@@ -87,6 +87,74 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
     GenServer.call(__MODULE__, :list_master_contexts, 30_000)
   end
 
+  def get_database_folders do
+    GenServer.call(__MODULE__, :get_database_folders)
+  end
+
+  def add_database_folder(folder) do
+    GenServer.call(__MODULE__, {:add_database_folder, folder})
+  end
+
+  def remove_database_folder(folder) do
+    GenServer.call(__MODULE__, {:remove_database_folder, folder})
+  end
+
+  def set_default_folder(folder) do
+    GenServer.call(__MODULE__, {:set_default_folder, folder})
+  end
+
+  def get_default_folder do
+    GenServer.call(__MODULE__, :get_default_folder)
+  end
+
+  def scan_all_databases do
+    GenServer.call(__MODULE__, :scan_all_databases, 30_000)
+  end
+
+  def create_database(name) do
+    GenServer.call(__MODULE__, {:create_database, name}, 30_000)
+  end
+
+  def list_databases do
+    GenServer.call(__MODULE__, :list_databases)
+  end
+
+  def save_database_to_disk(context, path \\ nil) do
+    GenServer.call(__MODULE__, {:save_database_to_disk, context, path}, 60_000)
+  end
+
+  def scan_all_experiments do
+    GenServer.call(__MODULE__, :scan_all_experiments, 30_000)
+  end
+
+  def create_experiment(name) do
+    GenServer.call(__MODULE__, {:create_experiment, name}, 30_000)
+  end
+
+  def copy_agents_to_experiment(agent_ids, source_context, target_context) do
+    GenServer.call(__MODULE__, {:copy_agents_to_experiment, agent_ids, source_context, target_context}, 60_000)
+  end
+
+  def get_experiments_from_settings do
+    GenServer.call(__MODULE__, :get_experiments_from_settings)
+  end
+
+  def add_experiment_to_settings(name, path) do
+    GenServer.call(__MODULE__, {:add_experiment_to_settings, name, path})
+  end
+
+  def remove_experiment_from_settings(name) do
+    GenServer.call(__MODULE__, {:remove_experiment_from_settings, name})
+  end
+
+  def create_experiment_in_settings(name, path) do
+    GenServer.call(__MODULE__, {:create_experiment_in_settings, name, path}, 30_000)
+  end
+
+  def create_empty_experiment(name) do
+    GenServer.call(__MODULE__, {:create_empty_experiment, name})
+  end
+
   # Server Callbacks
 
   @impl true
@@ -104,7 +172,14 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
       "/app/dxnn_analyzer/ebin"
     ]
     
-    Enum.each(analyzer_paths, fn path ->
+    # Add jsx dependency paths
+    jsx_paths = [
+      Path.expand("../../dxnn_analyzer/_build/default/lib/jsx/ebin"),
+      Path.expand("../dxnn_analyzer/_build/default/lib/jsx/ebin"),
+      "/app/dxnn_analyzer/_build/default/lib/jsx/ebin"
+    ]
+    
+    Enum.each(analyzer_paths ++ jsx_paths, fn path ->
       if File.exists?(path) do
         :code.add_pathz(String.to_charlist(path))
         IO.puts("Added Erlang code path: #{path}")
@@ -375,6 +450,212 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
   def handle_call(:list_master_contexts, _from, state) do
     result = :master_database.list_contexts()
     {:reply, format_contexts(result), state}
+  end
+
+  @impl true
+  def handle_call(:get_database_folders, _from, state) do
+    :database_settings.init()
+    folders = :database_settings.get_folders()
+    IO.puts("=== Bridge get_database_folders ===")
+    IO.puts("Folders from Erlang: #{inspect(folders)}")
+    {:reply, folders, state}
+  end
+
+  @impl true
+  def handle_call({:add_database_folder, folder}, _from, state) do
+    result = :database_settings.add_folder(:erlang.list_to_binary(String.to_charlist(folder)))
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call({:remove_database_folder, folder}, _from, state) do
+    result = :database_settings.remove_folder(:erlang.list_to_binary(String.to_charlist(folder)))
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call({:set_default_folder, folder}, _from, state) do
+    result = :database_settings.set_default(:erlang.list_to_binary(String.to_charlist(folder)))
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call(:get_default_folder, _from, state) do
+    result = :database_settings.get_default_folder()
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call(:scan_all_databases, _from, state) do
+    :database_settings.init()
+    folders = :database_settings.get_folders()
+    
+    all_databases = :lists.flatmap(fn folder ->
+      :database_settings.scan_databases(folder)
+    end, folders)
+    
+    {:reply, all_databases, state}
+  end
+
+  @impl true
+  def handle_call({:create_database, name}, _from, state) do
+    context_atom = String.to_atom(name)
+    result = :master_database.create_empty(context_atom)
+    {:reply, format_result(result), state}
+  end
+
+  @impl true
+  def handle_call(:list_databases, _from, state) do
+    result = :master_database.list_contexts()
+    {:reply, format_contexts(result), state}
+  end
+
+  @impl true
+  def handle_call({:save_database_to_disk, context, path}, _from, state) do
+    context_atom = String.to_atom(context)
+    save_path = path || "./data/default/#{context}"
+    result = :master_database.save(context_atom, String.to_charlist(save_path))
+    {:reply, format_result(result), state}
+  end
+
+  @impl true
+  def handle_call(:scan_all_experiments, _from, state) do
+    IO.puts("=== Bridge scan_all_experiments ===")
+    :database_settings.init()
+    folders = :database_settings.get_folders()
+    IO.puts("Folders to scan: #{inspect(folders)}")
+    
+    all_experiments = :lists.flatmap(fn folder ->
+      IO.puts("Scanning folder: #{inspect(folder)}")
+      results = :database_settings.scan_databases(folder)
+      IO.puts("Found experiments: #{inspect(results)}")
+      results
+    end, folders)
+    
+    IO.puts("Total experiments found: #{inspect(all_experiments)}")
+    {:reply, all_experiments, state}
+  end
+
+  @impl true
+  def handle_call({:create_experiment, name}, _from, state) do
+    {:ok, default_folder} = :database_settings.get_default_folder()
+    
+    # Create the full path for the new experiment
+    experiment_path = Path.join([to_string(default_folder), name])
+    
+    # Create the directory structure
+    case File.mkdir_p(experiment_path) do
+      :ok ->
+        # Initialize an empty Mnesia database in this folder
+        context_atom = String.to_atom(name)
+        result = :master_database.create_empty(context_atom)
+        
+        case result do
+          {:ok, _} ->
+            # Save the empty database to disk
+            save_result = :master_database.save(context_atom, String.to_charlist(experiment_path))
+            case save_result do
+              {:ok, _} -> {:reply, {:ok, experiment_path}, state}
+              error -> {:reply, error, state}
+            end
+          error -> {:reply, error, state}
+        end
+      
+      {:error, reason} ->
+        {:reply, {:error, "Failed to create directory: #{inspect(reason)}"}, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:copy_agents_to_experiment, agent_ids, source_context, target_context}, _from, state) do
+    source_context_atom = String.to_atom(source_context)
+    target_context_atom = String.to_atom(target_context)
+    
+    # Check if contexts exist in ETS
+    case :ets.info(:analyzer_contexts) do
+      :undefined ->
+        {:reply, {:error, "Analyzer not started"}, state}
+      _ ->
+        case :ets.lookup(:analyzer_contexts, source_context_atom) do
+          [] ->
+            {:reply, {:error, "Source experiment '#{source_context}' not loaded"}, state}
+          [_context_record] ->
+            case :ets.lookup(:analyzer_contexts, target_context_atom) do
+              [] ->
+                {:reply, {:error, "Target experiment '#{target_context}' not loaded"}, state}
+              [_target_record] ->
+                # Use master_database.add_to_context to copy agents
+                result = :master_database.add_to_context(agent_ids, source_context_atom, target_context_atom)
+                {:reply, format_result(result), state}
+            end
+        end
+    end
+  end
+
+  @impl true
+  def handle_call(:get_experiments_from_settings, _from, state) do
+    experiments = :experiment_settings.get_experiments()
+    
+    formatted = Enum.map(experiments, fn exp ->
+      %{
+        name: to_string(Map.get(exp, "name", "")),
+        path: to_string(Map.get(exp, "path", ""))
+      }
+    end)
+    
+    {:reply, formatted, state}
+  end
+
+  @impl true
+  def handle_call({:add_experiment_to_settings, name, path}, _from, state) do
+    name_bin = :erlang.list_to_binary(String.to_charlist(name))
+    path_bin = :erlang.list_to_binary(String.to_charlist(path))
+    result = :experiment_settings.add_experiment(name_bin, path_bin)
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call({:remove_experiment_from_settings, name}, _from, state) do
+    name_bin = :erlang.list_to_binary(String.to_charlist(name))
+    result = :experiment_settings.remove_experiment(name_bin)
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call({:create_experiment_in_settings, name, path}, _from, state) do
+    # Create the directory structure
+    case File.mkdir_p(path) do
+      :ok ->
+        # Initialize an empty Mnesia database
+        context_atom = String.to_atom(name)
+        result = :master_database.create_empty(context_atom)
+        
+        case result do
+          {:ok, _} ->
+            # Save the empty database to disk
+            save_result = :master_database.save(context_atom, String.to_charlist(path))
+            case save_result do
+              {:ok, _} ->
+                # Add to settings
+                name_bin = :erlang.list_to_binary(String.to_charlist(name))
+                path_bin = :erlang.list_to_binary(String.to_charlist(path))
+                add_result = :experiment_settings.add_experiment(name_bin, path_bin)
+                {:reply, add_result, state}
+              error -> {:reply, error, state}
+            end
+          error -> {:reply, error, state}
+        end
+      
+      {:error, reason} ->
+        {:reply, {:error, "Failed to create directory: #{inspect(reason)}"}, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:create_empty_experiment, name}, _from, state) do
+    context_atom = String.to_atom(name)
+    result = :master_database.create_empty(context_atom)
+    {:reply, result, state}
   end
 
   # Helper Functions

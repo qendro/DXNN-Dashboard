@@ -4,17 +4,19 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    contexts = AnalyzerBridge.list_contexts()
+    all_contexts = AnalyzerBridge.list_contexts()
 
     socket =
       socket
-      |> assign(:contexts, contexts)
+      |> assign(:contexts, all_contexts)
       |> assign(:selected_context, nil)
       |> assign(:agents, [])
       |> assign(:loading, false)
       |> assign(:selected_agents, MapSet.new())
       |> assign(:show_best_only, false)
       |> assign(:best_count, 10)
+      |> assign(:target_experiment, nil)
+      |> assign(:show_copy_modal, false)
 
     {:ok, socket}
   end
@@ -93,71 +95,41 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
   end
 
   @impl true
-  def handle_event("compare_selected", _, socket) do
-    if MapSet.size(socket.assigns.selected_agents) < 2 do
-      {:noreply, put_flash(socket, :error, "Select at least 2 agents to compare")}
+  def handle_event("copy_to_experiment", _, socket) do
+    if MapSet.size(socket.assigns.selected_agents) == 0 do
+      {:noreply, put_flash(socket, :error, "No agents selected")}
     else
-      agent_ids = MapSet.to_list(socket.assigns.selected_agents)
-      context = socket.assigns.selected_context
-      {:noreply, push_navigate(socket, to: ~p"/compare?context=#{context}&ids=#{encode_ids(agent_ids)}")}
+      {:noreply, assign(socket, :show_copy_modal, true)}
     end
   end
 
   @impl true
-  def handle_event("save_to_master", _, socket) do
+  def handle_event("copy_agents", %{"target" => target_context}, socket) do
     if MapSet.size(socket.assigns.selected_agents) == 0 do
       {:noreply, put_flash(socket, :error, "No agents selected")}
     else
       agent_ids = MapSet.to_list(socket.assigns.selected_agents)
-      context = socket.assigns.selected_context
+      source_context = socket.assigns.selected_context
 
-      IO.puts("=== Save to Master Debug ===")
-      IO.puts("Selected agents count: #{length(agent_ids)}")
-      IO.puts("Context: #{inspect(context)}")
-      IO.puts("Agent IDs: #{inspect(agent_ids)}")
-
-      # Create or use existing master context
-      master_context = "master"
-      
-      # Try to create empty master context (will return existing if already exists)
-      case AnalyzerBridge.create_empty_master(master_context) do
-        {:ok, _} ->
-          IO.puts("Master context ready")
-        {:error, reason} ->
-          IO.puts("Error with master context: #{inspect(reason)}")
-      end
-      
-      # Add agents to master context
-      case AnalyzerBridge.add_to_master(agent_ids, context, master_context) do
+      case AnalyzerBridge.copy_agents_to_experiment(agent_ids, source_context, target_context) do
         {:ok, count} ->
-          IO.puts("Successfully added #{count} agents")
-          
-          # Save master context to disk
-          case AnalyzerBridge.save_master(master_context, "./data/MasterDatabase") do
-            {:ok, _path} ->
-              socket =
-                socket
-                |> assign(:selected_agents, MapSet.new())
-                |> put_flash(:info, "Successfully added #{count} agent(s) to master database and saved to disk")
+          socket =
+            socket
+            |> assign(:selected_agents, MapSet.new())
+            |> assign(:show_copy_modal, false)
+            |> put_flash(:info, "Copied #{count} agents to #{target_context}")
 
-              {:noreply, socket}
-            
-            {:error, save_reason} ->
-              IO.puts("Error saving master: #{inspect(save_reason)}")
-              # Still consider it a success since agents were added to context
-              socket =
-                socket
-                |> assign(:selected_agents, MapSet.new())
-                |> put_flash(:info, "Added #{count} agent(s) to master context (save to disk failed: #{inspect(save_reason)})")
-              
-              {:noreply, socket}
-          end
+          {:noreply, socket}
 
         {:error, reason} ->
-          IO.puts("Error adding to master: #{inspect(reason)}")
-          {:noreply, put_flash(socket, :error, "Failed to add agents: #{inspect(reason)}")}
+          {:noreply, put_flash(socket, :error, "Failed: #{inspect(reason)}")}
       end
     end
+  end
+
+  @impl true
+  def handle_event("close_modal", _, socket) do
+    {:noreply, assign(socket, :show_copy_modal, false)}
   end
 
   defp load_agents(socket, context) do
@@ -205,13 +177,13 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
 
         <!-- Context Selector -->
         <div class="bg-white shadow rounded-lg p-6 mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Select Context</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Select Experiment</label>
           <select
             phx-change="select_context"
             name="context"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">-- Select a context --</option>
+            <option value="">-- Select an experiment --</option>
             <%= for context <- @contexts do %>
               <option value={context.name} selected={context.name == @selected_context}>
                 <%= context.name %> (<%= context.agent_count %> agents)
@@ -262,20 +234,63 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
                 <span class="text-sm text-blue-900">
                   <%= MapSet.size(@selected_agents) %> agent(s) selected
                 </span>
-                <div class="flex gap-2">
+                <button
+                  phx-click="copy_to_experiment"
+                  class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition text-sm"
+                >
+                  Copy to Experiment...
+                </button>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Copy to Experiment Modal -->
+          <%= if @show_copy_modal do %>
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold mb-4">Copy to Experiment</h3>
+                <p class="text-sm text-gray-600 mb-4">
+                  Select an experiment to copy <%= MapSet.size(@selected_agents) %> agent(s) to
+                </p>
+                
+                <%= if Enum.empty?(Enum.filter(@contexts, fn c -> c.name != @selected_context end)) do %>
+                  <p class="text-sm text-gray-500 mb-4">
+                    No other experiments available. Create or load another experiment first.
+                  </p>
+                  <div class="flex gap-2">
+                    <button
+                      phx-click="close_modal"
+                      class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition"
+                    >
+                      Cancel
+                    </button>
+                    <.link
+                      navigate={~p"/"}
+                      class="flex-1 text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                    >
+                      Go to Dashboard
+                    </.link>
+                  </div>
+                <% else %>
+                  <div class="space-y-2 mb-4">
+                    <%= for exp <- Enum.filter(@contexts, fn c -> c.name != @selected_context end) do %>
+                      <button
+                        phx-click="copy_agents"
+                        phx-value-target={exp.name}
+                        class="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition"
+                      >
+                        <div class="font-medium"><%= exp.name %></div>
+                        <div class="text-sm text-gray-500"><%= exp.agent_count %> agents</div>
+                      </button>
+                    <% end %>
+                  </div>
                   <button
-                    phx-click="save_to_master"
-                    class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition text-sm"
+                    phx-click="close_modal"
+                    class="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition"
                   >
-                    Save to Master Database
+                    Cancel
                   </button>
-                  <button
-                    phx-click="compare_selected"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition text-sm"
-                  >
-                    Compare Selected
-                  </button>
-                </div>
+                <% end %>
               </div>
             </div>
           <% end %>

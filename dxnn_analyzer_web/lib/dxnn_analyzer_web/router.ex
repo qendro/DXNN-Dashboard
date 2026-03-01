@@ -18,12 +18,12 @@ defmodule DxnnAnalyzerWeb.Router do
     pipe_through :browser
 
     live "/", DashboardLive, :index
+    live "/settings", SettingsLive, :index
     live "/agents", AgentListLive, :index
     live "/agents/:id", AgentInspectorLive, :show
     live "/topology/:id", TopologyViewerLive, :show
     live "/graph/:id", GraphViewerLive, :show
     live "/compare", ComparatorLive, :index
-    live "/master", MasterDatabaseLive, :index
   end
 
   if Application.compile_env(:dxnn_analyzer_web, :dev_routes) do

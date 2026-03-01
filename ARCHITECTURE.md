@@ -6,13 +6,15 @@ This document describes the technical architecture of the DXNN Analyzer Web Inte
 
 ## Technology Stack
 
-- **Frontend**: Phoenix LiveView, Tailwind CSS
-- **Backend**: Elixir/Phoenix, Erlang/OTP
-- **Database**: Mnesia (via ETS cache)
-- **Deployment**: Docker, Docker Compose
-- **Real-time**: WebSockets (Phoenix Channels)
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Frontend | Phoenix LiveView, Tailwind CSS, D3.js | Real-time UI, styling, visualization |
+| Backend | Elixir/Phoenix, Erlang/OTP | Web server, analysis engine |
+| Database | Mnesia, ETS | Persistent storage, in-memory cache |
+| Deployment | Docker, Docker Compose | Containerization, orchestration |
+| Real-time | WebSockets (Phoenix Channels) | Bidirectional communication |
 
-## System Architecture
+## System Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -21,11 +23,14 @@ This document describes the technical architecture of the DXNN Analyzer Web Inte
 │  │  Dashboard   │  │  Agent List  │  │   Inspector  │          │
 │  │   LiveView   │  │   LiveView   │  │   LiveView   │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              │ WebSocket (Phoenix Channel)
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
+│         │                  │                  │                  │
+│         └──────────────────┼──────────────────┘                  │
+│                            │                                     │
+└────────────────────────────┼─────────────────────────────────────┘
+                             │
+                             │ WebSocket (Phoenix Channel)
+                             │
+┌────────────────────────────┼─────────────────────────────────────┐
 │                    Phoenix Server (Elixir)                       │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │                    Phoenix Endpoint                       │  │
@@ -40,8 +45,8 @@ This document describes the technical architecture of the DXNN Analyzer Web Inte
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │              AnalyzerBridge (GenServer)                   │  │
 │  │  • Data format conversion (Elixir ↔ Erlang)             │  │
-│  │  • Timeout management                                     │  │
-│  │  • Error handling                                         │  │
+│  │  • Timeout management (30-60s)                           │  │
+│  │  • Error handling and formatting                         │  │
 │  │  • Code path management                                   │  │
 │  └──────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
@@ -60,15 +65,19 @@ This document describes the technical architecture of the DXNN Analyzer Web Inte
 │  │  │ mutation_  │  │ comparator │  │  stats_    │         │  │
 │  │  │ analyzer   │  │            │  │ collector  │         │  │
 │  │  └────────────┘  └────────────┘  └────────────┘         │  │
+│  │  ┌────────────┐  ┌────────────┐                          │  │
+│  │  │population_ │  │  master_   │                          │  │
+│  │  │  builder   │  │  database  │                          │  │
+│  │  └────────────┘  └────────────┘                          │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                              │                                   │
 │                              │ ETS Operations                    │
 │                              ▼                                   │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │              ETS Tables (In-Memory Cache)                 │  │
-│  │  • Context 1: exp1                                        │  │
-│  │  • Context 2: exp2                                        │  │
-│  │  • Context N: ...                                         │  │
+│  │  • Context 1: exp1_agent, exp1_neuron, ...              │  │
+│  │  • Context 2: exp2_agent, exp2_neuron, ...              │  │
+│  │  • Master: master_agent, master_neuron, ...             │  │
 │  └──────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -76,38 +85,34 @@ This document describes the technical architecture of the DXNN Analyzer Web Inte
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                  Mnesia Database (Disk)                          │
-│  • Agent records                                                 │
-│  • Cortex records                                                │
-│  • Neuron records                                                │
-│  • Sensor/Actuator records                                       │
-│  • Population records                                            │
+│  • Agent records        • Sensor records                         │
+│  • Cortex records       • Actuator records                       │
+│  • Neuron records       • Substrate records                      │
+│  • Population records   • Specie records                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Component Layers
 
-### 1. Browser Layer (Client)
+### Layer 1: Browser Layer (Client)
 
 **LiveView Pages** render UI and handle user interactions:
-- Dashboard: Load/manage contexts
-- Agent List: Browse and filter agents
-- Agent Inspector: Detailed agent view
-- Topology Viewer: Network visualization
-- Comparator: Multi-agent comparison
+
+| Page | Route | Purpose |
+|------|-------|---------|
+| DashboardLive | `/` | Load/manage contexts, view summaries |
+| AgentListLive | `/agents` | Browse and filter agents |
+| AgentInspectorLive | `/agents/:id` | Detailed agent view |
+| TopologyViewerLive | `/topology/:id` | Network visualization |
+| ComparatorLive | `/compare` | Multi-agent comparison |
+| MasterDatabaseLive | `/master` | Master database management |
 
 **Key Features:**
 - Real-time updates via WebSocket
 - Automatic DOM diffing and patching
 - No manual JavaScript for most interactions
 - Form handling and validation
-
-### 2. Phoenix Server Layer (Elixir)
-
-**Components:**
-- **Endpoint**: HTTP/WebSocket handling, static assets
-- **Router**: URL routing to LiveView modules
-- **LiveView Processes**: One per client, maintains session state
-- **PubSub**: Broadcast updates to multiple clients
+- Client-side hooks for D3.js visualizations
 
 **LiveView State Example:**
 ```elixir
@@ -117,91 +122,180 @@ socket.assigns = %{
   agents: [...],             # Agent list
   selected_agents: MapSet,   # Selected for comparison
   loading: false,            # Loading indicator
-  error: nil                 # Error message
+  error: nil,                # Error message
+  page: 1,                   # Current page
+  total_pages: 10            # Total pages
 }
 ```
 
-### 3. Bridge Layer (Erlang ↔ Elixir)
+### Layer 2: Phoenix Server Layer (Elixir)
 
-**AnalyzerBridge GenServer** provides seamless integration:
+**Components:**
 
-**Responsibilities:**
-1. **Code Path Management**: Adds Erlang beam files to code path
-2. **Data Conversion**: Elixir maps ↔ Erlang records, strings ↔ charlists
-3. **Timeout Management**: Handles long operations (30-60s)
-4. **Error Formatting**: User-friendly error messages
+**Endpoint** (`endpoint.ex`)
+- HTTP/WebSocket handling
+- Static asset serving
+- Session management
+- CSRF protection
 
-**Example Flow:**
-```elixir
-# 1. LiveView calls bridge
-AnalyzerBridge.load_context("/path/to/mnesia", "exp1")
+**Router** (`router.ex`)
+- URL routing to LiveView modules
+- Pipeline configuration
+- Scope definitions
 
-# 2. Bridge converts and calls Erlang
-GenServer.call → :analyzer.load('/path/to/mnesia', exp1)
+**LiveView Processes**
+- One process per client connection
+- Maintains session state
+- Handles events and updates
+- Automatic garbage collection
 
-# 3. Erlang processes request
-analyzer:load → mnesia_loader:load_folder → {ok, ContextRecord}
+**PubSub**
+- Broadcast updates to multiple clients
+- Topic-based subscriptions
+- Real-time synchronization
 
-# 4. Bridge formats response
-{:ok, %{name: :exp1, path: "...", agent_count: 45, specie_count: 3}}
-
-# 5. LiveView receives formatted data and updates UI
+**Application Supervisor Tree:**
+```
+DxnnAnalyzerWeb.Application
+├── Phoenix.PubSub
+├── DxnnAnalyzerWeb.Telemetry
+├── DxnnAnalyzerWeb.Endpoint
+└── DxnnAnalyzerWeb.AnalyzerBridge
 ```
 
-### 4. Analyzer Layer (Erlang)
+### Layer 3: Bridge Layer (Erlang ↔ Elixir)
+
+**AnalyzerBridge GenServer** provides seamless integration between Elixir and Erlang.
+
+**Responsibilities:**
+1. **Code Path Management** - Adds Erlang beam files to code path
+2. **Data Conversion** - Elixir maps ↔ Erlang records, strings ↔ charlists
+3. **Timeout Management** - Handles long operations (30-60s)
+4. **Error Formatting** - User-friendly error messages
+
+**Data Flow Example:**
+```
+LiveView
+  ↓ AnalyzerBridge.load_context("/path", "exp1")
+GenServer.call
+  ↓ Convert: "/path" → '/path', "exp1" → exp1
+:analyzer.load('/path', exp1)
+  ↓ Erlang processing
+{ok, #mnesia_context{...}}
+  ↓ Convert: record → map
+{:ok, %{name: :exp1, path: "/path", ...}}
+  ↓
+LiveView receives formatted data
+```
+
+**Type Conversions:**
+```elixir
+# String ↔ Charlist
+"hello" ↔ 'hello'
+
+# Map ↔ Record
+%{name: :exp1, path: "/path"} ↔ #mnesia_context{name=exp1, path="/path"}
+
+# Atom ↔ Atom (same)
+:exp1 ↔ exp1
+
+# List ↔ List (element conversion)
+[%{id: 1}, %{id: 2}] ↔ [#agent{id=1}, #agent{id=2}]
+```
+
+### Layer 4: Analyzer Layer (Erlang)
 
 **Core Modules:**
 
-| Module | Purpose |
-|--------|---------|
-| `analyzer.erl` | Main API, coordinates operations |
-| `mnesia_loader.erl` | Loads Mnesia folders into ETS contexts |
-| `agent_inspector.erl` | Deep agent analysis and topology extraction |
-| `topology_mapper.erl` | Network graph building and DOT export |
-| `mutation_analyzer.erl` | Evolution history and mutation tracking |
-| `comparator.erl` | Multi-agent comparison and similarity |
-| `stats_collector.erl` | Aggregate metrics and reports |
-| `population_builder.erl` | Create new populations from selected agents |
-| `master_database.erl` | ETS-based master contexts with Mnesia persistence |
+| Module | Purpose | Key Functions |
+|--------|---------|---------------|
+| `analyzer.erl` | Main API | load/2, list_agents/1, find_best/2, inspect/2 |
+| `mnesia_loader.erl` | Context management | load_folder/2, unload_context/1 |
+| `agent_inspector.erl` | Agent analysis | inspect_agent/2, get_full_topology/2 |
+| `topology_mapper.erl` | Network mapping | build_digraph/2, export_to_dot/3 |
+| `mutation_analyzer.erl` | Evolution tracking | parse_evo_hist/2, display_mutations/2 |
+| `comparator.erl` | Agent comparison | compare_agents/2, calculate_similarity/3 |
+| `stats_collector.erl` | Statistics | collect_stats/1, generate_summary/1 |
+| `population_builder.erl` | Population creation | create_population/4, validate_population/1 |
+| `master_database.erl` | Master DB | create_empty/1, add_to_context/3, save/2 |
 
-### 5. Data Layer
+**Module Dependencies:**
+```
+analyzer.erl (API)
+    ├── mnesia_loader.erl (context management)
+    ├── agent_inspector.erl
+    │   └── topology_mapper.erl
+    ├── mutation_analyzer.erl
+    ├── comparator.erl
+    │   └── agent_inspector.erl
+    ├── stats_collector.erl
+    ├── population_builder.erl
+    │   └── agent_inspector.erl
+    └── master_database.erl
+        └── mnesia_loader.erl
+```
 
-**ETS Tables:**
-- In-memory cache per context
+### Layer 5: Data Layer
+
+**ETS Tables (In-Memory Cache):**
 - Fast O(1) lookups
+- One set of tables per context
 - Isolated contexts
-- Concurrent reads
+- Concurrent reads without locking
+- Automatic cleanup on context unload
 
-**Mnesia Database:**
-- Persistent storage on disk
+**Table Structure per Context:**
+```erlang
+{ContextName}_agent      % Agent records
+{ContextName}_cortex     % Cortex records
+{ContextName}_neuron     % Neuron records
+{ContextName}_sensor     % Sensor records
+{ContextName}_actuator   % Actuator records
+{ContextName}_substrate  % Substrate records
+{ContextName}_population % Population records
+{ContextName}_specie     % Specie records
+```
+
+**Mnesia Database (Persistent Storage):**
 - ACID transactions
 - Record-based storage
+- Native Erlang term format
 - Distributed capability
+- Source data (read-only)
+- Output data (write-only)
 
 ## Data Flow Examples
 
 ### Loading a Context
 
 ```
-User clicks "Load Context"
+User clicks "Load Context" with path and name
   ↓
-DashboardLive.handle_event("load_context", params)
+DashboardLive.handle_event("load_context", %{"path" => path, "name" => name})
   ↓
 AnalyzerBridge.load_context(path, name)
   ↓
-GenServer.call → :analyzer.load(path, name)
+GenServer.call → :analyzer.load(charlist_path, atom_name)
   ↓
-mnesia_loader:load_folder(path, name)
+mnesia_loader:load_folder(charlist_path, atom_name)
   ↓
-Read Mnesia tables → Create ETS tables
+1. Create temp directory
+2. Copy Mnesia files to temp
+3. Start Mnesia with temp directory
+4. Wait for tables to load
+5. Read all records from Mnesia tables
+6. Create ETS tables for context
+7. Copy records to ETS
+8. Store context metadata
+9. Cleanup temp directory
   ↓
-Return context record
+Return {ok, #mnesia_context{}}
   ↓
 Bridge formats to Elixir map
   ↓
-LiveView updates socket assigns
+LiveView updates socket.assigns.contexts
   ↓
-Template re-renders
+Template re-renders with new context
   ↓
 Browser receives DOM diff via WebSocket
   ↓
@@ -213,23 +307,68 @@ UI updates (no page refresh)
 ```
 User navigates to /agents?context=exp1
   ↓
-AgentListLive.handle_params(params)
+AgentListLive.handle_params(%{"context" => "exp1"})
   ↓
-AnalyzerBridge.list_agents(context: "exp1")
+AnalyzerBridge.list_agents(context: "exp1", limit: 50)
   ↓
-GenServer.call → :analyzer.list_agents([{context, exp1}])
+GenServer.call → :analyzer.list_agents([{context, exp1}, {limit, 50}])
   ↓
-Query ETS tables for context exp1
+agent_inspector:query_agents(exp1, Options)
   ↓
-Return list of agent records
+Query ETS table: exp1_agent
   ↓
-Bridge formats to list of maps
+ets:foldl(fun(Agent, Acc) -> [Agent | Acc] end, [], exp1_agent)
   ↓
-LiveView assigns agents
+Sort by fitness, limit to 50
   ↓
-Template renders table
+Return [#agent{}, #agent{}, ...]
+  ↓
+Bridge converts records to maps
+  ↓
+LiveView assigns agents to socket
+  ↓
+Template renders agent table
   ↓
 Browser displays agent list
+```
+
+### Inspecting Agent Topology
+
+```
+User clicks "View Topology" on agent
+  ↓
+AgentInspectorLive.handle_event("view_topology", %{"id" => id})
+  ↓
+AnalyzerBridge.get_topology(id, context)
+  ↓
+GenServer.call → :agent_inspector.get_full_topology(agent_id, context)
+  ↓
+1. Read agent record from ETS
+2. Read cortex using agent.cx_id
+3. Read all neurons using cortex.neuron_ids
+4. Read all sensors using cortex.sensor_ids
+5. Read all actuators using cortex.actuator_ids
+6. Read substrate if agent.substrate_id exists
+  ↓
+Return topology map:
+#{
+    agent => #agent{},
+    cortex => #cortex{},
+    neurons => [#neuron{}],
+    sensors => [#sensor{}],
+    actuators => [#actuator{}],
+    substrate => #substrate{} | undefined
+}
+  ↓
+Bridge converts to Elixir map
+  ↓
+LiveView assigns topology to socket
+  ↓
+Template renders with phx-hook="NetworkGraph"
+  ↓
+D3.js hook receives data and renders visualization
+  ↓
+Interactive graph displayed in browser
 ```
 
 ### Saving to Master Database
@@ -237,36 +376,35 @@ Browser displays agent list
 ```
 User selects agents and clicks "Save to Master Database"
   ↓
-AgentListLive.handle_event("save_to_master", params)
+AgentListLive.handle_event("save_to_master", %{"agent_ids" => ids})
   ↓
-AnalyzerBridge.init_master_database("./data")
+AnalyzerBridge.add_to_master(ids, source_context, "master")
   ↓
-GenServer.call → :master_database.init(base_path)
+GenServer.call → :master_database.add_to_context(ids, source_context, master)
   ↓
-Create/verify master database Mnesia folder
+For each agent_id:
+  1. Get full topology from source context (ETS)
+  2. Copy agent record to master context (ETS)
+  3. Copy cortex record
+  4. Copy all neurons
+  5. Copy all sensors
+  6. Copy all actuators
+  7. Copy substrate if exists
   ↓
-AnalyzerBridge.add_to_master(agent_ids, context, master_path)
-  ↓
-GenServer.call → :master_database.add_agents(ids, context, path)
-  ↓
-Fetch agent topologies from source context ETS
-  ↓
-Switch Mnesia to master database directory
-  ↓
-Write agents with full topology to master database
-  ↓
-Return success count
+Return {ok, Count}
   ↓
 LiveView shows success message
   ↓
-User can view master database or load as context
+User can now view master database or save to disk
 ```
 
 ## Master Database Architecture
 
 ### Purpose
 
-The Master Database provides a centralized repository for curating elite agents across multiple experiments. It allows users to:
+The Master Database provides a centralized repository for curating elite agents across multiple experiments.
+
+**Use Cases:**
 - Build a collection of best-performing agents
 - Maintain a "hall of fame" across all experiments
 - Prepare agents for deployment to live trading
@@ -283,7 +421,9 @@ The Master Database provides a centralized repository for curating elite agents 
         ├── neuron.DCD
         ├── sensor.DCD
         ├── actuator.DCD
-        └── substrate.DCD
+        ├── substrate.DCD
+        ├── population.DCD
+        └── specie.DCD
 ```
 
 ### Data Flow
@@ -292,64 +432,53 @@ The Master Database provides a centralized repository for curating elite agents 
 Source Context (ETS)
     ↓ Read agent topology
 Agent Data (in-memory)
-    ↓ Switch Mnesia context
-Master Database (Mnesia)
-    ↓ Write full topology
-Persistent Storage (disk)
+    ↓ Copy to master context
+Master Context (ETS)
+    ↓ Save when ready
+Master Database (Mnesia on disk)
+    ↓ Deploy or load as context
+DXNN-Trader or Analysis
 ```
 
 ### Key Features
 
-1. **Non-destructive**: Original contexts remain unchanged
-2. **Full topology preservation**: All neurons, sensors, actuators copied
-3. **Duplicate detection**: Won't add same agent twice
-4. **DXNN-Trader compatible**: Can deploy master database directly
-5. **Context loading**: Can load master as a regular context for analysis
+1. **Non-destructive** - Original contexts remain unchanged
+2. **Full topology preservation** - All neurons, sensors, actuators copied
+3. **Duplicate detection** - Won't add same agent twice
+4. **DXNN-Trader compatible** - Can deploy master database directly
+5. **Context loading** - Can load master as a regular context for analysis
 
-### Implementation Details
+### Implementation
 
 **Erlang Module (`master_database.erl`):**
-- `load/2`: Load existing master database from Mnesia into ETS context
-- `create_empty/1`: Create empty master context (ETS only, no disk)
-- `add_to_context/3`: Add agents from source context to master context (ETS → ETS)
-- `save/2`: Save master context to Mnesia on disk
-- `export_for_deployment/3`: Export specific agents to new Mnesia database for deployment
-- `list_contexts/0`: List all master contexts
-- `unload/1`: Unload master context
+```erlang
+create_empty(ContextName) -> {ok, Context}
+add_to_context(AgentIds, SourceContext, MasterContext) -> {ok, Count}
+save(ContextName, OutputPath) -> ok
+load(MnesiaPath, ContextName) -> {ok, Context}
+export_for_deployment(AgentIds, PopId, OutputPath) -> {ok, Path}
+```
 
 **Bridge Functions:**
-- `load_master/2`: Load master database as ETS context
-- `create_empty_master/1`: Create empty master context
-- `add_to_master/3`: Add agents to master context
-- `save_master/2`: Save master context to disk
-- `export_for_deployment/3`: Export agents for deployment
-- `list_master_contexts/0`: List all master contexts
+```elixir
+load_master(path, name)
+create_empty_master(name)
+add_to_master(ids, source_context, master_context)
+save_master(context, output_path)
+export_for_deployment(ids, pop_id, output_path)
+```
 
-**LiveView Pages:**
-- `MasterDatabaseLive`: View and manage master database
-- `AgentListLive`: Enhanced with "Save to Master" button
-
-### Workflow Example
-
+**Workflow:**
 ```
 1. Load Context A (experiment 1)
-   ↓
 2. Create empty master context "master_elite"
-   ↓
 3. Select top 5 agents from Context A
-   ↓
 4. Add to master_elite (ETS → ETS, fast)
-   ↓
 5. Load Context B (experiment 2)
-   ↓
 6. Select top 3 agents from Context B
-   ↓
 7. Add to master_elite (ETS → ETS, fast)
-   ↓
 8. Analyze master_elite (8 elite agents, all in ETS)
-   ↓
 9. Save master_elite to disk (ETS → Mnesia)
-   ↓
 10. Deploy to DXNN-Trader or export subset
 ```
 
@@ -378,54 +507,73 @@ LiveView Process A      LiveView Process B
 - ETS allows concurrent reads without locking
 - Scales well for read-heavy workloads
 
+**Bottlenecks:**
+- Single AnalyzerBridge GenServer (can be pooled)
+- Large agent lists without pagination
+- Complex topology rendering
+
 ### Scalability Strategies
 
-1. Add more Phoenix nodes (distributed Erlang)
-2. Load balance WebSocket connections
-3. Cache frequently accessed data
-4. Implement pagination for large datasets
-5. Use PubSub for real-time updates across nodes
+1. **Add more Phoenix nodes** - Distributed Erlang cluster
+2. **Load balance WebSocket connections** - HAProxy, Nginx
+3. **Cache frequently accessed data** - ETS or Redis
+4. **Implement pagination** - Limit results per page
+5. **Use PubSub** - Real-time updates across nodes
+6. **Pool bridge GenServers** - Multiple bridge processes
 
 ## Performance Characteristics
 
 ### Strengths
 
-- **Fast ETS lookups**: O(1) complexity
-- **Efficient LiveView updates**: DOM diffing minimizes data transfer
-- **Concurrent operations**: Erlang's lightweight processes
-- **No database queries**: Data cached in ETS
+- **Fast ETS lookups** - O(1) complexity
+- **Efficient LiveView updates** - DOM diffing minimizes data transfer
+- **Concurrent operations** - Erlang's lightweight processes
+- **No database queries** - Data cached in ETS
+- **Real-time updates** - WebSocket push
 
 ### Bottlenecks
 
 - Single AnalyzerBridge GenServer (serializes calls)
 - Large agent lists (1000+) without pagination
-- Complex topology rendering
-- Initial context loading from disk
+- Complex topology rendering (many nodes/edges)
+- Initial context loading from disk (I/O bound)
 
 ### Optimization Techniques
 
-1. **Pagination:**
-   ```elixir
-   list_agents(context: exp1, limit: 50, offset: 0)
-   ```
+**1. Pagination:**
+```elixir
+list_agents(context: exp1, limit: 50, offset: 0)
+```
 
-2. **Lazy Loading:**
-   ```elixir
-   # Load topology only when viewed
-   get_topology(agent_id, context)
-   ```
+**2. Lazy Loading:**
+```elixir
+# Load topology only when viewed
+get_topology(agent_id, context)
+```
 
-3. **Caching:**
-   ```elixir
-   # Cache frequently accessed data
-   @cache_ttl 60_000  # 1 minute
-   ```
+**3. Filtering:**
+```elixir
+# Reduce data transfer
+list_agents(context: exp1, min_fitness: 0.7, limit: 20)
+```
 
-4. **Filtering:**
-   ```elixir
-   # Reduce data transfer
-   list_agents(context: exp1, min_fitness: 0.7, limit: 20)
-   ```
+**4. Caching:**
+```elixir
+# Cache frequently accessed data
+@cache_ttl 60_000  # 1 minute
+```
+
+**5. Streaming:**
+```elixir
+# Use LiveView streams for large lists
+stream(socket, :agents, agents)
+```
+
+**6. Debouncing:**
+```javascript
+// Debounce search input
+phx-debounce="300"
+```
 
 ## Security Considerations
 
@@ -433,16 +581,19 @@ LiveView Process A      LiveView Process B
 
 - CSRF protection enabled
 - Signed session cookies
+- WebSocket origin checking
 - No authentication (designed for local use)
 
 ### Production Recommendations
 
-1. **Authentication**: Add user accounts and session management
-2. **Authorization**: Role-based access control
-3. **HTTPS**: Enforce SSL/TLS in production
-4. **Firewall**: Restrict access to trusted networks
-5. **Rate Limiting**: Prevent abuse
-6. **Audit Logging**: Track user actions
+1. **Authentication** - Add user accounts and session management
+2. **Authorization** - Role-based access control
+3. **HTTPS** - Enforce SSL/TLS in production
+4. **Firewall** - Restrict access to trusted networks
+5. **Rate Limiting** - Prevent abuse (Plug.RateLimiter)
+6. **Audit Logging** - Track user actions
+7. **Input Validation** - Sanitize all user inputs
+8. **Secret Management** - Use environment variables for secrets
 
 ## Extension Points
 
@@ -470,14 +621,21 @@ live "/my-feature", MyFeatureLive, :index
 ```
 
 **2. New Analyzer Function:**
+```erlang
+% Add to dxnn_analyzer/src/analyzer.erl
+my_function(Arg, Context) ->
+    % Implementation
+    {ok, Result}.
+```
+
 ```elixir
 # Add to analyzer_bridge.ex
-def my_function(arg) do
-  GenServer.call(__MODULE__, {:my_function, arg})
+def my_function(arg, context) do
+  GenServer.call(__MODULE__, {:my_function, arg, context})
 end
 
-def handle_call({:my_function, arg}, _from, state) do
-  result = :analyzer.my_erlang_function(arg)
+def handle_call({:my_function, arg, context}, _from, state) do
+  result = :analyzer.my_function(arg, context)
   {:reply, format_result(result), state}
 end
 ```
@@ -498,43 +656,80 @@ defmodule DxnnAnalyzerWeb.MyComponent do
 end
 ```
 
+**4. New D3.js Visualization:**
+```javascript
+// assets/js/my_viz.js
+export const MyViz = {
+  mounted() {
+    this.renderViz();
+  },
+  
+  renderViz() {
+    const data = JSON.parse(this.el.dataset.viz);
+    // D3.js rendering
+  }
+};
+```
+
 ### Integration Options
 
-1. **External Services**: Add HTTP client for API calls
-2. **Background Jobs**: Use Oban for async processing
-3. **Real-Time Updates**: PubSub for multi-client synchronization
-4. **REST API**: Add JSON endpoints for external tools
+1. **External Services** - Add HTTP client for API calls (HTTPoison, Finch)
+2. **Background Jobs** - Use Oban for async processing
+3. **Real-Time Updates** - PubSub for multi-client synchronization
+4. **REST API** - Add JSON endpoints for external tools
+5. **GraphQL** - Add Absinthe for flexible queries
+6. **File Upload** - Add file upload for Mnesia folders
+7. **Export** - Add PDF/CSV export capabilities
 
 ## Testing Strategy
 
 ### Unit Tests
+
 ```elixir
-test "loads context successfully" do
+# Test LiveView logic
+test "loads context successfully", %{conn: conn} do
   {:ok, view, _html} = live(conn, "/")
-  # Test LiveView logic
+  
+  view
+  |> form("#load-context-form", %{path: "/test", name: "test"})
+  |> render_submit()
+  
+  assert render(view) =~ "Context loaded"
 end
 ```
 
 ### Integration Tests
+
 ```elixir
-test "user can load and view agents" do
-  # Test full flow
+# Test full flow
+test "user can load and view agents", %{conn: conn} do
+  {:ok, view, _} = live(conn, "/")
+  # Load context
+  # Navigate to agents
+  # Verify agents displayed
 end
 ```
 
 ### E2E Tests
+
 - Use Wallaby or Hound
 - Test browser interactions
 - Verify WebSocket connections
+- Test JavaScript hooks
 
 ## Monitoring
 
 ### Telemetry Events
 
 Phoenix emits events for monitoring:
-- `[:phoenix, :endpoint, :start]`
-- `[:phoenix, :live_view, :mount]`
-- `[:phoenix, :router_dispatch, :stop]`
+```elixir
+[:phoenix, :endpoint, :start]
+[:phoenix, :endpoint, :stop]
+[:phoenix, :live_view, :mount, :start]
+[:phoenix, :live_view, :mount, :stop]
+[:phoenix, :router_dispatch, :start]
+[:phoenix, :router_dispatch, :stop]
+```
 
 ### Key Metrics
 
@@ -542,29 +737,34 @@ Phoenix emits events for monitoring:
 - Response times
 - LiveView mount duration
 - Bridge call duration
+- ETS query times
 
 **Usage:**
 - Active connections
 - Contexts loaded
 - Agents viewed
+- Comparisons performed
 
 **Errors:**
 - Failed context loads
 - Bridge timeouts
 - Erlang errors
+- WebSocket disconnects
 
 ## Docker Deployment
 
-### Production Image
+### Multi-Stage Build
 
 ```dockerfile
-# Multi-stage build
+# Stage 1: Build Erlang Analyzer
 FROM erlang:26-alpine AS erlang-builder
 # Compile Erlang analyzer
 
+# Stage 2: Build Elixir Web Interface
 FROM elixir:1.16-alpine AS elixir-builder
 # Compile Elixir web interface
 
+# Stage 3: Runtime
 FROM elixir:1.16-alpine AS runtime
 # Minimal runtime image
 ```
@@ -579,19 +779,36 @@ services:
       - "4000:4000"
     volumes:
       - ./DXNN-Trader-V2:/app/DXNN-Trader-V2:ro
+      - ./data:/app/data
     environment:
       - SECRET_KEY_BASE=...
 ```
+
+### Best Practices
+
+1. **Multi-stage builds** - Minimize image size
+2. **Non-root user** - Security
+3. **Volume mounts** - Persist data
+4. **Environment variables** - Configuration
+5. **Health checks** - Monitoring
+6. **Resource limits** - Prevent resource exhaustion
 
 ## Summary
 
 The architecture provides:
 
-✓ **Clean separation of concerns** across layers
-✓ **Seamless Erlang ↔ Elixir integration** via bridge pattern
-✓ **Real-time updates** via Phoenix LiveView
-✓ **Scalable concurrent design** leveraging BEAM VM
-✓ **Extensible component structure** for new features
-✓ **Production-ready** with Docker support
+✓ **Clean separation of concerns** across layers  
+✓ **Seamless Erlang ↔ Elixir integration** via bridge pattern  
+✓ **Real-time updates** via Phoenix LiveView  
+✓ **Scalable concurrent design** leveraging BEAM VM  
+✓ **Extensible component structure** for new features  
+✓ **Production-ready** with Docker support  
+✓ **Multi-context support** for parallel analysis  
+✓ **Master database** for elite agent curation  
 
 The bridge pattern allows the Elixir web interface to leverage the existing Erlang analyzer without modification, while providing a modern, interactive user experience through Phoenix LiveView.
+
+---
+
+**Version:** 0.1.0  
+**Last Updated:** 2024

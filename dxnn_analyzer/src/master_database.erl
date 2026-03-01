@@ -12,38 +12,35 @@
 -include("../include/records.hrl").
 -include("../include/analyzer_records.hrl").
 
-%% ============================================================================
-%% Master Database: ETS-Based Implementation with Mnesia Persistence
-%% ============================================================================
-
-%% @doc Load existing master database from Mnesia into ETS context
-load(MnesiaPath, MasterContext) ->
-    io:format("Loading master database from ~s as context ~p~n", [MnesiaPath, MasterContext]),
+%% @doc Load existing database from Mnesia into ETS context
+load(MnesiaPath, Context) ->
+    io:format("Loading database from ~s as context ~p~n", [MnesiaPath, Context]),
     
-    MnesiaDir = filename:join(MnesiaPath, "Mnesia.nonode@nohost"),
+    MnesiaDir = case filename:basename(MnesiaPath) of
+        "Mnesia.nonode@nohost" -> MnesiaPath;
+        _ -> filename:join(MnesiaPath, "Mnesia.nonode@nohost")
+    end,
+    
     case filelib:is_dir(MnesiaDir) of
         false ->
-            io:format("Master database not found, creating empty context~n"),
-            create_empty(MasterContext);
+            io:format("Database not found, creating empty context~n"),
+            create_empty(Context);
         true ->
-            dxnn_mnesia_loader:load_folder(MnesiaDir, MasterContext)
+            dxnn_mnesia_loader:load_folder(MnesiaDir, Context)
     end.
 
-%% @doc Create empty master context (ETS only, no disk)
-create_empty(MasterContext) ->
-    io:format("Creating empty master context: ~p~n", [MasterContext]),
+%% @doc Create empty database context (ETS only, no disk)
+create_empty(Context) ->
+    io:format("Creating empty database context: ~p~n", [Context]),
     
-    %% Check if context already exists
-    case dxnn_mnesia_loader:get_context(MasterContext) of
+    case dxnn_mnesia_loader:get_context(Context) of
         {ok, ExistingContext} ->
-            io:format("Master context '~p' already exists~n", [MasterContext]),
+            io:format("Context '~p' already exists~n", [Context]),
             {ok, ExistingContext};
         {error, context_not_found} ->
-            %% Create new context
             Tables = [agent, cortex, neuron, sensor, actuator, substrate, population, specie],
             EtsTables = lists:map(fun(TableName) ->
-                EtsName = dxnn_mnesia_loader:table_name(MasterContext, TableName),
-                %% Check if table already exists
+                EtsName = dxnn_mnesia_loader:table_name(Context, TableName),
                 case ets:info(EtsName) of
                     undefined ->
                         ets:new(EtsName, [named_table, public, bag, {keypos, 2}]);
@@ -53,8 +50,8 @@ create_empty(MasterContext) ->
                 EtsName
             end, Tables),
             
-            Context = #mnesia_context{
-                name = MasterContext,
+            ContextRecord = #mnesia_context{
+                name = Context,
                 path = undefined,
                 loaded_at = erlang:timestamp(),
                 agent_count = 0,
@@ -69,10 +66,10 @@ create_empty(MasterContext) ->
                 _ -> ok
             end,
             
-            ets:insert(analyzer_contexts, Context),
+            ets:insert(analyzer_contexts, ContextRecord),
             
-            io:format("Empty master context '~p' created~n", [MasterContext]),
-            {ok, Context}
+            io:format("Empty context '~p' created~n", [Context]),
+            {ok, ContextRecord}
     end.
 
 %% @doc Add agents from source context to master context (ETS → ETS)
@@ -113,17 +110,17 @@ add_to_context(AgentIds, SourceContext, MasterContext) ->
             end
     end.
 
-%% @doc Save master context to Mnesia on disk
-save(MasterContext, OutputPath) ->
-    io:format("Saving master context ~p to ~s~n", [MasterContext, OutputPath]),
+%% @doc Save database context to Mnesia on disk
+save(Context, OutputPath) ->
+    io:format("Saving context ~p to ~s~n", [Context, OutputPath]),
     
-    case dxnn_mnesia_loader:get_context(MasterContext) of
+    case dxnn_mnesia_loader:get_context(Context) of
         {error, context_not_found} ->
-            {error, {context_not_found, MasterContext}};
-        {ok, Context} ->
+            {error, {context_not_found, Context}};
+        {ok, ContextRecord} ->
             MnesiaDir = filename:join(OutputPath, "Mnesia.nonode@nohost"),
             filelib:ensure_dir(MnesiaDir ++ "/"),
-            save_ets_to_mnesia(Context, MnesiaDir)
+            save_ets_to_mnesia(ContextRecord, MnesiaDir)
     end.
 
 %% @doc Export specific agents to new Mnesia database for deployment
@@ -176,8 +173,8 @@ unload(MasterContext) ->
 
 is_master_context(#mnesia_context{path = undefined}) -> true;
 is_master_context(#mnesia_context{path = Path}) ->
-    string:str(Path, "MasterDatabase") > 0 orelse
-    string:str(Path, "data/") > 0;
+    PathStr = lists:flatten(io_lib:format("~s", [Path])),
+    string:str(PathStr, "data/") > 0;
 is_master_context(_) -> false.
 
 validate_topology(AgentId, Topology) ->

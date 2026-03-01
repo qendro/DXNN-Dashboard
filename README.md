@@ -1,81 +1,79 @@
 # DXNN Analyzer Web Interface
 
-A modern Phoenix LiveView web interface for analyzing DXNN (Deep eXtended Neural Network) trading agents. Provides real-time interactive analysis through your browser with seamless Erlang-Elixir integration.
+A modern Phoenix LiveView web application for analyzing DXNN (Deep eXtended Neural Network) trading agents. Provides real-time interactive analysis of neuroevolution experiments through your browser with seamless Erlang-Elixir integration.
+
+## Overview
+
+DXNN Analyzer Web Interface combines a powerful Erlang-based analysis engine with a modern Phoenix LiveView frontend to provide comprehensive tools for analyzing, comparing, and managing DXNN trading agents across multiple experiments.
+
+**Key Components:**
+- **Erlang Analyzer** (`dxnn_analyzer/`) - Core analysis engine with multi-context support
+- **Phoenix Web Interface** (`dxnn_analyzer_web/`) - Real-time browser-based UI
+- **Master Database** - Centralized repository for elite agents across experiments
 
 ## Features
 
-- **Dashboard**: Load and manage multiple Mnesia contexts from different experiments
-- **Agent Browser**: View, filter, and search agents with real-time updates
-- **Agent Inspector**: Detailed analysis of individual agents including fitness, topology, and evolution history
-- **Topology Viewer**: Visualize neural network structure with sensors, neurons, and actuators
-- **Comparator**: Compare multiple agents side-by-side with similarity analysis
-- **Master Database**: Curate and manage elite agents across all experiments
-  - Select agents from any loaded context
-  - Save to centralized master database
-  - View and manage your collection of best performers
-  - Load master database as a context for analysis
-  - Export for deployment to DXNN-Trader
-- **Real-time Updates**: LiveView provides instant UI updates without page refreshes
+### Analysis & Inspection
+- **Multi-Context Management** - Load and analyze multiple Mnesia databases simultaneously
+- **Agent Browser** - View, filter, and search agents with real-time updates
+- **Deep Inspection** - Detailed analysis of fitness, topology, and evolution history
+- **Topology Visualization** - Interactive neural network structure viewer with D3.js
+- **Mutation Tracking** - Evolution history and mutation pattern analysis
 
-## Quick Start with Docker
+### Comparison & Statistics
+- **Multi-Agent Comparison** - Side-by-side comparison with similarity scoring
+- **Statistical Analysis** - Comprehensive metrics and distribution analysis
+- **Performance Metrics** - Fitness tracking, generation statistics, topology metrics
+
+### Population Management
+- **Master Database** - Curate elite agents across all experiments
+- **Population Builder** - Create new populations from selected agents
+- **Validation** - Comprehensive integrity checks on all outputs
+- **DXNN-Trader Integration** - Full compatibility with DXNN-Trader format
+
+### Real-Time Interface
+- **LiveView Updates** - Instant UI updates without page refreshes
+- **Interactive Dashboard** - Manage contexts and view summaries
+- **Responsive Design** - Modern Tailwind CSS interface
+
+## Quick Start
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- Your DXNN-Trader Mnesia database folders
+- **Docker & Docker Compose** (recommended) OR
+- **Elixir 1.14+**, **Erlang/OTP 26+**, **Node.js 18+**, **Rebar3**
 
-### Run with Docker Compose
+### Option 1: Docker (Recommended)
 
-1. **Clone or navigate to the project directory**
-
-2. **Start the container:**
+1. **Start the application:**
 ```bash
 docker-compose up -d
 ```
 
-3. **Access the interface:**
+2. **Access the interface:**
 Open your browser to `http://localhost:4000`
 
-4. **Load a context:**
+3. **Load a context:**
+   - Navigate to Dashboard
    - Path: `/app/DXNN-Trader-V2/DXNN-Trader-v2/Mnesia.nonode@nohost`
    - Name: `exp1`
+   - Click "Load Context"
 
-### Custom Mnesia Folder Location
-
-Edit `docker-compose.yml` to mount your Mnesia folders:
-
-```yaml
-volumes:
-  - /path/to/your/mnesia:/app/mnesia:ro
-```
-
-Then use path `/app/mnesia/Mnesia.nonode@nohost` in the interface.
-
-### Stop the Container
-
+4. **Stop the application:**
 ```bash
 docker-compose down
 ```
 
-## Local Development Setup
+### Option 2: Local Development
 
-### Prerequisites
-
-- Elixir 1.14+
-- Erlang/OTP 26+
-- Node.js 18+
-- Rebar3
-
-### Installation
-
-1. **Install dependencies:**
+1. **Install Elixir dependencies:**
 ```bash
 cd dxnn_analyzer_web
 mix deps.get
 cd assets && npm install && cd ..
 ```
 
-2. **Compile the Erlang analyzer:**
+2. **Compile Erlang analyzer:**
 ```bash
 cd ../dxnn_analyzer
 rebar3 compile
@@ -91,7 +89,6 @@ mix phx.server
 
 ### Windows Quick Setup
 
-Run the automated setup script:
 ```powershell
 cd dxnn_analyzer_web
 .\setup.ps1
@@ -102,132 +99,136 @@ cd dxnn_analyzer_web
 
 ### Loading Contexts
 
-1. Navigate to the dashboard (`/`)
-2. Enter your Mnesia folder path
-3. Provide a context name (e.g., `exp1`, `experiment_2024`)
+A "context" is a loaded Mnesia database that you can analyze:
+
+1. Navigate to Dashboard (`/`)
+2. Enter Mnesia folder path (e.g., `./Databases/Mnesia.nonode@nohost`)
+3. Provide context name (e.g., `exp1`, `experiment_2024`)
 4. Click "Load Context"
 
-The context will be loaded into memory and you can view its agents.
+The context loads into memory as ETS tables for fast querying. Original Mnesia files remain unchanged.
 
-### Viewing Agents
+### Viewing & Filtering Agents
 
 1. Click "View Agents" on a loaded context
 2. Use filters:
-   - Show best N agents only
-   - Sort by fitness or generation
+   - **Show best N agents** - Display only top performers
+   - **Sort by** - Fitness or generation
+   - **Search** - Filter by ID or properties
 3. Select agents using checkboxes
-4. Click "Inspect" for detailed view or "Topology" for network structure
+4. Actions:
+   - **Inspect** - Detailed agent view
+   - **Topology** - Network structure
+   - **Compare** - Multi-agent comparison
+   - **Save to Master** - Add to master database
+
+### Agent Inspection
+
+View comprehensive agent details:
+- **Basic Info** - ID, fitness, generation, encoding type
+- **Topology Summary** - Sensors, neurons, actuators, layers
+- **Network Statistics** - Connections, depth, width, cycles
+- **Evolution History** - Mutation timeline and patterns
+- **Quick Actions** - View topology, compare with others
+
+### Topology Visualization
+
+Interactive neural network visualization:
+- **Multiple Layouts** - Hierarchical, force-directed, circular
+- **Interactive Nodes** - Click for details, drag to reposition
+- **Connection Weights** - Visual representation of weights
+- **Layer Analysis** - Structure and depth visualization
+- **Zoom & Pan** - Navigate large networks
 
 ### Comparing Agents
 
-1. Select multiple agents (2+) using checkboxes
+Compare multiple agents side-by-side:
+
+1. Select 2+ agents using checkboxes
 2. Click "Compare Selected"
-3. View side-by-side comparison with:
-   - Fitness metrics
-   - Topology statistics
-   - Structural similarity
-   - Evolution history
+3. View comparison:
+   - **Fitness Metrics** - Sorted performance comparison
+   - **Topology Statistics** - Network structure differences
+   - **Structural Similarity** - Similarity matrix (0.0-1.0)
+   - **Evolution History** - Mutation patterns
+   - **Common Mutations** - Shared evolutionary changes
 
 ### Master Database
 
 Build and manage your collection of elite agents:
 
-1. **Save agents to master:**
-   - Load a context and view agents
-   - Select agents using checkboxes
-   - Click "Save to Master Database"
-   - Agents are copied (originals unchanged)
+**Saving Agents:**
+1. Load a context and view agents
+2. Select agents using checkboxes
+3. Click "Save to Master Database"
+4. Agents are copied (originals unchanged)
 
-2. **View master database:**
-   - Click "Master Database" in navigation
-   - See all your curated agents sorted by fitness
-   - Select and remove agents as needed
+**Viewing Master Database:**
+1. Click "Master Database" in navigation
+2. View all curated agents sorted by fitness
+3. Select and remove agents as needed
+4. Load as context for analysis
 
-3. **Use master database:**
-   - Load as context: Enter context name and click "Load as Context"
-   - Deploy to DXNN-Trader: Copy `./data/MasterDatabase/Mnesia.nonode@nohost` to your DXNN-Trader folder
-   - Analyze: Use all analyzer features (inspect, compare, topology)
+**Using Master Database:**
+- **Load as Context** - Analyze using all analyzer features
+- **Deploy to DXNN-Trader** - Copy `./data/MasterDatabase/Mnesia.nonode@nohost` to DXNN-Trader
+- **Export Subset** - Create deployment-ready populations
+- **Backup** - Regularly backup `./data/MasterDatabase/` folder
 
-4. **Best practices:**
-   - Regularly curate after experiments
-   - Keep only truly elite agents
-   - Backup `./data/MasterDatabase/` folder
-   - Use descriptive context names when loading
+**Best Practices:**
+- Curate after each experiment
+- Keep only truly elite agents
+- Use descriptive context names
+- Regular backups of master database
 
-### Agent Inspection
+## Docker Configuration
 
-View detailed information:
-- Basic info (ID, fitness, generation, encoding type)
-- Topology summary (sensors, neurons, actuators, layers)
-- Evolution history
-- Quick actions to view topology
+### Custom Mnesia Folder Location
 
-### Topology Visualization
+Edit `docker-compose.yml` to mount your Mnesia folders:
 
-- Network statistics dashboard
-- Complete list of sensors, neurons, and actuators
-- Layer information
-- Ready for interactive graph visualization (D3.js/Cytoscape.js)
-
-## Architecture
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system architecture, data flow, and component interactions.
-
-### High-Level Overview
-
-```
-Browser (LiveView) 
-    ↓ WebSocket
-Phoenix Server (Elixir)
-    ↓ GenServer
-AnalyzerBridge
-    ↓ Erlang Interop
-DXNN Analyzer (Erlang)
-    ↓ ETS
-Mnesia Database
+```yaml
+volumes:
+  - /path/to/your/mnesia:/app/mnesia:ro
 ```
 
-## Docker Commands
+Then use path `/app/mnesia/Mnesia.nonode@nohost` in the interface.
 
-### Production
+### Environment Variables
+
+Create `.env` file:
 
 ```bash
-# Build and start
-docker-compose up -d
+SECRET_KEY_BASE=your_generated_secret_key_min_64_chars
+PHX_HOST=your-domain.com
+PORT=4000
+```
 
-# View logs
-docker-compose logs -f
-
-# Stop
-docker-compose down
-
-# Rebuild after changes
-docker-compose build
-docker-compose up -d
+Run with custom configuration:
+```bash
+docker-compose --env-file .env up -d
 ```
 
 ### Development with Hot Reload
 
 ```bash
-# Start development container
 docker-compose --profile dev up dxnn_analyzer_dev
-
-# This mounts your source code for live editing
 ```
 
-### Custom Configuration
+This mounts source code for live editing.
 
-Set environment variables in `.env` file:
+### Docker Commands
 
 ```bash
-SECRET_KEY_BASE=your_secret_key_here
-PHX_HOST=your-domain.com
-PORT=4000
-```
+# View logs
+docker-compose logs -f
 
-Then run:
-```bash
-docker-compose --env-file .env up -d
+# Rebuild after changes
+docker-compose build
+docker-compose up -d
+
+# Stop and remove containers
+docker-compose down
 ```
 
 ## Project Structure
@@ -236,23 +237,46 @@ docker-compose --env-file .env up -d
 .
 ├── dxnn_analyzer/              # Erlang analyzer (backend)
 │   ├── src/                    # Erlang source files
+│   │   ├── analyzer.erl            # Main API
+│   │   ├── mnesia_loader.erl       # Context management
+│   │   ├── agent_inspector.erl     # Agent analysis
+│   │   ├── topology_mapper.erl     # Network mapping
+│   │   ├── mutation_analyzer.erl   # Evolution tracking
+│   │   ├── comparator.erl          # Agent comparison
+│   │   ├── stats_collector.erl     # Statistics
+│   │   ├── population_builder.erl  # Population creation
+│   │   └── master_database.erl     # Master DB management
 │   ├── include/                # Header files
+│   │   ├── records.hrl             # Mnesia record definitions
+│   │   └── analyzer_records.hrl    # Analyzer-specific records
+│   ├── priv/examples/          # Example scripts
 │   └── rebar.config            # Erlang build config
 │
 ├── dxnn_analyzer_web/          # Phoenix web interface
 │   ├── lib/
 │   │   └── dxnn_analyzer_web/
-│   │       ├── live/           # LiveView pages
-│   │       ├── components/     # Reusable components
-│   │       ├── analyzer_bridge.ex  # Erlang bridge
-│   │       ├── endpoint.ex     # Phoenix endpoint
-│   │       └── router.ex       # Routes
+│   │       ├── live/               # LiveView pages
+│   │       │   ├── dashboard_live.ex       # Main dashboard
+│   │       │   ├── agent_list_live.ex      # Agent listing
+│   │       │   ├── agent_inspector_live.ex # Agent details
+│   │       │   ├── topology_viewer_live.ex # Network topology
+│   │       │   ├── comparator_live.ex      # Agent comparison
+│   │       │   └── master_database_live.ex # Master DB management
+│   │       ├── components/         # Reusable UI components
+│   │       ├── analyzer_bridge.ex  # Erlang ↔ Elixir bridge
+│   │       ├── application.ex      # Application supervisor
+│   │       ├── endpoint.ex         # Phoenix endpoint
+│   │       └── router.ex           # Route definitions
 │   ├── assets/                 # Frontend assets
-│   │   ├── js/                 # JavaScript
-│   │   └── css/                # Tailwind CSS
+│   │   ├── js/
+│   │   │   ├── app.js              # LiveView JavaScript
+│   │   │   └── network_graph.js    # D3.js visualization
+│   │   └── css/
+│   │       └── app.css             # Tailwind CSS
 │   ├── config/                 # Configuration
 │   └── mix.exs                 # Elixir dependencies
 │
+├── Databases/                  # Sample Mnesia databases
 ├── Dockerfile                  # Production image
 ├── Dockerfile.dev              # Development image
 ├── docker-compose.yml          # Docker orchestration
@@ -289,25 +313,21 @@ analyzer_path = Path.expand("/custom/path/to/ebin")
 
 **Container won't start:**
 ```bash
-# Check logs
 docker-compose logs dxnn_analyzer_web
-
-# Rebuild
 docker-compose build --no-cache
 ```
 
 **Port already in use:**
-```bash
+```yaml
 # Change port in docker-compose.yml
 ports:
   - "4001:4000"
 ```
 
 **Can't access Mnesia files:**
-```bash
-# Check volume mount in docker-compose.yml
-# Ensure path is correct and readable
-```
+- Check volume mount in `docker-compose.yml`
+- Ensure path is correct and readable
+- Verify file permissions
 
 ### Local Development Issues
 
@@ -315,13 +335,14 @@ ports:
 ```bash
 cd dxnn_analyzer
 rebar3 compile
-# Verify ebin/*.beam files exist
+ls ebin/*.beam  # Verify beam files exist
 ```
 
 **"Port 4000 already in use":**
 ```bash
 # Change port in config/dev.exs
-# Or kill process: lsof -ti:4000 | xargs kill
+# Or kill process (Unix): lsof -ti:4000 | xargs kill
+# Windows: netstat -ano | findstr :4000
 ```
 
 **Assets not loading:**
@@ -343,59 +364,40 @@ mix deps.get
 **Context fails to load:**
 - Verify Mnesia path is correct
 - Check file permissions
-- Ensure Mnesia folder contains valid tables
+- Ensure Mnesia folder contains valid tables (*.DCD, *.DAT files)
 
 **Slow performance with large populations:**
 - Use "Show best agents only" filter
 - Limit results to 50-100 agents
-- Consider pagination for 1000+ agents
+- Unload unused contexts to free memory
 
 **WebSocket disconnects:**
 - Check firewall settings
 - Verify network stability
 - Check browser console for errors
 
-## Development
+## Performance Considerations
 
-### Adding New Features
+### Recommended Limits
 
-1. **New LiveView page:**
-   - Create in `lib/dxnn_analyzer_web/live/`
-   - Add route in `router.ex`
-   - Implement `mount/3` and `render/1`
+- **Agents per page:** 50-100
+- **Concurrent contexts:** 5-10
+- **Max agent selection:** 10 for comparison
+- **Context size:** Up to 1000+ agents per context
 
-2. **New analyzer function:**
-   - Add to `analyzer_bridge.ex`
-   - Implement `handle_call/3`
-   - Add data formatting function
+### Optimization Tips
 
-3. **New component:**
-   - Create in `lib/dxnn_analyzer_web/components/`
-   - Use in templates with `<.component_name />`
+1. **Use filters** to reduce data transfer
+2. **Unload unused contexts** to free memory
+3. **Enable pagination** for large populations
+4. **Use "best agents only"** filter
+5. **Load master database** as context for analysis
 
-### Testing
+### Memory Usage
 
-```bash
-# Run tests
-cd dxnn_analyzer_web
-mix test
-
-# Run with coverage
-mix test --cover
-
-# Run specific test
-mix test test/dxnn_analyzer_web/live/dashboard_live_test.exs
-```
-
-### Code Formatting
-
-```bash
-# Format Elixir code
-mix format
-
-# Check formatting
-mix format --check-formatted
-```
+- Each context: ~10-50 MB (depends on population size)
+- Each LiveView connection: ~1-5 MB
+- Erlang analyzer: ~50-200 MB base
 
 ## Production Deployment
 
@@ -423,19 +425,6 @@ docker run -d \
   dxnn_analyzer_web:latest
 ```
 
-### Using Docker Compose (Recommended)
-
-1. Create `.env` file:
-```bash
-SECRET_KEY_BASE=your_generated_secret_key_min_64_chars
-PHX_HOST=your-domain.com
-```
-
-2. Start:
-```bash
-docker-compose up -d
-```
-
 ### Reverse Proxy (Nginx)
 
 ```nginx
@@ -456,47 +445,122 @@ server {
 }
 ```
 
-## Performance Considerations
-
-### Recommended Limits
-
-- **Agents per page:** 50-100
-- **Concurrent contexts:** 5-10
-- **Max agent selection:** 10 for comparison
-
-### Optimization Tips
-
-1. **Use filters** to reduce data transfer
-2. **Unload unused contexts** to free memory
-3. **Enable pagination** for large populations
-4. **Cache frequently accessed data**
-5. **Use "best agents only"** filter
-
-### Memory Usage
-
-- Each context: ~10-50 MB (depends on population size)
-- Each LiveView connection: ~1-5 MB
-- Erlang analyzer: ~50-200 MB base
-
 ## Security
 
 ### Production Checklist
 
-- [ ] Generate secure `SECRET_KEY_BASE`
+- [ ] Generate secure `SECRET_KEY_BASE` (min 64 characters)
 - [ ] Use HTTPS in production
 - [ ] Set proper `PHX_HOST`
 - [ ] Configure firewall rules
 - [ ] Implement authentication (if needed)
 - [ ] Set up monitoring and logging
 - [ ] Regular security updates
-- [ ] Backup Mnesia data
+- [ ] Backup Mnesia data regularly
 
 ### Authentication (Optional)
 
 For adding authentication, consider:
-- [Pow](https://github.com/danschultzer/pow)
-- [Guardian](https://github.com/ueberauth/guardian)
-- [Phx.Gen.Auth](https://hexdocs.pm/phoenix/mix_phx_gen_auth.html)
+- [Pow](https://github.com/danschultzer/pow) - Complete authentication solution
+- [Guardian](https://github.com/ueberauth/guardian) - Token-based authentication
+- [Phx.Gen.Auth](https://hexdocs.pm/phoenix/mix_phx_gen_auth.html) - Phoenix built-in auth
+
+## Development
+
+### Running Tests
+
+```bash
+# Elixir tests
+cd dxnn_analyzer_web
+mix test
+mix test --cover
+
+# Erlang tests
+cd dxnn_analyzer
+rebar3 eunit
+```
+
+### Code Formatting
+
+```bash
+# Format Elixir code
+cd dxnn_analyzer_web
+mix format
+
+# Check formatting
+mix format --check-formatted
+```
+
+### Adding New Features
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed development guide.
+
+## Integration with DXNN-Trader
+
+### Workflow
+
+1. **Run DXNN-Trader experiment**
+2. **Copy Mnesia folder** for analysis
+3. **Load in analyzer** and analyze agents
+4. **Select best agents** based on fitness
+5. **Create elite population** or save to master database
+6. **Copy back to DXNN-Trader** for continued evolution
+
+### Example Workflow
+
+```bash
+# After DXNN experiment
+cp -r DXNN-Trader-V2/DXNN-Trader-v2/Mnesia.nonode@nohost ./experiment_backup/
+
+# Use web interface to:
+# 1. Load context from ./experiment_backup/Mnesia.nonode@nohost
+# 2. Select top 10 agents
+# 3. Save to master database or create new population
+
+# Copy back to DXNN-Trader
+rm -rf DXNN-Trader-V2/DXNN-Trader-v2/Mnesia.nonode@nohost
+cp -r ./data/MasterDatabase/Mnesia.nonode@nohost DXNN-Trader-V2/DXNN-Trader-v2/
+```
+
+## Command-Line Usage (Erlang Analyzer)
+
+For advanced users, the Erlang analyzer can be used directly:
+
+```bash
+cd dxnn_analyzer
+make shell
+```
+
+```erlang
+%% Start analyzer
+analyzer:start().
+
+%% Load context
+analyzer:load("../Databases/Mnesia.nonode@nohost", exp1).
+
+%% Find best agents
+Best = analyzer:find_best(10, [{context, exp1}]).
+
+%% Inspect agent
+[Agent|_] = Best.
+analyzer:inspect(Agent#agent.id, exp1).
+
+%% Create population
+Ids = [A#agent.id || A <- Best].
+analyzer:create_population(Ids, elite, "./output/").
+```
+
+See `dxnn_analyzer/README.md` for complete Erlang API documentation.
+
+## Resources
+
+- [Phoenix Framework](https://www.phoenixframework.org/)
+- [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/)
+- [Elixir](https://elixir-lang.org/)
+- [Erlang](https://www.erlang.org/)
+- [Docker](https://www.docker.com/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [D3.js](https://d3js.org/)
 
 ## Contributing
 
@@ -510,22 +574,14 @@ Contributions welcome! Please:
 
 ## Future Enhancements
 
-- [ ] Interactive topology visualization (D3.js/Cytoscape.js)
+- [ ] Advanced filtering and search capabilities
 - [ ] Real-time evolution monitoring
-- [ ] Population builder wizard
 - [ ] Export reports as PDF
 - [ ] Multi-experiment comparison dashboard
-- [ ] Advanced filtering and search
 - [ ] Mutation timeline visualization
 - [ ] REST API for external tools
-
-## Resources
-
-- [Phoenix Framework](https://www.phoenixframework.org/)
-- [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/)
-- [Elixir](https://elixir-lang.org/)
-- [Erlang](https://www.erlang.org/)
-- [Docker](https://www.docker.com/)
+- [ ] Agent simulation and testing
+- [ ] Performance prediction models
 
 ## License
 
@@ -543,6 +599,7 @@ For issues and questions:
 
 Built for the DXNN-Trader-V2 project, providing a modern web interface for neuroevolution analysis and agent management.
 
-cd C:\Users\qbot7\OneDrive\Documents\DXNN\dxnn_analyzer_web
+---
 
-mix phx.server
+**Version:** 0.1.0  
+**Last Updated:** 2024

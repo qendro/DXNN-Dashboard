@@ -21,6 +21,29 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
   end
 
   @impl true
+  def handle_event("load_all_experiments", _, socket) do
+    experiments = AnalyzerBridge.get_experiments_from_settings()
+    
+    results = Enum.map(experiments, fn exp ->
+      case AnalyzerBridge.load_context(exp.path, exp.name) do
+        {:ok, _} -> {:ok, exp.name}
+        {:error, {:already_loaded, _}} -> {:ok, exp.name}
+        {:error, reason} -> {:error, exp.name, reason}
+      end
+    end)
+    
+    success_count = Enum.count(results, fn r -> match?({:ok, _}, r) end)
+    total_count = length(experiments)
+    
+    socket =
+      socket
+      |> load_experiments()
+      |> put_flash(:info, "Loaded #{success_count} of #{total_count} experiments")
+    
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("refresh", _, socket) do
     {:noreply, load_experiments(socket)}
   end
@@ -68,6 +91,12 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
               ⚙️ Manage Experiments
             </.link>
             <button
+              phx-click="load_all_experiments"
+              class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
+            >
+              📂 Load All
+            </button>
+            <button
               phx-click="refresh"
               class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
             >
@@ -112,7 +141,7 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
                     navigate={~p"/agents?context=#{experiment.name}"}
                     class="block text-center bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700 transition"
                   >
-                    View Agents
+                    View Experiment
                   </.link>
                 </div>
               <% end %>

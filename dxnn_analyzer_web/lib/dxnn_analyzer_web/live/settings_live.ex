@@ -15,6 +15,66 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
   end
 
   @impl true
+  def handle_event("load_all_experiments", _, socket) do
+    experiments = socket.assigns.experiments
+    unloaded_experiments = Enum.filter(experiments, fn exp -> !exp.loaded end)
+    
+    if Enum.empty?(unloaded_experiments) do
+      {:noreply, put_flash(socket, :info, "All experiments are already loaded")}
+    else
+      results = Enum.map(unloaded_experiments, fn exp ->
+        # Check if the path exists and has Mnesia files
+        mnesia_path = Path.join(exp.path, "Mnesia.nonode@nohost")
+        
+        has_mnesia_files = case File.ls(exp.path) do
+          {:ok, files} ->
+            direct_files = Enum.any?(files, fn f -> 
+              String.ends_with?(f, ".DCD") or 
+              String.ends_with?(f, ".DCL") or 
+              String.ends_with?(f, ".DAT")
+            end)
+            
+            subdir_files = case File.ls(mnesia_path) do
+              {:ok, subfiles} ->
+                Enum.any?(subfiles, fn f -> 
+                  String.ends_with?(f, ".DCD") or 
+                  String.ends_with?(f, ".DCL") or 
+                  String.ends_with?(f, ".DAT")
+                end)
+              _ -> false
+            end
+            
+            direct_files or subdir_files
+          _ -> false
+        end
+        
+        if has_mnesia_files do
+          case AnalyzerBridge.load_context(exp.path, exp.name) do
+            {:ok, _} -> {:ok, exp.name}
+            {:error, {:already_loaded, _}} -> {:ok, exp.name}
+            {:error, reason} -> {:error, exp.name, reason}
+          end
+        else
+          case AnalyzerBridge.create_empty_experiment(exp.name) do
+            {:ok, _} -> {:ok, exp.name}
+            {:error, reason} -> {:error, exp.name, reason}
+          end
+        end
+      end)
+      
+      success_count = Enum.count(results, fn r -> match?({:ok, _}, r) end)
+      total_count = length(unloaded_experiments)
+      
+      socket =
+        socket
+        |> load_experiments()
+        |> put_flash(:info, "Loaded #{success_count} of #{total_count} experiments")
+      
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_event("show_add_modal", _, socket) do
     {:noreply, assign(socket, :show_add_modal, true)}
   end
@@ -233,6 +293,12 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
           <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-semibold">Experiments</h2>
             <div class="flex gap-2">
+              <button
+                phx-click="load_all_experiments"
+                class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition"
+              >
+                📂 Load All
+              </button>
               <button
                 phx-click="show_add_modal"
                 class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"

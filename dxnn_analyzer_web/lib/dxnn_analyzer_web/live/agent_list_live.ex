@@ -11,12 +11,13 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
       |> assign(:contexts, all_contexts)
       |> assign(:selected_context, nil)
       |> assign(:agents, [])
+      |> assign(:populations, [])
+      |> assign(:species, [])
       |> assign(:loading, false)
       |> assign(:selected_agents, MapSet.new())
-      |> assign(:show_best_only, false)
-      |> assign(:best_count, 10)
       |> assign(:target_experiment, nil)
       |> assign(:show_copy_modal, false)
+      |> assign(:show_delete_modal, false)
 
     {:ok, socket}
   end
@@ -30,6 +31,7 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
         socket
         |> assign(:selected_context, context)
         |> load_agents(context)
+        |> load_context_details(context)
       else
         socket
       end
@@ -37,10 +39,7 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_event("select_context", %{"context" => context}, socket) do
-    {:noreply, push_patch(socket, to: ~p"/agents?context=#{context}")}
-  end
+
 
   @impl true
   def handle_event("toggle_agent", %{"id" => id_str}, socket) do
@@ -64,35 +63,7 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
     end
   end
 
-  @impl true
-  def handle_event("toggle_best", %{"value" => value}, socket) do
-    show_best = value == "true"
-    socket = assign(socket, :show_best_only, show_best)
 
-    socket =
-      if socket.assigns.selected_context do
-        load_agents(socket, socket.assigns.selected_context)
-      else
-        socket
-      end
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("update_best_count", %{"count" => count}, socket) do
-    {count_int, _} = Integer.parse(count)
-    socket = assign(socket, :best_count, count_int)
-
-    socket =
-      if socket.assigns.show_best_only && socket.assigns.selected_context do
-        load_agents(socket, socket.assigns.selected_context)
-      else
-        socket
-      end
-
-    {:noreply, socket}
-  end
 
   @impl true
   def handle_event("copy_to_experiment", _, socket) do
@@ -100,6 +71,45 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
       {:noreply, put_flash(socket, :error, "No agents selected")}
     else
       {:noreply, assign(socket, :show_copy_modal, true)}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_agents", _, socket) do
+    if MapSet.size(socket.assigns.selected_agents) == 0 do
+      {:noreply, put_flash(socket, :error, "No agents selected")}
+    else
+      {:noreply, assign(socket, :show_delete_modal, true)}
+    end
+  end
+
+  @impl true
+  def handle_event("confirm_delete", _, socket) do
+    if MapSet.size(socket.assigns.selected_agents) == 0 do
+      {:noreply, put_flash(socket, :error, "No agents selected")}
+    else
+      agent_ids = MapSet.to_list(socket.assigns.selected_agents)
+      context = socket.assigns.selected_context
+
+      case AnalyzerBridge.delete_agents(agent_ids, context) do
+        {:ok, count} ->
+          socket =
+            socket
+            |> assign(:selected_agents, MapSet.new())
+            |> assign(:show_delete_modal, false)
+            |> load_agents(context)
+            |> put_flash(:info, "Deleted #{count} agent(s) from #{context}")
+          
+          {:noreply, socket}
+
+        {:error, reason} ->
+          socket =
+            socket
+            |> assign(:show_delete_modal, false)
+            |> put_flash(:error, "Failed to delete agents: #{inspect(reason)}")
+          
+          {:noreply, socket}
+      end
     end
   end
 
@@ -148,17 +158,18 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
 
   @impl true
   def handle_event("close_modal", _, socket) do
-    {:noreply, assign(socket, :show_copy_modal, false)}
+    socket =
+      socket
+      |> assign(:show_copy_modal, false)
+      |> assign(:show_delete_modal, false)
+    
+    {:noreply, socket}
   end
 
   defp load_agents(socket, context) do
     socket = assign(socket, :loading, true)
 
-    result = if socket.assigns.show_best_only do
-      AnalyzerBridge.find_best(socket.assigns.best_count, context: context)
-    else
-      AnalyzerBridge.list_agents(context: context)
-    end
+    result = AnalyzerBridge.list_agents(context: context)
 
     case result do
       {:error, reason} ->
@@ -173,6 +184,24 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
         |> assign(:loading, false)
         |> clear_flash()
     end
+  end
+
+  defp load_context_details(socket, context) do
+    # Load populations
+    populations = case AnalyzerBridge.get_populations(context) do
+      {:ok, pops} -> pops
+      _ -> []
+    end
+
+    # Load species
+    species = case AnalyzerBridge.get_species(context) do
+      {:ok, specs} -> specs
+      _ -> []
+    end
+
+    socket
+    |> assign(:populations, populations)
+    |> assign(:species, species)
   end
 
   defp encode_ids(ids) do
@@ -191,60 +220,72 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
           <.link navigate={~p"/"} class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">
             ← Back to Dashboard
           </.link>
-          <h1 class="text-3xl font-bold text-gray-900">Agent List</h1>
-        </div>
-
-        <!-- Context Selector -->
-        <div class="bg-white shadow rounded-lg p-6 mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Select Experiment</label>
-          <select
-            phx-change="select_context"
-            name="context"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">-- Select an experiment --</option>
-            <%= for context <- @contexts do %>
-              <option value={context.name} selected={context.name == @selected_context}>
-                <%= context.name %> (<%= context.agent_count %> agents)
-              </option>
-            <% end %>
-          </select>
+          <h1 class="text-3xl font-bold text-gray-900">Experiment Details</h1>
+          <%= if @selected_context do %>
+            <p class="text-gray-600 mt-2">Experiment: <span class="font-semibold"><%= @selected_context %></span></p>
+          <% end %>
         </div>
 
         <%= if @selected_context do %>
-          <!-- Filters -->
-          <div class="bg-white shadow rounded-lg p-6 mb-6">
-            <div class="flex items-center gap-6">
-              <div class="flex items-center">
-                <input
-                  type="checkbox"
-                  id="show-best"
-                  phx-click="toggle_best"
-                  phx-value-value={!@show_best_only}
-                  checked={@show_best_only}
-                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label for="show-best" class="ml-2 text-sm text-gray-700">
-                  Show best agents only
-                </label>
+          <!-- Experiment Overview Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- Populations Card -->
+            <.link navigate={~p"/populations?context=#{@selected_context}"} class="block">
+              <div class="bg-white shadow rounded-lg p-4 hover:shadow-lg transition cursor-pointer">
+                <h3 class="text-sm font-medium text-gray-500 mb-2">Populations</h3>
+                <%= if Enum.empty?(@populations) do %>
+                  <p class="text-2xl font-bold text-gray-400">0</p>
+                  <p class="text-xs text-gray-500 mt-1">No populations found</p>
+                <% else %>
+                  <p class="text-2xl font-bold text-gray-900"><%= length(@populations) %></p>
+                  <p class="text-xs text-blue-600 mt-2">Click to view details →</p>
+                <% end %>
               </div>
+            </.link>
 
-              <%= if @show_best_only do %>
-                <div class="flex items-center gap-2">
-                  <label class="text-sm text-gray-700">Count:</label>
-                  <input
-                    type="number"
-                    value={@best_count}
-                    phx-change="update_best_count"
-                    name="count"
-                    min="1"
-                    max="100"
-                    class="w-20 px-2 py-1 border border-gray-300 rounded-md text-sm"
-                  />
+            <!-- Species Card -->
+            <.link navigate={~p"/species?context=#{@selected_context}"} class="block">
+              <div class="bg-white shadow rounded-lg p-4 hover:shadow-lg transition cursor-pointer">
+                <h3 class="text-sm font-medium text-gray-500 mb-2">Species</h3>
+                <%= if Enum.empty?(@species) do %>
+                  <p class="text-2xl font-bold text-gray-400">0</p>
+                  <p class="text-xs text-gray-500 mt-1">No species found</p>
+                <% else %>
+                  <p class="text-2xl font-bold text-gray-900"><%= length(@species) %></p>
+                  <p class="text-xs text-gray-600 mt-1">
+                    Total agents: <%= Enum.sum(Enum.map(@species, & &1.agent_count)) %>
+                  </p>
+                  <p class="text-xs text-blue-600 mt-1">Click to view details →</p>
+                <% end %>
+              </div>
+            </.link>
+
+            <!-- Agents Card -->
+            <div class="bg-white shadow rounded-lg p-4">
+              <h3 class="text-sm font-medium text-gray-500 mb-2">Agents</h3>
+              <p class="text-2xl font-bold text-gray-900"><%= length(@agents) %></p>
+              <%= if !Enum.empty?(@agents) do %>
+                <div class="mt-2">
+                  <p class="text-xs text-gray-600">
+                    Best: <span class="font-semibold"><%= 
+                      @agents 
+                      |> Enum.map(& &1.fitness) 
+                      |> Enum.max() 
+                      |> Float.round(4) 
+                    %></span>
+                  </p>
+                  <p class="text-xs text-gray-600">
+                    Avg: <span class="font-semibold"><%= 
+                      fitnesses = Enum.map(@agents, & &1.fitness)
+                      (Enum.sum(fitnesses) / length(@agents)) |> Float.round(4) 
+                    %></span>
+                  </p>
                 </div>
               <% end %>
             </div>
           </div>
+
+          <h2 class="text-xl font-semibold mb-4">Agents</h2>
 
           <!-- Selected Actions -->
           <%= if MapSet.size(@selected_agents) > 0 do %>
@@ -253,12 +294,21 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
                 <span class="text-sm text-blue-900">
                   <%= MapSet.size(@selected_agents) %> agent(s) selected
                 </span>
-                <button
-                  phx-click="copy_to_experiment"
-                  class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition text-sm"
-                >
-                  Copy to Experiment...
-                </button>
+                <div class="flex gap-2">
+                  <button
+                    phx-click="copy_to_experiment"
+                    class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition text-sm font-medium border border-green-700 shadow-sm"
+                  >
+                    Copy to Experiment...
+                  </button>
+                  <button
+                    phx-click="delete_agents"
+                    class="px-4 py-2 rounded-md text-sm font-medium shadow-sm"
+                    style="background-color: #dc2626 !important; color: white !important; border: 1px solid #b91c1c !important;"
+                  >
+                    Delete Agents
+                  </button>
+                </div>
               </div>
             </div>
           <% end %>
@@ -279,7 +329,7 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
                   <div class="flex gap-2">
                     <button
                       phx-click="close_modal"
-                      class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition"
+                      class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition font-medium border border-gray-400 shadow-sm"
                     >
                       Cancel
                     </button>
@@ -310,6 +360,36 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
                     Cancel
                   </button>
                 <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Delete Confirmation Modal -->
+          <%= if @show_delete_modal do %>
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold mb-4 text-red-600">Delete Agents</h3>
+                <p class="text-sm text-gray-600 mb-4">
+                  Are you sure you want to delete <%= MapSet.size(@selected_agents) %> agent(s) from <span class="font-semibold"><%= @selected_context %></span>?
+                </p>
+                <p class="text-sm text-red-600 mb-6">
+                  This action cannot be undone.
+                </p>
+                <div class="flex gap-2">
+                  <button
+                    phx-click="close_modal"
+                    class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    phx-click="confirm_delete"
+                    class="flex-1 px-4 py-2 rounded-md font-medium shadow-sm"
+                    style="background-color: #dc2626 !important; color: white !important; border: 1px solid #b91c1c !important;"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           <% end %>

@@ -71,7 +71,7 @@ defmodule DxnnAnalyzerWeb.AgentInspectorLive do
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-6">
           <.link navigate={~p"/agents?context=#{@context}"} class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">
-            ← Back to Agent List
+            ← Back to Experiment Details
           </.link>
           <h1 class="text-3xl font-bold text-gray-900">Agent Inspector</h1>
         </div>
@@ -120,11 +120,25 @@ defmodule DxnnAnalyzerWeb.AgentInspectorLive do
                 </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500">Population ID</dt>
-                  <dd class="mt-1 text-sm text-gray-900 font-mono"><%= inspect(@inspection.population_id) %></dd>
+                  <dd class="mt-1 text-sm text-gray-900 font-mono">
+                    <.link
+                      navigate={~p"/populations?context=#{@context}"}
+                      class="text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      <%= inspect(@inspection.population_id) %>
+                    </.link>
+                  </dd>
                 </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500">Specie ID</dt>
-                  <dd class="mt-1 text-sm text-gray-900 font-mono"><%= inspect(@inspection.specie_id) %></dd>
+                  <dd class="mt-1 text-sm text-gray-900 font-mono">
+                    <.link
+                      navigate={~p"/species?context=#{@context}"}
+                      class="text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      <%= inspect(@inspection.specie_id) %>
+                    </.link>
+                  </dd>
                 </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500">Cortex ID</dt>

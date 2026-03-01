@@ -24,6 +24,8 @@ defmodule DxnnAnalyzerWeb.Router do
     live "/topology/:id", TopologyViewerLive, :show
     live "/graph/:id", GraphViewerLive, :show
     live "/compare", ComparatorLive, :index
+    live "/populations", PopulationListLive, :index
+    live "/species", SpecieListLive, :index
   end
 
   if Application.compile_env(:dxnn_analyzer_web, :dev_routes) do

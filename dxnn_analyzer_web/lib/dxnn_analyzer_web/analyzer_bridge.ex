@@ -63,6 +63,22 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
     GenServer.call(__MODULE__, {:get_stats, context}, 30_000)
   end
 
+  def get_populations(context) do
+    GenServer.call(__MODULE__, {:get_populations, context}, 30_000)
+  end
+
+  def get_species(context) do
+    GenServer.call(__MODULE__, {:get_species, context}, 30_000)
+  end
+
+  def get_population(population_id, context) do
+    GenServer.call(__MODULE__, {:get_population, population_id, context}, 30_000)
+  end
+
+  def get_specie(specie_id, context) do
+    GenServer.call(__MODULE__, {:get_specie, specie_id, context}, 30_000)
+  end
+
   def create_empty_master(master_context) do
     GenServer.call(__MODULE__, {:create_empty_master, master_context}, 30_000)
   end
@@ -133,6 +149,10 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
 
   def copy_agents_to_experiment(agent_ids, source_context, target_context) do
     GenServer.call(__MODULE__, {:copy_agents_to_experiment, agent_ids, source_context, target_context}, 60_000)
+  end
+
+  def delete_agents(agent_ids, context) do
+    GenServer.call(__MODULE__, {:delete_agents, agent_ids, context}, 60_000)
   end
 
   def save_experiment(experiment_name, experiment_path) do
@@ -382,6 +402,34 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
   end
 
   @impl true
+  def handle_call({:get_populations, context}, _from, state) do
+    context_atom = String.to_atom(context)
+    result = :context_inspector.get_populations(context_atom)
+    {:reply, format_context_data(result), state}
+  end
+
+  @impl true
+  def handle_call({:get_species, context}, _from, state) do
+    context_atom = String.to_atom(context)
+    result = :context_inspector.get_species(context_atom)
+    {:reply, format_context_data(result), state}
+  end
+
+  @impl true
+  def handle_call({:get_population, population_id, context}, _from, state) do
+    context_atom = String.to_atom(context)
+    result = :context_inspector.get_population(population_id, context_atom)
+    {:reply, format_context_data(result), state}
+  end
+
+  @impl true
+  def handle_call({:get_specie, specie_id, context}, _from, state) do
+    context_atom = String.to_atom(context)
+    result = :context_inspector.get_specie(specie_id, context_atom)
+    {:reply, format_context_data(result), state}
+  end
+
+  @impl true
   def handle_call({:create_empty_master, master_context}, _from, state) do
     master_context_atom = String.to_atom(master_context)
     result = :master_database.create_empty(master_context_atom)
@@ -591,6 +639,49 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
                 # Use master_database.add_to_context to copy agents
                 result = :master_database.add_to_context(agent_ids, source_context_atom, target_context_atom)
                 {:reply, format_result(result), state}
+            end
+        end
+    end
+  end
+
+  @impl true
+  def handle_call({:delete_agents, agent_ids, context}, _from, state) do
+    context_atom = String.to_atom(context)
+    
+    # Check if context exists in ETS
+    case :ets.info(:analyzer_contexts) do
+      :undefined ->
+        {:reply, {:error, "Analyzer not started"}, state}
+      _ ->
+        case :ets.lookup(:analyzer_contexts, context_atom) do
+          [] ->
+            {:reply, {:error, "Context '#{context}' not loaded"}, state}
+          [context_record] ->
+            # Delete each agent from the context
+            try do
+              # Get the table name for agents in this context
+              agent_table = String.to_atom("#{context}_agent")
+              
+              # Delete each agent
+              deleted_count = Enum.reduce(agent_ids, 0, fn agent_id, count ->
+                case :ets.delete(agent_table, agent_id) do
+                  true -> count + 1
+                  false -> count
+                end
+              end)
+              
+              # Update the agent_count in the context record
+              # Context record structure: {mnesia_context, name, path, loaded_at, agent_count, population_count, specie_count, tables}
+              old_count = elem(context_record, 4)
+              new_count = max(0, old_count - deleted_count)
+              updated_context = :erlang.setelement(5, context_record, new_count)
+              :ets.insert(:analyzer_contexts, updated_context)
+              
+              {:reply, {:ok, deleted_count}, state}
+            catch
+              kind, reason ->
+                IO.puts("Error deleting agents: #{inspect(kind)} - #{inspect(reason)}")
+                {:reply, {:error, "Failed to delete agents: #{inspect(reason)}"}, state}
             end
         end
     end
@@ -1052,4 +1143,13 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
 
   defp format_stats(data) when is_map(data), do: data
   defp format_stats(_), do: %{}
+
+  defp format_context_data({:ok, data}) when is_list(data) do
+    {:ok, Enum.map(data, &format_value/1)}
+  end
+  defp format_context_data({:ok, data}) when is_map(data) do
+    {:ok, format_value(data)}
+  end
+  defp format_context_data({:error, reason}), do: {:error, to_string(reason)}
+  defp format_context_data(other), do: other
 end

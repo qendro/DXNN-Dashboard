@@ -162,7 +162,7 @@ analyzer:load → mnesia_loader:load_folder → {ok, ContextRecord}
 | `comparator.erl` | Multi-agent comparison and similarity |
 | `stats_collector.erl` | Aggregate metrics and reports |
 | `population_builder.erl` | Create new populations from selected agents |
-| `master_database.erl` | Manage centralized master database of elite agents |
+| `master_database.erl` | ETS-based master contexts with Mnesia persistence |
 
 ### 5. Data Layer
 
@@ -309,18 +309,21 @@ Persistent Storage (disk)
 ### Implementation Details
 
 **Erlang Module (`master_database.erl`):**
-- `init/1`: Initialize or verify master database
-- `add_agents/3`: Copy agents from source context to master
-- `list_agents/1`: List all agents in master database
-- `remove_agents/2`: Remove agents from master
-- `clear_master/1`: Clear entire master database
+- `load/2`: Load existing master database from Mnesia into ETS context
+- `create_empty/1`: Create empty master context (ETS only, no disk)
+- `add_to_context/3`: Add agents from source context to master context (ETS → ETS)
+- `save/2`: Save master context to Mnesia on disk
+- `export_for_deployment/3`: Export specific agents to new Mnesia database for deployment
+- `list_contexts/0`: List all master contexts
+- `unload/1`: Unload master context
 
 **Bridge Functions:**
-- `init_master_database/1`: Initialize master database
-- `add_to_master/3`: Add agents to master
-- `list_master_agents/1`: List master agents
-- `remove_from_master/2`: Remove from master
-- `load_master_as_context/2`: Load master as context
+- `load_master/2`: Load master database as ETS context
+- `create_empty_master/1`: Create empty master context
+- `add_to_master/3`: Add agents to master context
+- `save_master/2`: Save master context to disk
+- `export_for_deployment/3`: Export agents for deployment
+- `list_master_contexts/0`: List all master contexts
 
 **LiveView Pages:**
 - `MasterDatabaseLive`: View and manage master database
@@ -331,21 +334,23 @@ Persistent Storage (disk)
 ```
 1. Load Context A (experiment 1)
    ↓
-2. Select top 5 agents
+2. Create empty master context "master_elite"
    ↓
-3. Save to Master Database
+3. Select top 5 agents from Context A
    ↓
-4. Load Context B (experiment 2)
+4. Add to master_elite (ETS → ETS, fast)
    ↓
-5. Select top 3 agents
+5. Load Context B (experiment 2)
    ↓
-6. Save to Master Database
+6. Select top 3 agents from Context B
    ↓
-7. View Master Database (8 elite agents)
+7. Add to master_elite (ETS → ETS, fast)
    ↓
-8. Load Master as Context "elite"
+8. Analyze master_elite (8 elite agents, all in ETS)
    ↓
-9. Analyze, compare, or deploy to DXNN-Trader
+9. Save master_elite to disk (ETS → Mnesia)
+   ↓
+10. Deploy to DXNN-Trader or export subset
 ```
 
 ## Concurrency Model

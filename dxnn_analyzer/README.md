@@ -8,6 +8,7 @@ A comprehensive Erlang tool for analyzing, inspecting, and managing DXNN trading
 - Inspect agent structure, topology, and mutations
 - Compare agents across different experiments
 - Create elite populations from best performers
+- Master database: ETS-based contexts with Mnesia persistence
 - Export visualizations and reports
 - Pure Erlang implementation with no external dependencies
 
@@ -86,6 +87,26 @@ analyzer:create_population(
     "./output/",                                     % Output folder
     [{context, exp1}]                               % Options
 ).
+```
+
+### Master Database (Elite Agent Collection)
+```erlang
+%% Create empty master context
+master_database:create_empty(master_elite).
+
+%% Add agents from multiple experiments
+master_database:add_to_context([Id1, Id2], exp1, master_elite).
+master_database:add_to_context([Id3, Id4], exp2, master_elite).
+
+%% Analyze master context (uses standard analyzer functions)
+analyzer:list_agents([{context, master_elite}]).
+analyzer:compare([Id1, Id2, Id3], master_elite).
+
+%% Save to disk when ready
+master_database:save(master_elite, "./data/elite").
+
+%% Export subset for deployment
+master_database:export_for_deployment([Id1, Id2], prod_pop, "./deployment").
 ```
 
 ### Visualization

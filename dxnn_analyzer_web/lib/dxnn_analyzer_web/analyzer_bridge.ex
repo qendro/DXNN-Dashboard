@@ -63,24 +63,28 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
     GenServer.call(__MODULE__, {:get_stats, context}, 30_000)
   end
 
-  def init_master_database(base_path) do
-    GenServer.call(__MODULE__, {:init_master_database, base_path}, 30_000)
+  def create_empty_master(master_context) do
+    GenServer.call(__MODULE__, {:create_empty_master, master_context}, 30_000)
   end
 
-  def add_to_master(agent_ids, source_context, master_path) do
-    GenServer.call(__MODULE__, {:add_to_master, agent_ids, source_context, master_path}, 60_000)
+  def load_master(master_path, master_context) do
+    GenServer.call(__MODULE__, {:load_master, master_path, master_context}, 30_000)
   end
 
-  def list_master_agents(master_path) do
-    GenServer.call(__MODULE__, {:list_master_agents, master_path}, 30_000)
+  def add_to_master(agent_ids, source_context, master_context) do
+    GenServer.call(__MODULE__, {:add_to_master, agent_ids, source_context, master_context}, 60_000)
   end
 
-  def remove_from_master(agent_ids, master_path) do
-    GenServer.call(__MODULE__, {:remove_from_master, agent_ids, master_path}, 30_000)
+  def save_master(master_context, output_path) do
+    GenServer.call(__MODULE__, {:save_master, master_context, output_path}, 60_000)
   end
 
-  def load_master_as_context(master_path, context_name) do
-    GenServer.call(__MODULE__, {:load_master_as_context, master_path, context_name}, 30_000)
+  def export_for_deployment(agent_ids, population_id, output_path) do
+    GenServer.call(__MODULE__, {:export_for_deployment, agent_ids, population_id, output_path}, 60_000)
+  end
+
+  def list_master_contexts do
+    GenServer.call(__MODULE__, :list_master_contexts, 30_000)
   end
 
   # Server Callbacks
@@ -299,41 +303,34 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
   end
 
   @impl true
-  def handle_call({:init_master_database, base_path}, _from, state) do
-    base_path_charlist = String.to_charlist(base_path)
-    result = :master_database.init(base_path_charlist)
-    
-    # Convert result back to string for Elixir
-    formatted_result = case result do
-      {:ok, path_charlist} when is_list(path_charlist) -> 
-        {:ok, List.to_string(path_charlist)}
-      other -> 
-        format_result(other)
-    end
-    
-    {:reply, formatted_result, state}
+  def handle_call({:create_empty_master, master_context}, _from, state) do
+    master_context_atom = String.to_atom(master_context)
+    result = :master_database.create_empty(master_context_atom)
+    {:reply, format_result(result), state}
   end
 
   @impl true
-  def handle_call({:add_to_master, agent_ids, source_context, master_path}, _from, state) do
+  def handle_call({:load_master, master_path, master_context}, _from, state) do
+    master_path_charlist = String.to_charlist(master_path)
+    master_context_atom = String.to_atom(master_context)
+    result = :master_database.load(master_path_charlist, master_context_atom)
+    {:reply, format_result(result), state}
+  end
+
+  @impl true
+  def handle_call({:add_to_master, agent_ids, source_context, master_context}, _from, state) do
     IO.puts("=== Bridge add_to_master ===")
     IO.puts("Agent IDs: #{inspect(agent_ids)}")
     IO.puts("Source context (string): #{inspect(source_context)}")
-    IO.puts("Master path: #{inspect(master_path)}")
+    IO.puts("Master context: #{inspect(master_context)}")
     
     source_context_atom = String.to_atom(source_context)
-    
-    # master_path might already be a charlist from init_master_database
-    master_path_charlist = if is_binary(master_path) do
-      String.to_charlist(master_path)
-    else
-      master_path
-    end
+    master_context_atom = String.to_atom(master_context)
     
     IO.puts("Source context (atom): #{inspect(source_context_atom)}")
-    IO.puts("Master path (charlist): #{inspect(master_path_charlist)}")
+    IO.puts("Master context (atom): #{inspect(master_context_atom)}")
     
-    # Check if context exists in ETS
+    # Check if contexts exist in ETS
     case :ets.info(:analyzer_contexts) do
       :undefined ->
         IO.puts("ERROR: analyzer_contexts table doesn't exist")
@@ -341,42 +338,43 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
       _ ->
         case :ets.lookup(:analyzer_contexts, source_context_atom) do
           [] ->
-            IO.puts("ERROR: Context '#{source_context}' not found in ETS")
-            IO.puts("Available contexts: #{inspect(:ets.tab2list(:analyzer_contexts))}")
+            IO.puts("ERROR: Source context '#{source_context}' not found in ETS")
             {:reply, {:error, "Context '#{source_context}' not loaded"}, state}
-          [context_record] ->
-            IO.puts("Found context: #{inspect(context_record)}")
-            
-            result = :master_database.add_agents(agent_ids, source_context_atom, master_path_charlist)
-            IO.puts("Result from master_database: #{inspect(result)}")
-            {:reply, format_result(result), state}
+          [_context_record] ->
+            case :ets.lookup(:analyzer_contexts, master_context_atom) do
+              [] ->
+                IO.puts("ERROR: Master context '#{master_context}' not found in ETS")
+                {:reply, {:error, "Master context '#{master_context}' not loaded. Create it first with create_empty_master."}, state}
+              [_master_record] ->
+                IO.puts("Both contexts found, calling add_to_context...")
+                result = :master_database.add_to_context(agent_ids, source_context_atom, master_context_atom)
+                IO.puts("Result from master_database: #{inspect(result)}")
+                {:reply, format_result(result), state}
+            end
         end
     end
   end
 
   @impl true
-  def handle_call({:list_master_agents, master_path}, _from, state) do
-    master_path_charlist = String.to_charlist(master_path)
-    result = :master_database.list_agents(master_path_charlist)
-    case result do
-      {:ok, agents} -> {:reply, format_agents(agents), state}
-      {:error, reason} -> {:reply, {:error, to_string(reason)}, state}
-    end
-  end
-
-  @impl true
-  def handle_call({:remove_from_master, agent_ids, master_path}, _from, state) do
-    master_path_charlist = String.to_charlist(master_path)
-    result = :master_database.remove_agents(agent_ids, master_path_charlist)
+  def handle_call({:save_master, master_context, output_path}, _from, state) do
+    master_context_atom = String.to_atom(master_context)
+    output_path_charlist = String.to_charlist(output_path)
+    result = :master_database.save(master_context_atom, output_path_charlist)
     {:reply, format_result(result), state}
   end
 
   @impl true
-  def handle_call({:load_master_as_context, master_path, context_name}, _from, state) do
-    master_path_charlist = String.to_charlist(master_path)
-    context_atom = String.to_atom(context_name)
-    result = :master_database.load_as_context(master_path_charlist, context_atom)
+  def handle_call({:export_for_deployment, agent_ids, population_id, output_path}, _from, state) do
+    population_id_atom = String.to_atom(population_id)
+    output_path_charlist = String.to_charlist(output_path)
+    result = :master_database.export_for_deployment(agent_ids, population_id_atom, output_path_charlist)
     {:reply, format_result(result), state}
+  end
+
+  @impl true
+  def handle_call(:list_master_contexts, _from, state) do
+    result = :master_database.list_contexts()
+    {:reply, format_contexts(result), state}
   end
 
   # Helper Functions

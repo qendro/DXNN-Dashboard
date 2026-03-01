@@ -116,30 +116,46 @@ defmodule DxnnAnalyzerWeb.AgentListLive do
       IO.puts("Context: #{inspect(context)}")
       IO.puts("Agent IDs: #{inspect(agent_ids)}")
 
-      # Initialize master database if needed - pass the base path without "MasterDatabase"
-      case AnalyzerBridge.init_master_database("./data") do
-        {:ok, path} ->
-          IO.puts("Master database initialized at: #{path}")
+      # Create or use existing master context
+      master_context = "master"
+      
+      # Try to create empty master context (will return existing if already exists)
+      case AnalyzerBridge.create_empty_master(master_context) do
+        {:ok, _} ->
+          IO.puts("Master context ready")
+        {:error, reason} ->
+          IO.puts("Error with master context: #{inspect(reason)}")
+      end
+      
+      # Add agents to master context
+      case AnalyzerBridge.add_to_master(agent_ids, context, master_context) do
+        {:ok, count} ->
+          IO.puts("Successfully added #{count} agents")
           
-          # Add agents to master
-          case AnalyzerBridge.add_to_master(agent_ids, context, path) do
-            {:ok, count} ->
-              IO.puts("Successfully added #{count} agents")
+          # Save master context to disk
+          case AnalyzerBridge.save_master(master_context, "./data/MasterDatabase") do
+            {:ok, _path} ->
               socket =
                 socket
                 |> assign(:selected_agents, MapSet.new())
-                |> put_flash(:info, "Successfully added #{count} agent(s) to master database")
+                |> put_flash(:info, "Successfully added #{count} agent(s) to master database and saved to disk")
 
               {:noreply, socket}
-
-            {:error, reason} ->
-              IO.puts("Error adding to master: #{inspect(reason)}")
-              {:noreply, put_flash(socket, :error, "Failed to save: #{inspect(reason)}")}
+            
+            {:error, save_reason} ->
+              IO.puts("Error saving master: #{inspect(save_reason)}")
+              # Still consider it a success since agents were added to context
+              socket =
+                socket
+                |> assign(:selected_agents, MapSet.new())
+                |> put_flash(:info, "Added #{count} agent(s) to master context (save to disk failed: #{inspect(save_reason)})")
+              
+              {:noreply, socket}
           end
 
         {:error, reason} ->
-          IO.puts("Error initializing master: #{inspect(reason)}")
-          {:noreply, put_flash(socket, :error, "Failed to initialize master database: #{inspect(reason)}")}
+          IO.puts("Error adding to master: #{inspect(reason)}")
+          {:noreply, put_flash(socket, :error, "Failed to add agents: #{inspect(reason)}")}
       end
     end
   end

@@ -1,423 +1,420 @@
 -module(master_database).
 -export([
-    init/1,
-    add_agents/3,
-    load_as_context/2,
-    list_agents/1,
-    remove_agents/2,
-    clear_master/1,
-    debug_check_source/2
+    load/2,
+    create_empty/1,
+    add_to_context/3,
+    save/2,
+    export_for_deployment/3,
+    list_contexts/0,
+    unload/1
 ]).
 
 -include("../include/records.hrl").
 -include("../include/analyzer_records.hrl").
 
-%% @doc Initialize master database as DETS files
-init(BasePath) ->
-    MasterPath = filename:join(BasePath, "MasterDatabase"),
-    filelib:ensure_dir(MasterPath ++ "/"),
-    
-    io:format("Initializing master database at: ~s~n", [MasterPath]),
-    
-    %% Create DETS files for each table
-    %% Core tables: agent topology
-    %% Optional tables: population, specie (for compatibility with analyzer loader)
-    %% Use duplicate_bag to allow multiple records with same key (like ETS bag)
-    Tables = [agent, cortex, neuron, sensor, actuator, substrate, population, specie],
-    lists:foreach(fun(Table) ->
-        DetsFile = filename:join(MasterPath, atom_to_list(Table) ++ ".dets"),
-        %% Use duplicate_bag to match ETS bag behavior
-        case dets:open_file(Table, [{file, DetsFile}, {type, duplicate_bag}]) of
-            {ok, _} -> 
-                dets:close(Table),
-                io:format("  Initialized table: ~p~n", [Table]);
-            {error, Reason} ->
-                io:format("  Error initializing table ~p: ~p~n", [Table, Reason])
-        end
-    end, Tables),
-    
-    io:format("Master database initialized successfully~n"),
-    {ok, MasterPath}.
+%% ============================================================================
+%% Master Database: ETS-Based Implementation with Mnesia Persistence
+%% ============================================================================
 
-%% @doc Add agents to master database (DETS)
-add_agents(AgentIds, SourceContext, MasterPath) ->
-    io:format("Adding ~w agents to master database from context ~p~n", [length(AgentIds), SourceContext]),
+%% @doc Load existing master database from Mnesia into ETS context
+load(MnesiaPath, MasterContext) ->
+    io:format("Loading master database from ~s as context ~p~n", [MnesiaPath, MasterContext]),
     
-    %% Fetch all agent data from source context (ETS tables)
-    io:format("Fetching agents from source context...~n"),
-    AgentData = lists:map(fun(AgentId) ->
-        case agent_inspector:get_full_topology(AgentId, SourceContext) of
-            {error, Reason} ->
-                io:format("  Error fetching agent ~p: ~p~n", [AgentId, Reason]),
-                {error, AgentId, Reason};
-            Topology ->
-                %% Validate topology has all required components
-                Agent = maps:get(agent, Topology),
-                Cortex = maps:get(cortex, Topology),
-                Neurons = maps:get(neurons, Topology),
-                Sensors = maps:get(sensors, Topology),
-                Actuators = maps:get(actuators, Topology),
-                
-                %% Check for undefined values
-                UndefinedNeurons = length([N || N <- Neurons, N =:= undefined]),
-                UndefinedSensors = length([S || S <- Sensors, S =:= undefined]),
-                UndefinedActuators = length([A || A <- Actuators, A =:= undefined]),
-                
-                if
-                    UndefinedNeurons > 0 ->
-                        io:format("  WARNING: Agent ~p has ~w undefined neurons!~n", [AgentId, UndefinedNeurons]);
-                    true -> ok
-                end,
-                if
-                    UndefinedSensors > 0 ->
-                        io:format("  WARNING: Agent ~p has ~w undefined sensors!~n", [AgentId, UndefinedSensors]);
-                    true -> ok
-                end,
-                if
-                    UndefinedActuators > 0 ->
-                        io:format("  WARNING: Agent ~p has ~w undefined actuators!~n", [AgentId, UndefinedActuators]);
-                    true -> ok
-                end,
-                
-                io:format("  Fetched agent ~p: ~w neurons, ~w sensors, ~w actuators~n", 
-                         [AgentId, length(Neurons) - UndefinedNeurons, 
-                          length(Sensors) - UndefinedSensors, 
-                          length(Actuators) - UndefinedActuators]),
-                {ok, AgentId, Topology}
-        end
-    end, AgentIds),
+    MnesiaDir = filename:join(MnesiaPath, "Mnesia.nonode@nohost"),
+    case filelib:is_dir(MnesiaDir) of
+        false ->
+            io:format("Master database not found, creating empty context~n"),
+            create_empty(MasterContext);
+        true ->
+            dxnn_mnesia_loader:load_folder(MnesiaDir, MasterContext)
+    end.
+
+%% @doc Create empty master context (ETS only, no disk)
+create_empty(MasterContext) ->
+    io:format("Creating empty master context: ~p~n", [MasterContext]),
     
-    %% Check for fetch errors
-    FetchErrors = [{Id, R} || {error, Id, R} <- AgentData],
-    case FetchErrors of
-        [] ->
-            %% All agents fetched, now write to DETS
-            io:format("Writing ~w agents to master database...~n", [length(AgentData)]),
-            write_agents_to_dets(AgentData, MasterPath);
+    %% Check if context already exists
+    case dxnn_mnesia_loader:get_context(MasterContext) of
+        {ok, ExistingContext} ->
+            io:format("Master context '~p' already exists~n", [MasterContext]),
+            {ok, ExistingContext};
+        {error, context_not_found} ->
+            %% Create new context
+            Tables = [agent, cortex, neuron, sensor, actuator, substrate, population, specie],
+            EtsTables = lists:map(fun(TableName) ->
+                EtsName = dxnn_mnesia_loader:table_name(MasterContext, TableName),
+                %% Check if table already exists
+                case ets:info(EtsName) of
+                    undefined ->
+                        ets:new(EtsName, [named_table, public, bag, {keypos, 2}]);
+                    _ ->
+                        io:format("  Table ~p already exists, reusing~n", [EtsName])
+                end,
+                EtsName
+            end, Tables),
+            
+            Context = #mnesia_context{
+                name = MasterContext,
+                path = undefined,
+                loaded_at = erlang:timestamp(),
+                agent_count = 0,
+                population_count = 0,
+                specie_count = 0,
+                tables = EtsTables
+            },
+            
+            case ets:info(analyzer_contexts) of
+                undefined ->
+                    ets:new(analyzer_contexts, [named_table, public, set, {keypos, 2}]);
+                _ -> ok
+            end,
+            
+            ets:insert(analyzer_contexts, Context),
+            
+            io:format("Empty master context '~p' created~n", [MasterContext]),
+            {ok, Context}
+    end.
+
+%% @doc Add agents from source context to master context (ETS → ETS)
+add_to_context(AgentIds, SourceContext, MasterContext) ->
+    io:format("Adding ~w agents from ~p to ~p~n", 
+              [length(AgentIds), SourceContext, MasterContext]),
+    
+    case dxnn_mnesia_loader:get_context(MasterContext) of
+        {error, context_not_found} ->
+            {error, {master_context_not_loaded, MasterContext}};
+        {ok, _} ->
+            io:format("Fetching agents from source context (ETS)...~n"),
+            AgentData = lists:map(fun(AgentId) ->
+                case agent_inspector:get_full_topology(AgentId, SourceContext) of
+                    {error, Reason} ->
+                        io:format("  Error fetching agent ~p: ~p~n", [AgentId, Reason]),
+                        {error, AgentId, Reason};
+                    Topology ->
+                        case validate_topology(AgentId, Topology) of
+                            [] ->
+                                io:format("  Fetched agent ~p: valid~n", [AgentId]),
+                                {ok, AgentId, Topology};
+                            Errors ->
+                                io:format("  Agent ~p has errors: ~p~n", [AgentId, Errors]),
+                                {error, AgentId, {validation_failed, Errors}}
+                        end
+                end
+            end, AgentIds),
+            
+            Errors = [{Id, R} || {error, Id, R} <- AgentData],
+            case Errors of
+                [] ->
+                    ValidTopologies = [{Id, T} || {ok, Id, T} <- AgentData],
+                    write_to_ets_context(ValidTopologies, MasterContext);
+                _ ->
+                    io:format("Failed to fetch/validate ~w agents~n", [length(Errors)]),
+                    {error, {fetch_failed, Errors}}
+            end
+    end.
+
+%% @doc Save master context to Mnesia on disk
+save(MasterContext, OutputPath) ->
+    io:format("Saving master context ~p to ~s~n", [MasterContext, OutputPath]),
+    
+    case dxnn_mnesia_loader:get_context(MasterContext) of
+        {error, context_not_found} ->
+            {error, {context_not_found, MasterContext}};
+        {ok, Context} ->
+            MnesiaDir = filename:join(OutputPath, "Mnesia.nonode@nohost"),
+            filelib:ensure_dir(MnesiaDir ++ "/"),
+            save_ets_to_mnesia(Context, MnesiaDir)
+    end.
+
+%% @doc Export specific agents to new Mnesia database for deployment
+export_for_deployment(AgentIds, PopulationId, OutputPath) ->
+    io:format("Exporting ~w agents for deployment...~n", [length(AgentIds)]),
+    
+    MasterContext = master,
+    
+    case dxnn_mnesia_loader:get_context(MasterContext) of
+        {error, context_not_found} ->
+            {error, {master_not_loaded, "Load master database first"}};
+        {ok, _} ->
+            io:format("Fetching ~w agents from master context...~n", [length(AgentIds)]),
+            Topologies = lists:map(fun(AgentId) ->
+                case agent_inspector:get_full_topology(AgentId, MasterContext) of
+                    {error, Reason} ->
+                        io:format("  Error fetching agent ~p: ~p~n", [AgentId, Reason]),
+                        {error, AgentId, Reason};
+                    Topology ->
+                        {ok, AgentId, Topology}
+                end
+            end, AgentIds),
+            
+            Errors = [{Id, R} || {error, Id, R} <- Topologies],
+            case Errors of
+                [] ->
+                    ValidTopologies = [{Id, T} || {ok, Id, T} <- Topologies],
+                    create_deployment_database(ValidTopologies, PopulationId, OutputPath);
+                _ ->
+                    {error, {fetch_failed, Errors}}
+            end
+    end.
+
+%% @doc List all master contexts
+list_contexts() ->
+    case ets:info(analyzer_contexts) of
+        undefined -> [];
         _ ->
-            io:format("Failed to fetch ~w agents: ~p~n", [length(FetchErrors), FetchErrors]),
-            {error, {fetch_failed, FetchErrors}}
+            AllContexts = ets:tab2list(analyzer_contexts),
+            [C || C <- AllContexts, is_master_context(C)]
     end.
 
-%% Write agents to DETS files
-write_agents_to_dets(AgentData, MasterPath) ->
-    try
-        %% Open all DETS files
-        Tables = [
-            {agent, filename:join(MasterPath, "agent.dets")},
-            {cortex, filename:join(MasterPath, "cortex.dets")},
-            {neuron, filename:join(MasterPath, "neuron.dets")},
-            {sensor, filename:join(MasterPath, "sensor.dets")},
-            {actuator, filename:join(MasterPath, "actuator.dets")},
-            {substrate, filename:join(MasterPath, "substrate.dets")},
-            {population, filename:join(MasterPath, "population.dets")},
-            {specie, filename:join(MasterPath, "specie.dets")}
-        ],
-        
-        %% Open all tables with duplicate_bag type
-        lists:foreach(fun({Table, File}) ->
-            {ok, _} = dets:open_file(Table, [{file, File}, {type, duplicate_bag}])
-        end, Tables),
-        
-        %% Write each agent
-        Results = lists:map(fun({ok, AgentId, Topology}) ->
-            write_agent_to_dets(AgentId, Topology)
-        end, AgentData),
-        
-        %% Close all DETS files
-        lists:foreach(fun({Table, _}) ->
-            dets:close(Table)
-        end, Tables),
-        
-        SuccessCount = length([ok || {ok, _} <- Results]),
-        io:format("Successfully added ~w agents to master database~n", [SuccessCount]),
-        {ok, SuccessCount}
-    catch
-        Error:Reason:Stack ->
-            io:format("Error writing to DETS: ~p:~p~n~p~n", [Error, Reason, Stack]),
-            {error, {dets_write_failed, Reason}}
-    end.
+%% @doc Unload master context
+unload(MasterContext) ->
+    dxnn_mnesia_loader:unload_context(MasterContext).
 
-write_agent_to_dets(AgentId, Topology) ->
-    try
-        %% Check if agent already exists
-        case dets:lookup(agent, AgentId) of
-            [_] ->
-                io:format("  Agent ~p already exists, skipping~n", [AgentId]),
-                {ok, skipped};
+%% ============================================================================
+%% Internal Functions
+%% ============================================================================
+
+is_master_context(#mnesia_context{path = undefined}) -> true;
+is_master_context(#mnesia_context{path = Path}) ->
+    string:str(Path, "MasterDatabase") > 0 orelse
+    string:str(Path, "data/") > 0;
+is_master_context(_) -> false.
+
+validate_topology(AgentId, Topology) ->
+    Errors = [],
+    
+    Neurons = maps:get(neurons, Topology),
+    UndefinedNeurons = [N || N <- Neurons, N =:= undefined],
+    Errors1 = case UndefinedNeurons of
+        [] -> Errors;
+        _ -> [{AgentId, {undefined_neurons, length(UndefinedNeurons)}} | Errors]
+    end,
+    
+    NeuronIds = [N#neuron.id || N <- Neurons, N =/= undefined],
+    Duplicates = NeuronIds -- lists:usort(NeuronIds),
+    Errors2 = case Duplicates of
+        [] -> Errors1;
+        _ -> [{AgentId, {duplicate_neuron_ids, Duplicates}} | Errors1]
+    end,
+    
+    Cortex = maps:get(cortex, Topology),
+    ExpectedNeuronIds = Cortex#cortex.neuron_ids,
+    ActualNeuronIds = lists:usort(NeuronIds),
+    Missing = ExpectedNeuronIds -- ActualNeuronIds,
+    Errors3 = case Missing of
+        [] -> Errors2;
+        _ -> [{AgentId, {missing_neurons, Missing}} | Errors2]
+    end,
+    
+    Errors3.
+
+filter_undefined(List) ->
+    [X || X <- List, X =/= undefined].
+
+write_to_ets_context(AgentData, MasterContext) ->
+    io:format("Writing ~w agents to master context (ETS)...~n", [length(AgentData)]),
+    
+    lists:foreach(fun({AgentId, Topology}) ->
+        AgentTable = dxnn_mnesia_loader:table_name(MasterContext, agent),
+        case ets:lookup(AgentTable, AgentId) of
+            [_|_] ->
+                io:format("  Agent ~p already exists, skipping~n", [AgentId]);
             [] ->
-                %% Write all components, filtering out undefined values
                 Agent = maps:get(agent, Topology),
-                dets:insert(agent, Agent),
-                io:format("  Wrote agent ~p~n", [AgentId]),
-                
                 Cortex = maps:get(cortex, Topology),
-                dets:insert(cortex, Cortex),
-                io:format("    Wrote cortex ~p~n", [Cortex#cortex.id]),
+                Neurons = filter_undefined(maps:get(neurons, Topology)),
+                Sensors = filter_undefined(maps:get(sensors, Topology)),
+                Actuators = filter_undefined(maps:get(actuators, Topology)),
                 
-                %% Filter out undefined neurons
-                Neurons = lists:filter(fun(N) -> N =/= undefined end, maps:get(neurons, Topology)),
-                io:format("    Writing ~w neurons...~n", [length(Neurons)]),
-                lists:foreach(fun(N) ->
-                    dets:insert(neuron, N)
-                end, Neurons),
+                ets:insert(AgentTable, Agent),
+                ets:insert(dxnn_mnesia_loader:table_name(MasterContext, cortex), Cortex),
                 
-                %% Filter out undefined sensors
-                Sensors = lists:filter(fun(S) -> S =/= undefined end, maps:get(sensors, Topology)),
-                io:format("    Writing ~w sensors...~n", [length(Sensors)]),
-                lists:foreach(fun(S) ->
-                    dets:insert(sensor, S)
-                end, Sensors),
+                NeuronTable = dxnn_mnesia_loader:table_name(MasterContext, neuron),
+                lists:foreach(fun(N) -> ets:insert(NeuronTable, N) end, Neurons),
                 
-                %% Filter out undefined actuators
-                Actuators = lists:filter(fun(A) -> A =/= undefined end, maps:get(actuators, Topology)),
-                io:format("    Writing ~w actuators...~n", [length(Actuators)]),
-                lists:foreach(fun(A) ->
-                    dets:insert(actuator, A)
-                end, Actuators),
+                SensorTable = dxnn_mnesia_loader:table_name(MasterContext, sensor),
+                lists:foreach(fun(S) -> ets:insert(SensorTable, S) end, Sensors),
+                
+                ActuatorTable = dxnn_mnesia_loader:table_name(MasterContext, actuator),
+                lists:foreach(fun(A) -> ets:insert(ActuatorTable, A) end, Actuators),
                 
                 case maps:get(substrate, Topology) of
-                    undefined -> 
-                        io:format("    No substrate~n");
-                    Substrate -> 
-                        dets:insert(substrate, Substrate),
-                        io:format("    Wrote substrate ~p~n", [Substrate#substrate.id])
+                    undefined -> ok;
+                    Sub -> 
+                        SubTable = dxnn_mnesia_loader:table_name(MasterContext, substrate),
+                        ets:insert(SubTable, Sub)
                 end,
                 
-                io:format("  Successfully wrote agent ~p with all components~n", [AgentId]),
-                {ok, copied}
+                io:format("  Wrote agent ~p: ~w neurons, ~w sensors, ~w actuators~n",
+                         [AgentId, length(Neurons), length(Sensors), length(Actuators)])
         end
-    catch
-        Error:WriteReason:Stack ->
-            io:format("  Error writing agent ~p: ~p:~p~n~p~n", [AgentId, Error, WriteReason, Stack]),
-            {error, {AgentId, WriteReason}}
-    end.
-
-%% @doc Load master database as a context (DETS -> ETS)
-load_as_context(MasterPath, ContextName) ->
-    io:format("Loading master database as context: ~p~n", [ContextName]),
+    end, AgentData),
     
-    try
-        %% Create ETS tables for this context
-        %% Use 'bag' type to match source context behavior (allows multiple records per key)
-        Tables = [agent, cortex, neuron, sensor, actuator, substrate, population, specie],
-        EtsTables = lists:map(fun(TableName) ->
-            EtsName = dxnn_mnesia_loader:table_name(ContextName, TableName),
-            ets:new(EtsName, [named_table, public, bag, {keypos, 2}]),
-            {TableName, EtsName}
-        end, Tables),
-        
-        %% Load data from DETS to ETS
-        lists:foreach(fun(Table) ->
-            DetsFile = filename:join(MasterPath, atom_to_list(Table) ++ ".dets"),
-            case filelib:is_file(DetsFile) of
-                true ->
-                    {ok, _} = dets:open_file(Table, [{file, DetsFile}, {type, duplicate_bag}]),
-                    EtsTable = dxnn_mnesia_loader:table_name(ContextName, Table),
-                    
-                    %% Copy all records from DETS to ETS
-                    dets:traverse(Table, fun(Record) ->
-                        ets:insert(EtsTable, Record),
-                        continue
-                    end),
-                    
-                    RecordCount = ets:info(EtsTable, size),
-                    dets:close(Table),
-                    io:format("  Loaded ~p records from ~p~n", [RecordCount, Table]);
-                false ->
-                    io:format("  No DETS file for ~p, skipping~n", [Table])
-            end
-        end, Tables),
-        
-        %% Count agents
-        AgentTable = dxnn_mnesia_loader:table_name(ContextName, agent),
-        AgentCount = ets:info(AgentTable, size),
-        
-        %% Create context record
-        Context = #mnesia_context{
-            name = ContextName,
-            path = MasterPath,
-            loaded_at = erlang:timestamp(),
-            agent_count = AgentCount,
-            population_count = 0,
-            specie_count = 0,
-            tables = [T || {_, T} <- EtsTables]
-        },
-        
-        %% Store context
-        case ets:info(analyzer_contexts) of
-            undefined ->
-                ets:new(analyzer_contexts, [named_table, public, set]);
-            _ -> ok
-        end,
-        ets:insert(analyzer_contexts, Context),
-        
-        io:format("Master database loaded as context '~p' with ~w agents~n", [ContextName, AgentCount]),
-        {ok, Context}
-    catch
-        Error:Reason:Stack ->
-            io:format("Error loading master as context: ~p:~p~n~p~n", [Error, Reason, Stack]),
-            {error, {load_failed, Reason}}
-    end.
+    AgentTable = dxnn_mnesia_loader:table_name(MasterContext, agent),
+    NewCount = ets:info(AgentTable, size),
+    case ets:lookup(analyzer_contexts, MasterContext) of
+        [Context] ->
+            UpdatedContext = Context#mnesia_context{agent_count = NewCount},
+            ets:insert(analyzer_contexts, UpdatedContext);
+        [] -> ok
+    end,
+    
+    io:format("Successfully added ~w agents to master context~n", [length(AgentData)]),
+    {ok, length(AgentData)}.
 
-%% @doc List all agents in master database
-list_agents(MasterPath) ->
-    DetsFile = filename:join(MasterPath, "agent.dets"),
-    case filelib:is_file(DetsFile) of
+save_ets_to_mnesia(Context, MnesiaDir) ->
+    io:format("Saving to Mnesia directory: ~s~n", [MnesiaDir]),
+    
+    CurrentDir = case application:get_env(mnesia, dir) of
+        {ok, Dir} -> Dir;
+        undefined -> undefined
+    end,
+    
+    NeedRestart = CurrentDir =/= MnesiaDir,
+    
+    if
+        NeedRestart ->
+            application:stop(mnesia),
+            application:set_env(mnesia, dir, MnesiaDir);
         true ->
-            {ok, _} = dets:open_file(master_agent, [{file, DetsFile}, {type, duplicate_bag}]),
-            Agents = dets:foldl(fun(Agent, Acc) -> [Agent | Acc] end, [], master_agent),
-            dets:close(master_agent),
-            {ok, Agents};
+            ok
+    end,
+    
+    SchemaFile = filename:join(MnesiaDir, "schema.DAT"),
+    case filelib:is_file(SchemaFile) of
         false ->
-            {ok, []}
-    end.
+            io:format("Creating new Mnesia schema~n"),
+            mnesia:create_schema([node()]);
+        true ->
+            io:format("Using existing Mnesia schema~n")
+    end,
+    
+    if
+        NeedRestart ->
+            mnesia:start();
+        true ->
+            ok
+    end,
+    
+    create_mnesia_tables(),
+    
+    Tables = [agent, cortex, neuron, sensor, actuator, substrate, population, specie],
+    
+    %% Write data outside of transaction to avoid nested transaction issues
+    io:format("Copying data from ETS to Mnesia...~n"),
+    lists:foreach(fun(TableName) ->
+        mnesia:clear_table(TableName),
+        
+        EtsTable = dxnn_mnesia_loader:table_name(Context#mnesia_context.name, TableName),
+        
+        %% Write each record individually using dirty operations
+        Count = ets:foldl(fun(Record, Acc) ->
+            mnesia:dirty_write(Record),
+            Acc + 1
+        end, 0, EtsTable),
+        
+        io:format("  Saved ~w records to ~p~n", [Count, TableName])
+    end, Tables),
+    
+    io:format("Master context saved successfully to: ~s~n", [MnesiaDir]),
+    {ok, MnesiaDir}.
 
-%% @doc Remove agents from master database
-remove_agents(AgentIds, MasterPath) ->
-    try
-        %% Open DETS files
-        Tables = [
-            {agent, filename:join(MasterPath, "agent.dets")},
-            {cortex, filename:join(MasterPath, "cortex.dets")},
-            {neuron, filename:join(MasterPath, "neuron.dets")},
-            {sensor, filename:join(MasterPath, "sensor.dets")},
-            {actuator, filename:join(MasterPath, "actuator.dets")},
-            {substrate, filename:join(MasterPath, "substrate.dets")}
-        ],
-        
-        lists:foreach(fun({Table, File}) ->
-            case filelib:is_file(File) of
-                true -> {ok, _} = dets:open_file(Table, [{file, File}, {type, duplicate_bag}]);
-                false -> ok
-            end
-        end, Tables),
-        
-        %% Delete each agent and its components
-        lists:foreach(fun(AgentId) ->
-            case dets:lookup(agent, AgentId) of
-                [Agent] ->
-                    %% Get cortex to find all components
-                    CxId = Agent#agent.cx_id,
-                    case dets:lookup(cortex, CxId) of
-                        [Cortex] ->
-                            %% Delete neurons
-                            lists:foreach(fun(NId) ->
-                                dets:delete(neuron, NId)
-                            end, Cortex#cortex.neuron_ids),
-                            
-                            %% Delete sensors
-                            lists:foreach(fun(SId) ->
-                                dets:delete(sensor, SId)
-                            end, Cortex#cortex.sensor_ids),
-                            
-                            %% Delete actuators
-                            lists:foreach(fun(AId) ->
-                                dets:delete(actuator, AId)
-                            end, Cortex#cortex.actuator_ids),
-                            
-                            %% Delete cortex
-                            dets:delete(cortex, CxId);
-                        [] -> ok
-                    end,
-                    
-                    %% Delete substrate if exists
-                    case Agent#agent.substrate_id of
-                        undefined -> ok;
-                        SubId -> dets:delete(substrate, SubId)
-                    end,
-                    
-                    %% Delete agent
-                    dets:delete(agent, AgentId);
-                [] -> ok
-            end
-        end, AgentIds),
-        
-        %% Close all DETS files
-        lists:foreach(fun({Table, _}) ->
-            dets:close(Table)
-        end, Tables),
-        
-        {ok, length(AgentIds)}
-    catch
-        Error:Reason:Stack ->
-            io:format("Error removing agents: ~p:~p~n~p~n", [Error, Reason, Stack]),
-            {error, {remove_failed, Reason}}
-    end.
-
-%% @doc Clear all agents from master database
-clear_master(MasterPath) ->
-    Tables = [agent, cortex, neuron, sensor, actuator, substrate],
-    lists:foreach(fun(Table) ->
-        DetsFile = filename:join(MasterPath, atom_to_list(Table) ++ ".dets"),
-        case filelib:is_file(DetsFile) of
-            true -> file:delete(DetsFile);
-            false -> ok
+create_mnesia_tables() ->
+    Tables = [
+        {agent, record_info(fields, agent)},
+        {cortex, record_info(fields, cortex)},
+        {neuron, record_info(fields, neuron)},
+        {sensor, record_info(fields, sensor)},
+        {actuator, record_info(fields, actuator)},
+        {substrate, record_info(fields, substrate)},
+        {population, record_info(fields, population)},
+        {specie, record_info(fields, specie)}
+    ],
+    
+    lists:foreach(fun({TableName, Fields}) ->
+        case mnesia:create_table(TableName, [
+            {disc_copies, [node()]},
+            {attributes, Fields},
+            {type, bag},
+            {record_name, TableName}
+        ]) of
+            {atomic, ok} -> 
+                io:format("  Created table: ~p~n", [TableName]);
+            {aborted, {already_exists, _}} ->
+                ok;
+            {aborted, Reason} ->
+                io:format("  Error creating table ~p: ~p~n", [TableName, Reason])
         end
     end, Tables),
-    init(filename:dirname(MasterPath)).
+    
+    mnesia:wait_for_tables([agent, cortex, neuron, sensor, actuator,
+                           substrate, population, specie], 5000).
 
-%% @doc Debug function to check source context for an agent
-debug_check_source(AgentId, SourceContext) ->
-    io:format("~n=== Debugging Source Context for Agent ~p ===~n", [AgentId]),
+create_deployment_database(Topologies, PopulationId, OutputPath) ->
+    DeployDir = filename:join(OutputPath, "Mnesia.nonode@nohost"),
+    filelib:ensure_dir(DeployDir ++ "/"),
     
-    %% Check agent
-    AgentTable = dxnn_mnesia_loader:table_name(SourceContext, agent),
-    io:format("Agent table: ~p~n", [AgentTable]),
-    case ets:lookup(AgentTable, AgentId) of
-        [] -> io:format("  Agent NOT FOUND~n");
-        Agents -> io:format("  Found ~w agent record(s)~n", [length(Agents)])
-    end,
+    io:format("Creating deployment database at: ~s~n", [DeployDir]),
     
-    %% Get topology
-    case agent_inspector:get_full_topology(AgentId, SourceContext) of
-        {error, Reason} ->
-            io:format("  Error getting topology: ~p~n", [Reason]);
-        Topology ->
+    application:stop(mnesia),
+    application:set_env(mnesia, dir, DeployDir),
+    mnesia:create_schema([node()]),
+    mnesia:start(),
+    create_mnesia_tables(),
+    
+    AgentIds = [Id || {Id, _} <- Topologies],
+    
+    F = fun() ->
+        Population = #population{
+            id = PopulationId,
+            specie_ids = [PopulationId],
+            morphologies = [xor_mimic],
+            innovation_factor = {0, 0}
+        },
+        mnesia:write(Population),
+        
+        Specie = #specie{
+            id = PopulationId,
+            population_id = PopulationId,
+            agent_ids = AgentIds,
+            fingerprint = undefined
+        },
+        mnesia:write(Specie),
+        
+        lists:foreach(fun({AgentId, Topology}) ->
             Agent = maps:get(agent, Topology),
-            Cortex = maps:get(cortex, Topology),
-            Neurons = maps:get(neurons, Topology),
-            Sensors = maps:get(sensors, Topology),
-            Actuators = maps:get(actuators, Topology),
+            UpdatedAgent = Agent#agent{
+                population_id = PopulationId,
+                specie_id = PopulationId
+            },
             
-            io:format("~nCortex: ~p~n", [Cortex#cortex.id]),
-            io:format("  Neuron IDs in cortex: ~p~n", [Cortex#cortex.neuron_ids]),
-            io:format("  Sensor IDs in cortex: ~p~n", [Cortex#cortex.sensor_ids]),
-            io:format("  Actuator IDs in cortex: ~p~n", [Cortex#cortex.actuator_ids]),
+            mnesia:write(UpdatedAgent),
+            mnesia:write(maps:get(cortex, Topology)),
             
-            io:format("~nNeurons retrieved: ~w~n", [length(Neurons)]),
-            lists:foreach(fun(N) ->
-                case N of
-                    undefined -> io:format("  - undefined~n");
-                    _ -> io:format("  - ~p~n", [N#neuron.id])
-                end
-            end, Neurons),
+            Neurons = filter_undefined(maps:get(neurons, Topology)),
+            Sensors = filter_undefined(maps:get(sensors, Topology)),
+            Actuators = filter_undefined(maps:get(actuators, Topology)),
             
-            io:format("~nSensors retrieved: ~w~n", [length(Sensors)]),
-            lists:foreach(fun(S) ->
-                case S of
-                    undefined -> io:format("  - undefined~n");
-                    _ -> io:format("  - ~p~n", [S#sensor.id])
-                end
-            end, Sensors),
+            lists:foreach(fun(N) -> mnesia:write(N) end, Neurons),
+            lists:foreach(fun(S) -> mnesia:write(S) end, Sensors),
+            lists:foreach(fun(A) -> mnesia:write(A) end, Actuators),
             
-            io:format("~nActuators retrieved: ~w~n", [length(Actuators)]),
-            lists:foreach(fun(A) ->
-                case A of
-                    undefined -> io:format("  - undefined~n");
-                    _ -> io:format("  - ~p~n", [A#actuator.id])
-                end
-            end, Actuators),
+            case maps:get(substrate, Topology) of
+                undefined -> ok;
+                Sub -> mnesia:write(Sub)
+            end,
             
-            %% Check each neuron ID directly in ETS
-            io:format("~nDirect ETS lookup for each neuron:~n"),
-            NeuronTable = dxnn_mnesia_loader:table_name(SourceContext, neuron),
-            lists:foreach(fun(NId) ->
-                case ets:lookup(NeuronTable, NId) of
-                    [] -> io:format("  ~p: NOT FOUND~n", [NId]);
-                    Records -> io:format("  ~p: Found ~w record(s)~n", [NId, length(Records)])
-                end
-            end, Cortex#cortex.neuron_ids)
+            io:format("  Exported agent ~p~n", [AgentId])
+        end, Topologies)
     end,
     
-    ok.
+    case mnesia:transaction(F) of
+        {atomic, _} ->
+            application:stop(mnesia),
+            io:format("Deployment database created successfully~n"),
+            io:format("Ready to deploy: ~s~n", [DeployDir]),
+            {ok, DeployDir};
+        {aborted, Reason} ->
+            application:stop(mnesia),
+            {error, {export_failed, Reason}}
+    end.

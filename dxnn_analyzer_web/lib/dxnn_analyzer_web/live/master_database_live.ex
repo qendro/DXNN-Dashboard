@@ -2,33 +2,36 @@ defmodule DxnnAnalyzerWeb.MasterDatabaseLive do
   use DxnnAnalyzerWeb, :live_view
   alias DxnnAnalyzerWeb.AnalyzerBridge
 
+  @default_master_context "master"
   @default_master_path "./data/MasterDatabase"
 
   @impl true
   def mount(_params, _session, socket) do
     socket =
       socket
+      |> assign(:master_context, @default_master_context)
       |> assign(:master_path, @default_master_path)
       |> assign(:agents, [])
       |> assign(:loading, false)
       |> assign(:selected_agents, MapSet.new())
       |> assign(:initialized, false)
       |> assign(:error, nil)
-      |> check_and_init_master()
+      |> check_and_load_master()
 
     {:ok, socket}
   end
 
   @impl true
   def handle_event("init_master", %{"path" => path}, socket) do
-    case AnalyzerBridge.init_master_database(path) do
-      {:ok, master_path} ->
+    # Create empty master context
+    case AnalyzerBridge.create_empty_master(@default_master_context) do
+      {:ok, _} ->
         socket =
           socket
-          |> assign(:master_path, master_path)
+          |> assign(:master_path, path)
           |> assign(:initialized, true)
           |> assign(:error, nil)
-          |> put_flash(:info, "Master database initialized at #{master_path}")
+          |> put_flash(:info, "Master database context created")
           |> load_agents()
 
         {:noreply, socket}
@@ -45,12 +48,11 @@ defmodule DxnnAnalyzerWeb.MasterDatabaseLive do
 
   @impl true
   def handle_event("toggle_agent", %{"id" => id_str}, socket) do
-    # Find the actual agent by id_string
     agent = Enum.find(socket.assigns.agents, fn a -> a.id_string == id_str end)
     
     if agent do
       selected = socket.assigns.selected_agents
-      agent_id = agent.id  # Use the actual Erlang tuple ID
+      agent_id = agent.id
 
       selected =
         if MapSet.member?(selected, agent_id) do
@@ -66,31 +68,28 @@ defmodule DxnnAnalyzerWeb.MasterDatabaseLive do
   end
 
   @impl true
-  def handle_event("remove_selected", _, socket) do
-    if MapSet.size(socket.assigns.selected_agents) == 0 do
-      {:noreply, put_flash(socket, :error, "No agents selected")}
-    else
-      agent_ids = MapSet.to_list(socket.assigns.selected_agents)
+  def handle_event("save_to_disk", _, socket) do
+    master_context = socket.assigns.master_context
+    master_path = socket.assigns.master_path
+    
+    case AnalyzerBridge.save_master(master_context, master_path) do
+      {:ok, _path} ->
+        socket =
+          socket
+          |> put_flash(:info, "Master database saved to #{master_path}")
 
-      case AnalyzerBridge.remove_from_master(agent_ids, socket.assigns.master_path) do
-        {:ok, count} ->
-          socket =
-            socket
-            |> assign(:selected_agents, MapSet.new())
-            |> put_flash(:info, "Removed #{count} agent(s) from master database")
-            |> load_agents()
+        {:noreply, socket}
 
-          {:noreply, socket}
-
-        {:error, reason} ->
-          {:noreply, put_flash(socket, :error, "Failed to remove agents: #{reason}")}
-      end
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, "Failed to save: #{reason}")}
     end
   end
 
   @impl true
   def handle_event("load_as_context", %{"name" => context_name}, socket) do
-    case AnalyzerBridge.load_master_as_context(socket.assigns.master_path, context_name) do
+    master_path = socket.assigns.master_path
+    
+    case AnalyzerBridge.load_master(master_path, context_name) do
       {:ok, _} ->
         socket =
           socket
@@ -104,28 +103,39 @@ defmodule DxnnAnalyzerWeb.MasterDatabaseLive do
     end
   end
 
-  defp check_and_init_master(socket) do
+  defp check_and_load_master(socket) do
     master_path = socket.assigns.master_path
+    master_context = socket.assigns.master_context
 
-    case AnalyzerBridge.init_master_database(master_path) do
-      {:ok, path} ->
+    # Try to load existing master database
+    case AnalyzerBridge.load_master(master_path, master_context) do
+      {:ok, _} ->
         socket
-        |> assign(:master_path, path)
         |> assign(:initialized, true)
         |> load_agents()
 
       {:error, _reason} ->
-        assign(socket, :initialized, false)
+        # Master doesn't exist yet, create empty context
+        case AnalyzerBridge.create_empty_master(master_context) do
+          {:ok, _} ->
+            socket
+            |> assign(:initialized, true)
+            |> assign(:agents, [])
+          
+          {:error, _} ->
+            assign(socket, :initialized, false)
+        end
     end
   end
 
   defp load_agents(socket) do
     if socket.assigns.initialized do
       socket = assign(socket, :loading, true)
+      master_context = socket.assigns.master_context
 
-      case AnalyzerBridge.list_master_agents(socket.assigns.master_path) do
+      # Use standard analyzer list_agents with master context
+      case AnalyzerBridge.list_agents(context: master_context) do
         agents when is_list(agents) ->
-          # Sort by fitness descending
           sorted_agents = Enum.sort_by(agents, & &1.fitness, :desc)
 
           socket

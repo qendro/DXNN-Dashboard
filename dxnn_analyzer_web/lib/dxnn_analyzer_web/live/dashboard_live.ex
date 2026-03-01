@@ -58,7 +58,7 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
     master_path = "./data/MasterDatabase"
     context_name = "master"
     
-    case AnalyzerBridge.load_master_as_context(master_path, context_name) do
+    case AnalyzerBridge.load_master(master_path, context_name) do
       {:ok, _} ->
         socket =
           socket

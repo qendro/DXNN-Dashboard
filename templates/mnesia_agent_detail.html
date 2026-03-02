@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Details - NEAT Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/agents.css') }}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .detail-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #fbbf24;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .info-value.large {
+            font-size: 28px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .component-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .component-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .component-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .component-id {
+            font-family: monospace;
+            font-size: 14px;
+            color: #a5b4fc;
+        }
+
+        .component-type {
+            background: rgba(102, 126, 234, 0.3);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .component-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .component-detail {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .component-detail strong {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            font-size: 18px;
+        }
+
+        .error {
+            background: rgba(248, 113, 113, 0.2);
+            border: 1px solid #f87171;
+            border-radius: 8px;
+            padding: 20px;
+            color: #f87171;
+            text-align: center;
+        }
+
+        .json-view {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:hover {
+            color: #fbbf24;
+        }
+
+        .collapsible-content {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .collapsible-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="detail-container">
+        <a href="/mnesia" class="back-link">← Back to Mnesia Browser</a>
+        
+        <h1>Agent Details</h1>
+        <p style="font-family: monospace; color: rgba(255, 255, 255, 0.7);">Agent ID: {{ agent_id }}</p>
+
+        <div id="loading" class="loading">
+            Loading agent details...
+        </div>
+
+        <div id="error" style="display: none;"></div>
+
+        <div id="content" style="display: none;">
+            <!-- Agent Overview -->
+            <div class="section">
+                <h2 class="section-title">Overview</h2>
+                <div class="info-grid" id="overview"></div>
+            </div>
+
+            <!-- Cortex -->
+            <div class="section">
+                <h2 class="section-title">Cortex</h2>
+                <div id="cortex"></div>
+            </div>
+
+            <!-- Neurons -->
+            <div class="section">
+                <h2 class="section-title collapsible" onclick="toggleSection('neurons')">
+                    Neurons (<span id="neuron-count">0</span>) ▼
+                </h2>
+                <div id="neurons" class="component-list collapsible-content"></div>
+            </div>
+
+            <!-- Sensors -->
+            <div class="section">
+                <h2 class="section-title collapsible" onclick="toggleSection('sensors')">
+                    Sensors (<span id="sensor-count">0</span>) ▼
+                </h2>
+                <div id="sensors" class="component-list collapsible-content"></div>
+            </div>
+
+            <!-- Actuators -->
+            <div class="section">
+                <h2 class="section-title collapsible" onclick="toggleSection('actuators')">
+                    Actuators (<span id="actuator-count">0</span>) ▼
+                </h2>
+                <div id="actuators" class="component-list collapsible-content"></div>
+            </div>
+
+            <!-- Substrate -->
+            <div class="section" id="substrate-section" style="display: none;">
+                <h2 class="section-title">Substrate</h2>
+                <div id="substrate"></div>
+            </div>
+
+            <!-- Raw Data -->
+            <div class="section">
+                <h2 class="section-title collapsible" onclick="toggleSection('raw-data')">
+                    Raw Data (JSON) ▼
+                </h2>
+                <div id="raw-data" class="json-view collapsible-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const agentId = "{{ agent_id }}";
+        const mnesiaPath = localStorage.getItem('mnesia_path') || "C:\\Users\\qbot7\\OneDrive\\Documents\\mnesia";
+
+        async function loadAgentDetails() {
+            try {
+                const response = await fetch(`/api/mnesia/agent/${encodeURIComponent(agentId)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: mnesiaPath })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayAgentDetails(data);
+                } else {
+                    showError(data.error || 'Failed to load agent details');
+                }
+            } catch (error) {
+                showError('Error loading agent details: ' + error.message);
+            }
+        }
+
+        function displayAgentDetails(agent) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+            // Overview
+            const overview = document.getElementById('overview');
+            overview.innerHTML = `
+                <div class="info-item">
+                    <div class="info-label">Fitness</div>
+                    <div class="info-value large">${(agent.fitness || 0).toFixed(6)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Generation</div>
+                    <div class="info-value large">${agent.generation || 0}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Encoding</div>
+                    <div class="info-value">${agent.encoding || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Pattern</div>
+                    <div class="info-value">${agent.pattern || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Population ID</div>
+                    <div class="info-value" style="font-size: 12px;">${extractPopId(agent.population_id)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Specie ID</div>
+                    <div class="info-value" style="font-size: 12px;">${agent.specie_id || 'N/A'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Innovation Factor</div>
+                    <div class="info-value">${(agent.innovation_factor || 0).toFixed(4)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Heredity Type</div>
+                    <div class="info-value">${agent.heredity_type || 'N/A'}</div>
+                </div>
+            `;
+
+            // Cortex
+            const cortex = document.getElementById('cortex');
+            if (agent.cortex) {
+                cortex.innerHTML = `
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Cortex ID</div>
+                            <div class="info-value" style="font-size: 12px;">${agent.cortex.id || 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Neurons</div>
+                            <div class="info-value">${(agent.cortex.neuron_ids || []).length}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Sensors</div>
+                            <div class="info-value">${(agent.cortex.sensor_ids || []).length}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Actuators</div>
+                            <div class="info-value">${(agent.cortex.actuator_ids || []).length}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Neurons
+            const neurons = agent.neurons || [];
+            document.getElementById('neuron-count').textContent = neurons.length;
+            document.getElementById('neurons').innerHTML = neurons.map(n => `
+                <div class="component-card">
+                    <div class="component-header">
+                        <span class="component-id">${n.id || 'N/A'}</span>
+                        <span class="component-type">${n.activation_function || 'N/A'}</span>
+                    </div>
+                    <div class="component-details">
+                        <div class="component-detail"><strong>Gen:</strong> ${n.generation || 0}</div>
+                        <div class="component-detail"><strong>Aggr:</strong> ${n.aggregation_function || 'N/A'}</div>
+                        <div class="component-detail"><strong>Outputs:</strong> ${(n.output_ids || []).length}</div>
+                        <div class="component-detail"><strong>Plasticity:</strong> ${n.plasticity_function || 'none'}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Sensors
+            const sensors = agent.sensors || [];
+            document.getElementById('sensor-count').textContent = sensors.length;
+            document.getElementById('sensors').innerHTML = sensors.map(s => `
+                <div class="component-card" style="border-left-color: #10b981;">
+                    <div class="component-header">
+                        <span class="component-id">${s.id || 'N/A'}</span>
+                        <span class="component-type">${s.name || s.type || 'N/A'}</span>
+                    </div>
+                    <div class="component-details">
+                        <div class="component-detail"><strong>Type:</strong> ${s.type || 'N/A'}</div>
+                        <div class="component-detail"><strong>VL:</strong> ${s.vl || 0}</div>
+                        <div class="component-detail"><strong>Format:</strong> ${s.format || 'N/A'}</div>
+                        <div class="component-detail"><strong>Fanout:</strong> ${(s.fanout_ids || []).length}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Actuators
+            const actuators = agent.actuators || [];
+            document.getElementById('actuator-count').textContent = actuators.length;
+            document.getElementById('actuators').innerHTML = actuators.map(a => `
+                <div class="component-card" style="border-left-color: #f59e0b;">
+                    <div class="component-header">
+                        <span class="component-id">${a.id || 'N/A'}</span>
+                        <span class="component-type">${a.name || a.type || 'N/A'}</span>
+                    </div>
+                    <div class="component-details">
+                        <div class="component-detail"><strong>Type:</strong> ${a.type || 'N/A'}</div>
+                        <div class="component-detail"><strong>VL:</strong> ${a.vl || 0}</div>
+                        <div class="component-detail"><strong>Format:</strong> ${a.format || 'N/A'}</div>
+                        <div class="component-detail"><strong>Fanin:</strong> ${(a.fanin_ids || []).length}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Substrate
+            if (agent.substrate && agent.substrate !== null) {
+                document.getElementById('substrate-section').style.display = 'block';
+                document.getElementById('substrate').innerHTML = `
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Substrate ID</div>
+                            <div class="info-value" style="font-size: 12px;">${agent.substrate.id || 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Link Form</div>
+                            <div class="info-value">${agent.substrate.link_form || 'N/A'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Plasticity</div>
+                            <div class="info-value">${agent.substrate.plasticity || 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Raw Data
+            document.getElementById('raw-data').textContent = JSON.stringify(agent, null, 2);
+        }
+
+        function extractPopId(popId) {
+            if (!popId) return 'N/A';
+            if (popId.includes('<<') && popId.includes('>>')) {
+                const match = popId.match(/<<"([^"]+)">>/);
+                if (match) return match[1];
+            }
+            return popId;
+        }
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('active');
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = `<div class="error">${message}</div>`;
+            errorDiv.style.display = 'block';
+        }
+
+        // Load on page load
+        window.addEventListener('load', loadAgentDetails);
+    </script>
+</body>
+</html>

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mnesia Database Browser - NEAT Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/agents.css') }}">
+    <style>
+        .mnesia-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .path-selector {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .path-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .path-input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: #1e293b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .path-input::placeholder {
+            color: #64748b;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .mnesia-dirs-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .mnesia-dir-card {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mnesia-dir-card:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .mnesia-dir-card.selected {
+            background: rgba(165, 180, 252, 0.3);
+            border-color: #a5b4fc;
+            box-shadow: 0 4px 12px rgba(165, 180, 252, 0.4);
+        }
+
+        .mnesia-dir-name {
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .mnesia-dir-path {
+            font-size: 12px;
+            color: #e0e7ff;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .agents-table-container {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .agents-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .agents-table th {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            text-align: left;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .agents-table th:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .agents-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .agents-table tr:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .agents-table tbody tr {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .agents-table tbody tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .agent-id {
+            font-family: monospace;
+            color: #fbbf24;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .agent-id:hover {
+            text-decoration: underline;
+            color: #fcd34d;
+        }
+
+        .positive {
+            color: #86efac;
+            font-weight: 600;
+        }
+
+        .negative {
+            color: #fca5a5;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .error {
+            background: rgba(248, 113, 113, 0.3);
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            padding: 15px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .info {
+            background: rgba(165, 180, 252, 0.3);
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 15px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .sort-indicator {
+            margin-left: 5px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 16px;
+            width: 80%;
+            max-width: 800px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #667eea;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #fff;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .detail-value.large {
+            font-size: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">🧠 NEAT Dashboard</div>
+        <div class="nav-links">
+            <a href="/">Main</a>
+            <a href="/agents">Agents</a>
+            <a href="/lineage">Lineage</a>
+            <a href="/mnesia" class="active">Mnesia Browser</a>
+        </div>
+    </nav>
+
+    <div class="mnesia-container">
+        <h1 style="color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin-bottom: 30px;">🗄️ Mnesia Database Browser</h1>
+        
+        <div class="path-selector">
+            <h3 style="color: #ffffff; margin-bottom: 10px;">Select Mnesia Database</h3>
+            <p style="color: #ffffff; font-size: 14px; margin-bottom: 15px; line-height: 1.6;">
+                💡 Tip: For best results, ensure Erlang is installed and <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #fbbf24;">escript</code> is in your PATH. 
+                Otherwise, the system will fall back to reading from benchmarker logs.
+            </p>
+            <div class="path-input-group">
+                <input 
+                    type="text" 
+                    id="basePath" 
+                    class="path-input" 
+                    placeholder="Enter Mnesia directory path (e.g., C:\Users\qbot7\OneDrive\Documents\mnesia)"
+                    value="C:\Users\qbot7\OneDrive\Documents\mnesia"
+                >
+                <button class="btn" onclick="loadMnesiaDirectly()">Load This Directory</button>
+                <button class="btn" onclick="scanForMnesia()">Scan for Subdirectories</button>
+            </div>
+            
+            <div id="mnesiaDirectories"></div>
+        </div>
+
+        <div id="errorMessage"></div>
+        <div id="infoMessage"></div>
+
+        <div id="statsSection" style="display: none;">
+            <h3 style="color: #ffffff; margin-bottom: 20px;">Database Statistics</h3>
+            <div class="stats-grid" id="statsGrid"></div>
+        </div>
+
+        <div id="agentsSection" style="display: none;">
+            <div class="agents-table-container">
+                <h3 style="color: #ffffff; margin-bottom: 20px;">Agents in Database</h3>
+                <table class="agents-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('agent_id')">Agent ID <span class="sort-indicator" id="sort-agent_id"></span></th>
+                            <th onclick="sortTable('fitness')">Fitness <span class="sort-indicator" id="sort-fitness">▼</span></th>
+                            <th onclick="sortTable('generation')">Generation <span class="sort-indicator" id="sort-generation"></span></th>
+                            <th onclick="sortTable('encoding')">Encoding <span class="sort-indicator" id="sort-encoding"></span></th>
+                            <th onclick="sortTable('neurons')">Neurons <span class="sort-indicator" id="sort-neurons"></span></th>
+                            <th>Sensors</th>
+                            <th>Actuators</th>
+                            <th>Population ID</th>
+                            <th>Specie ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agentsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="loadingMessage" class="loading" style="display: none;">
+            Loading...
+        </div>
+    </div>
+
+    <!-- Agent Detail Modal -->
+    <div id="agentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Agent Details</h2>
+                <span class="close" onclick="closeAgentModal()">&times;</span>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedMnesiaPath = null;
+        let currentAgents = [];
+        let currentSortField = 'fitness';
+        let currentSortReverse = true;
+
+        function showError(message) {
+            console.error('Error:', message);
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.innerHTML = `<div class="error">❌ ${message}</div>`;
+            setTimeout(() => errorDiv.innerHTML = '', 8000);
+        }
+
+        function showInfo(message) {
+            console.log('Info:', message);
+            const infoDiv = document.getElementById('infoMessage');
+            infoDiv.innerHTML = `<div class="info">✅ ${message}</div>`;
+            setTimeout(() => infoDiv.innerHTML = '', 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+        }
+
+        async function scanForMnesia() {
+            const basePath = document.getElementById('basePath').value;
+            
+            if (!basePath) {
+                showError('Please enter a base path');
+                return;
+            }
+
+            showLoading(true);
+            
+            try {
+                console.log('Scanning path:', basePath); // Debug
+                
+                const response = await fetch('/api/mnesia/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: basePath })
+                });
+
+                console.log('Scan response status:', response.status); // Debug
+                
+                const data = await response.json();
+                
+                console.log('Scan response data:', data); // Debug
+                
+                if (response.ok) {
+                    displayMnesiaDirectories(data.mnesia_directories || []);
+                    showInfo(`Found ${data.count || 0} Mnesia director${data.count === 1 ? 'y' : 'ies'}`);
+                } else {
+                    showError(data.error || 'Failed to scan for Mnesia directories');
+                }
+            } catch (error) {
+                console.error('Scan error:', error); // Debug
+                showError('Error scanning for Mnesia directories: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadMnesiaDirectly() {
+            const path = document.getElementById('basePath').value;
+            
+            if (!path) {
+                showError('Please enter a Mnesia directory path');
+                return;
+            }
+
+            console.log('Loading Mnesia directly from:', path);
+            
+            // Clear the directories list
+            document.getElementById('mnesiaDirectories').innerHTML = '';
+            
+            // Set as selected path
+            selectedMnesiaPath = path;
+            
+            showLoading(true);
+            
+            try {
+                const requestBody = { 
+                    path: path,
+                    sort_by: currentSortField
+                };
+                
+                console.log('Request body:', requestBody);
+                
+                const response = await fetch('/api/mnesia/agents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const data = await response.json();
+                
+                console.log('API Response:', data);
+                
+                if (response.ok) {
+                    currentAgents = data.agents || [];
+                    displayStatistics(data.statistics || {});
+                    displayAgents(data.agents || []);
+                    showInfo(`Loaded ${(data.agents || []).length} agents from database`);
+                } else {
+                    showError(data.error || 'Failed to load agents');
+                    console.error('API Error:', data);
+                }
+            } catch (error) {
+                showError('Error loading agents: ' + error.message);
+                console.error('Fetch error:', error);
+                console.error('Error stack:', error.stack);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayMnesiaDirectories(directories) {
+            const container = document.getElementById('mnesiaDirectories');
+            
+            console.log('displayMnesiaDirectories called with:', directories);
+            console.log('Type:', typeof directories);
+            console.log('Is array:', Array.isArray(directories));
+            
+            // Handle undefined or null
+            if (!directories) {
+                console.error('directories is null or undefined');
+                container.innerHTML = '<div class="error">Error: No directory data received</div>';
+                return;
+            }
+            
+            // Handle non-array
+            if (!Array.isArray(directories)) {
+                console.error('directories is not an array:', directories);
+                container.innerHTML = '<div class="error">Error: Invalid directory data format</div>';
+                return;
+            }
+            
+            // Handle empty array
+            if (directories.length === 0) {
+                container.innerHTML = '<div class="info" style="margin-top: 15px;">ℹ️ No Mnesia directories found in the specified path. Make sure the path contains folders named "Mnesia.*"</div>';
+                return;
+            }
+
+            try {
+                const html = `
+                    <h4 style="color: #ffffff; margin-bottom: 15px; margin-top: 15px;">Found ${directories.length} Mnesia Director${directories.length === 1 ? 'y' : 'ies'}:</h4>
+                    <div class="mnesia-dirs-list">
+                        ${directories.map(dir => `
+                            <div class="mnesia-dir-card" onclick="selectMnesiaDir('${(dir.path || '').replace(/\\/g, '\\\\')}')">
+                                <div class="mnesia-dir-name">📁 ${dir.name || 'Unknown'}</div>
+                                <div class="mnesia-dir-path">${dir.path || ''}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error rendering directories:', error);
+                container.innerHTML = '<div class="error">Error rendering directories: ' + error.message + '</div>';
+            }
+        }
+
+        async function selectMnesiaDir(path) {
+            selectedMnesiaPath = path;
+            
+            // Update UI to show selection
+            document.querySelectorAll('.mnesia-dir-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.mnesia-dir-card').classList.add('selected');
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/api/mnesia/agents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        path: path,
+                        sort_by: currentSortField
+                    })
+                });
+
+                const data = await response.json();
+                
+                console.log('API Response:', data); // Debug log
+                
+                if (response.ok) {
+                    currentAgents = data.agents || [];
+                    displayStatistics(data.statistics || {});
+                    displayAgents(data.agents || []);
+                    showInfo(`Loaded ${(data.agents || []).length} agents from database`);
+                } else {
+                    showError(data.error || 'Failed to load agents');
+                    console.error('API Error:', data);
+                }
+            } catch (error) {
+                showError('Error loading agents: ' + error.message);
+                console.error('Fetch error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayStatistics(stats) {
+            const statsSection = document.getElementById('statsSection');
+            const statsGrid = document.getElementById('statsGrid');
+            
+            statsSection.style.display = 'block';
+            
+            // Handle encodings safely
+            let encodingsDisplay = 'N/A';
+            if (stats.encodings && Array.isArray(stats.encodings) && stats.encodings.length > 0) {
+                encodingsDisplay = stats.encodings.join(', ');
+            }
+            
+            const html = `
+                <div class="stat-card">
+                    <div class="stat-value">${stats.total_agents || 0}</div>
+                    <div class="stat-label">Total Agents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(stats.max_fitness || 0).toFixed(4)}</div>
+                    <div class="stat-label">Max Fitness</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(stats.avg_fitness || 0).toFixed(4)}</div>
+                    <div class="stat-label">Avg Fitness</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.round(stats.avg_neurons || 0)}</div>
+                    <div class="stat-label">Avg Neurons</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.max_generation || 0}</div>
+                    <div class="stat-label">Max Generation</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="font-size: 20px;">${encodingsDisplay}</div>
+                    <div class="stat-label">Encodings</div>
+                </div>
+            `;
+            
+            statsGrid.innerHTML = html;
+        }
+
+        function displayAgents(agents) {
+            const agentsSection = document.getElementById('agentsSection');
+            const tbody = document.getElementById('agentsTableBody');
+            
+            agentsSection.style.display = 'block';
+            
+            if (!agents || agents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #ffffff; padding: 30px; font-size: 16px;">ℹ️ No agents found in this database. The database may be empty or not yet populated.</td></tr>';
+                return;
+            }
+
+            const html = agents.map(agent => {
+                // Extract population ID from the binary format
+                let popId = agent.population_id || 'N/A';
+                if (popId.includes('<<') && popId.includes('>>')) {
+                    // Extract the readable part from <<\"2026-02-22T02:09:59Z_p08s_run4\">>
+                    const match = popId.match(/<<"([^"]+)">>/);
+                    if (match) {
+                        popId = match[1];
+                    }
+                }
+                if (popId === 'undefined') popId = 'N/A';
+                
+                // Shorten specie ID for display
+                let specieId = agent.specie_id || 'N/A';
+                if (specieId.length > 20) {
+                    specieId = specieId.substring(0, 17) + '...';
+                }
+                
+                return `
+                <tr onclick="showAgentDetail('${agent.agent_id || 'unknown'}')" style="cursor: pointer;">
+                    <td><span class="agent-id">${agent.agent_id || 'unknown'}</span></td>
+                    <td class="${(agent.fitness || 0) > 0 ? 'positive' : (agent.fitness || 0) < 0 ? 'negative' : ''}">${(agent.fitness || 0).toFixed(2)}</td>
+                    <td>${agent.generation || 0}</td>
+                    <td>${agent.encoding || 'unknown'}</td>
+                    <td>${agent.neurons || 0}</td>
+                    <td>${agent.sensors || 0}</td>
+                    <td>${agent.actuators || 0}</td>
+                    <td style="font-size: 11px;">${popId}</td>
+                    <td style="font-size: 11px;" title="${agent.specie_id || 'N/A'}">${specieId}</td>
+                </tr>
+            `}).join('');
+            
+            tbody.innerHTML = html;
+        }
+
+        function showAgentDetail(agentId) {
+            console.log('Showing detail for agent:', agentId);
+            
+            // Store the mnesia path in localStorage so the detail page can use it
+            localStorage.setItem('mnesia_path', selectedMnesiaPath);
+            
+            // Navigate to the detail page
+            window.location.href = `/mnesia/agent/${encodeURIComponent(agentId)}`;
+        }
+
+        async function sortTable(field) {
+            if (currentSortField === field) {
+                currentSortReverse = !currentSortReverse;
+            } else {
+                currentSortField = field;
+                currentSortReverse = true;
+            }
+
+            // Update sort indicators
+            document.querySelectorAll('.sort-indicator').forEach(el => el.textContent = '');
+            document.getElementById(`sort-${field}`).textContent = currentSortReverse ? '▼' : '▲';
+
+            if (!selectedMnesiaPath) return;
+
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/api/mnesia/agents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        path: selectedMnesiaPath,
+                        sort_by: field
+                    })
+                });
+
+                const data = await response.json();
+                
+                console.log('Sort API Response:', data); // Debug log
+                
+                if (response.ok) {
+                    let agents = data.agents || [];
+                    if (!currentSortReverse) {
+                        agents = agents.reverse();
+                    }
+                    currentAgents = agents;
+                    displayAgents(agents);
+                } else {
+                    console.error('Sort API Error:', data);
+                }
+            } catch (error) {
+                showError('Error sorting: ' + error.message);
+                console.error('Sort error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Auto-load on page load if path is provided
+        window.addEventListener('load', () => {
+            try {
+                console.log('Page loaded, checking for auto-load');
+                const basePath = document.getElementById('basePath').value;
+                if (basePath) {
+                    console.log('Auto-loading path:', basePath);
+                    loadMnesiaDirectly();
+                }
+            } catch (error) {
+                console.error('Error in page load handler:', error);
+                showError('Error initializing page: ' + error.message);
+            }
+        });
+
+        // Global error handler
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            showError('JavaScript error: ' + event.error.message);
+        });
+    </script>
+</body>
+</html>

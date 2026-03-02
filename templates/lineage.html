@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEAT Lineage Visualization</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/lineage.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🧬 NEAT Agent Lineage</h1>
+            <div class="header-right">
+                <a href="/" class="nav-link">📊 Main Dashboard</a>
+                <a href="/agents" class="nav-link">🤖 Agent Performance</a>
+                <a href="/mnesia" class="nav-link">🗄️ Mnesia Browser</a>
+                <div class="status-indicator">
+                    <span class="pulse"></span>
+                    <span id="status-text">Loading...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Controls -->
+        <div class="controls-panel">
+            <div class="control-group">
+                <label for="population-select">Population:</label>
+                <select id="population-select">
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="view-mode">View Mode:</label>
+                <select id="view-mode">
+                    <option value="tree">Tree View</option>
+                    <option value="timeline">Timeline View</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="color-by">Color By:</label>
+                <select id="color-by">
+                    <option value="fitness">Fitness</option>
+                    <option value="generation">Population Run</option>
+                    <option value="species">Species</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <button id="zoom-in" class="btn-control">🔍+ Zoom In</button>
+                <button id="zoom-out" class="btn-control">🔍- Zoom Out</button>
+                <button id="zoom-fit" class="btn-control">📐 Fit to Screen</button>
+                <button id="export-svg" class="btn-control">💾 Export SVG</button>
+            </div>
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="stats-panel">
+            <div class="stat-item">
+                <span class="stat-label">Total Generations:</span>
+                <span class="stat-value" id="total-generations">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Agents:</span>
+                <span class="stat-value" id="total-agents">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Lineage Depth:</span>
+                <span class="stat-value" id="lineage-depth">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Best Fitness:</span>
+                <span class="stat-value" id="best-fitness">0</span>
+            </div>
+        </div>
+
+        <!-- Visualization Container -->
+        <div class="viz-container">
+            <div id="lineage-viz" class="lineage-canvas"></div>
+            <div id="tooltip" class="tooltip"></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend-panel">
+            <h3>Legend</h3>
+            <div id="legend-content"></div>
+        </div>
+
+        <!-- Agent Details Panel -->
+        <div id="details-panel" class="details-panel hidden">
+            <div class="details-header">
+                <h3>Agent Details</h3>
+                <button id="close-details" class="btn-close">✕</button>
+            </div>
+            <div id="details-content"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/lineage.js"></script>
+</body>
+</html>

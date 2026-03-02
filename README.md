@@ -4,6 +4,7 @@ Real-time monitoring dashboard for your Erlang NEAT forex trader neural network 
 
 ## ✨ Features
 
+### Main Dashboard
 - **Real-time Updates**: Auto-refreshes every 2 seconds with minimal overhead
 - **Key Metrics Focus**: 
   - 💰 Realized Profit (primary metric)
@@ -18,6 +19,63 @@ Real-time monitoring dashboard for your Erlang NEAT forex trader neural network 
   - Fitness Evolution (Max & Avg)
 - **Experiment Tracking**: Monitor current run, total runs, and status
 - **Beautiful UI**: Modern, gradient-based design with smooth animations
+
+### Agent Performance Dashboard
+- **Individual Agent Tracking**: Monitor performance of each agent over time
+- **Interactive Chart**: Visualize top 50 agents with selectable metrics
+- **Metric Selection**: Switch between:
+  - 🎯 Fitness
+  - 💰 Raw Total Profit
+  - ✅ Realized P/L
+  - ⏳ Unrealized P/L
+  - 📊 Realized Trades
+- **Top 50 Leaderboard**: Sortable table showing best performing agents
+- **Real-time Updates**: Auto-refreshes every 5 seconds
+- **Color-coded Values**: Positive (green), negative (red), neutral (gray)
+- **PID Instance Details**: Click any PID to see detailed information about that specific run instance
+  - View metadata (run, generation, encoding, neurons, sensors)
+  - See complete evaluation history
+  - Link to full Agent ID details
+- **Agent ID Details Page**: Click any Agent ID to see all instances across all runs
+  - View aggregate statistics (best fitness, best profit, total evaluations)
+  - Compare performance across different runs
+  - Track evolution of the same agent across multiple experiments
+
+### Lineage Visualization Dashboard
+- **Evolutionary Tree**: Interactive visualization of agent lineage and ancestry
+- **Multiple View Modes**:
+  - 🌳 Tree View: Hierarchical parent-child relationships
+  - ⏱️ Timeline View: Generation-based horizontal layout
+- **Color Coding Options**:
+  - By Fitness: See performance at a glance
+  - By Generation: Track evolutionary progress
+  - By Species: Identify speciation patterns
+- **Interactive Features**:
+  - Click agents to see detailed information
+  - Hover for quick stats
+  - Zoom and pan to explore large lineages
+  - Export visualizations as SVG
+- **Population Tracking**: Switch between different experimental runs
+- **Lineage Statistics**: View depth, breadth, and best performers
+
+### Mnesia Database Browser
+- **Database Selection**: Browse and select Mnesia directories from your filesystem
+- **Agent Inventory**: View all agents stored in the Mnesia database
+- **Database Statistics**: 
+  - Total agents count
+  - Max and average fitness scores
+  - Average neuron count
+  - Maximum generation reached
+  - Encoding types used
+- **Sortable Agent Table**: Sort by fitness, generation, neurons, or agent ID
+- **Agent Details**: View complete agent information including:
+  - Agent ID (genetic identifier)
+  - Fitness score
+  - Generation number
+  - Neural network encoding type
+  - Neuron, sensor, and actuator counts
+  - Database table location
+- **Multi-Database Support**: Switch between different Mnesia databases to compare experiments
 
 ## 🚀 Quick Start
 
@@ -50,11 +108,35 @@ python3 dashboard.py
 ## 📊 Access Dashboard
 
 Once started, open your browser and navigate to:
+
+**Main Dashboard:**
 ```
 http://localhost:5000
 ```
 
+**Agent Performance Dashboard:**
+```
+http://localhost:5000/agents
+```
+
+**Agent Detail Page (for specific Agent ID):**
+```
+http://localhost:5000/agent/{agent_id}
+```
+
+**Lineage Visualization:**
+```
+http://localhost:5000/lineage
+```
+
+**Mnesia Database Browser:**
+```
+http://localhost:5000/mnesia
+```
+
 The dashboard will automatically start monitoring your logs in the `logs/` directory.
+
+You can navigate between dashboards using the navigation links in the header.
 
 ## 📁 Log Structure
 
@@ -62,7 +144,7 @@ The dashboard monitors these log files:
 ```
 logs/
 ├── Benchmarker/
-│   ├── agent_meta.log      # Agent metadata
+│   ├── agent_meta.log      # Agent metadata (PID to Agent ID mapping)
 │   ├── agent_trades.log    # Trading performance (main data source)
 │   ├── benchmarker.log     # Generation statistics
 │   └── pid_map.log
@@ -71,6 +153,20 @@ logs/
 └── System/
     └── qStatus.log         # System status
 ```
+
+## 🔗 Understanding PIDs and Agent IDs
+
+The system tracks two types of identifiers:
+
+- **PID (Process ID)**: Like `<0.486.0>` - Unique to each instance/run of an agent
+  - Each time an agent is evaluated, it gets a new PID
+  - PIDs are temporary and specific to that execution
+  - Click a PID in the table to see instance-specific details
+
+- **Agent ID**: Like `{5.644213002572617e-10,agent}` - The permanent genetic identifier
+  - Remains constant across multiple runs
+  - One Agent ID can have multiple PIDs (multiple evaluations)
+  - Click an Agent ID to see all instances and compare performance across runs
 
 ## 🎯 Key Metrics Explained
 

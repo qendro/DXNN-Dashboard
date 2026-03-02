@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Details - NEAT Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/agents.css') }}?v=7">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
+    <style>
+        .instance-card {
+            background: rgba(102, 126, 234, 0.05);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .instance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+        }
+        
+        .instance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .instance-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .summary-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .back-button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .agent-id-display {
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9em;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧬 Agent Details</h1>
+            <div class="nav-links">
+                <a href="/agents" class="nav-link">← Back to Agents</a>
+                <a href="/" class="nav-link">Main Dashboard</a>
+                <a href="/lineage" class="nav-link">🧬 Lineage Tree</a>
+                <a href="/mnesia" class="nav-link">🗄️ Mnesia Browser</a>
+            </div>
+        </header>
+
+        <div class="summary-section">
+            <h2>Agent ID</h2>
+            <div class="agent-id-display" id="agent-id-display">{{ agent_id }}</div>
+            
+            <div class="summary-grid" id="summary-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Total Instances</div>
+                    <div class="stat-value" id="total-instances">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Best Fitness</div>
+                    <div class="stat-value" id="best-fitness">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Best Profit</div>
+                    <div class="stat-value" id="best-profit">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total Evaluations</div>
+                    <div class="stat-value" id="total-evaluations">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <h2>All Instances</h2>
+            <div id="instances-container">
+                <p style="text-align: center; color: #667eea;">Loading instances...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const agentId = "{{ agent_id }}";
+        
+        async function loadAgentDetails() {
+            try {
+                const response = await fetch(`/api/agent/${encodeURIComponent(agentId)}`);
+                const data = await response.json();
+                
+                // Update summary stats
+                document.getElementById('total-instances').textContent = data.total_instances;
+                document.getElementById('best-fitness').textContent = data.best_fitness.toFixed(2);
+                document.getElementById('best-profit').textContent = data.best_profit.toFixed(2);
+                document.getElementById('total-evaluations').textContent = data.total_evaluations;
+                
+                // Render instances
+                renderInstances(data.instances);
+                
+            } catch (error) {
+                console.error('Error loading agent details:', error);
+                document.getElementById('instances-container').innerHTML = 
+                    '<p style="text-align: center; color: #ef4444;">Error loading agent details</p>';
+            }
+        }
+        
+        function renderInstances(instances) {
+            const container = document.getElementById('instances-container');
+            
+            if (!instances || instances.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #6b7280;">No instances found</p>';
+                return;
+            }
+            
+            // Sort by fitness descending
+            instances.sort((a, b) => b.latest_fitness - a.latest_fitness);
+            
+            const html = instances.map((instance, index) => {
+                const rank = index + 1;
+                const pidDisplay = instance.pid.length > 15 ? instance.pid.substring(0, 12) + '...' : instance.pid;
+                
+                // Build evaluation history table
+                let historyHTML = '';
+                if (instance.history && instance.history.length > 0) {
+                    historyHTML = `
+                        <div style="margin-top: 15px;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">Evaluation History (${instance.history.length} evaluations)</h4>
+                            <div class="history-table-container">
+                                <table class="history-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Row</th>
+                                            <th>Timestamp</th>
+                                            <th>Fitness</th>
+                                            <th>Total Profit</th>
+                                            <th>Realized P/L</th>
+                                            <th>Unrealized P/L</th>
+                                            <th>Trades</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${instance.history.map((h, i) => `
+                                            <tr>
+                                                <td>${i + 1}</td>
+                                                <td>${h.row_number || 'N/A'}</td>
+                                                <td>${h.timestamp || 'N/A'}</td>
+                                                <td>${h.fitness.toFixed(2)}</td>
+                                                <td class="${getValueClass(h.raw_total_profit)}">${h.raw_total_profit.toFixed(2)}</td>
+                                                <td class="${getValueClass(h.realized_pl)}">${h.realized_pl.toFixed(2)}</td>
+                                                <td class="${getValueClass(h.unrealized_pl)}">${h.unrealized_pl.toFixed(2)}</td>
+                                                <td>${h.realized_trades}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="instance-card">
+                        <div class="instance-header">
+                            <div class="instance-title">
+                                #${rank} - PID: ${pidDisplay}
+                                <span style="font-size: 0.8em; color: #6b7280; font-weight: normal;">
+                                    (Run ${instance.run}, Gen ${instance.generation})
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-grid" style="margin-top: 15px;">
+                            <div class="detail-item">
+                                <span class="detail-label">PID:</span>
+                                <span class="detail-value" style="font-size: 0.75em;">${instance.pid}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Encoding:</span>
+                                <span class="detail-value">${instance.encoding}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Neurons:</span>
+                                <span class="detail-value">${instance.neurons}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Sensors:</span>
+                                <span class="detail-value">${instance.sensors}</span>
+                            </div>
+                        </div>
+                        
+                        ${historyHTML}
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+        
+        function getValueClass(value) {
+            if (value > 0) return 'positive';
+            if (value < 0) return 'negative';
+            return 'neutral';
+        }
+        
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', loadAgentDetails);
+    </script>
+</body>
+</html>

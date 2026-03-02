@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Performance - NEAT Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/agents.css') }}?v=15">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Agent Performance Tracker</h1>
+            <div class="nav-links">
+                <a href="/" class="nav-link">← Main Dashboard</a>
+                <a href="/lineage" class="nav-link">🧬 Lineage Tree</a>
+                <a href="/mnesia" class="nav-link">🗄️ Mnesia Browser</a>
+            </div>
+            <div class="status-indicator">
+                <span class="pulse"></span>
+                <span id="status-text">Loading...</span>
+            </div>
+        </header>
+
+        <div class="controls">
+            <label for="metric-select">Select Metric:</label>
+            <select id="metric-select">
+                <option value="fitness">Fitness</option>
+                <option value="raw_total_profit">Raw Total Profit</option>
+                <option value="realized_pl">Realized P/L</option>
+                <option value="unrealized_pl">Unrealized P/L</option>
+                <option value="realized_trades">Realized Trades</option>
+            </select>
+            <span id="agent-count" class="agent-count">Total Agents: 0</span>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-help">
+                💡 <strong>Controls:</strong> Mouse wheel to zoom | Drag to pan | Arrow keys ← → to scroll | Home/End to jump
+            </div>
+            <div id="agentChart"></div>
+        </div>
+
+        <div class="table-container">
+            <h2>Top 50 Agents</h2>
+            <table id="agentTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>PID</th>
+                        <th>Agent ID</th>
+                        <th>Row #</th>
+                        <th>Fitness</th>
+                        <th>Raw Total Profit</th>
+                        <th>Realized P/L</th>
+                        <th>Unrealized P/L</th>
+                        <th>Realized Trades</th>
+                    </tr>
+                </thead>
+                <tbody id="agentTableBody">
+                    <tr>
+                        <td colspan="9" class="loading">Loading agent data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PID Details Modal -->
+    <div id="pid-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>PID Instance Details</h2>
+                <button class="modal-close" onclick="closePidModal()">&times;</button>
+            </div>
+            <div id="pid-modal-body" class="modal-body">
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/agents.js') }}?v=30"></script>
+</body>
+</html>

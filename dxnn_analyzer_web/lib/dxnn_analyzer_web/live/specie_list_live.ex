@@ -33,7 +33,9 @@ defmodule DxnnAnalyzerWeb.SpecieListLive do
     socket = assign(socket, :loading, true)
 
     species = case AnalyzerBridge.get_species(context) do
-      {:ok, specs} -> specs
+      {:ok, specs} when is_list(specs) -> specs
+      {:ok, _} -> []
+      {:error, _} -> []
       _ -> []
     end
 

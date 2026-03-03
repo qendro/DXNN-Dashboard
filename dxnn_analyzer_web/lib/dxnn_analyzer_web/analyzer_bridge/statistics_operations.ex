@@ -20,8 +20,11 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.StatisticsOperations do
   """
   def get_populations(context) do
     with {:ok, context_atom, _} <- ContextManager.validate_context(context) do
-      result = :context_inspector.get_populations(context_atom)
-      {:ok, result}
+      case :context_inspector.get_populations(context_atom) do
+        {:ok, populations} -> {:ok, populations}
+        {:error, reason} -> {:error, reason}
+        other -> {:error, "Unexpected result: #{inspect(other)}"}
+      end
     end
   end
 
@@ -30,8 +33,11 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.StatisticsOperations do
   """
   def get_species(context) do
     with {:ok, context_atom, _} <- ContextManager.validate_context(context) do
-      result = :context_inspector.get_species(context_atom)
-      {:ok, result}
+      case :context_inspector.get_species(context_atom) do
+        {:ok, species} -> {:ok, species}
+        {:error, reason} -> {:error, reason}
+        other -> {:error, "Unexpected result: #{inspect(other)}"}
+      end
     end
   end
 

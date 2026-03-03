@@ -33,7 +33,9 @@ defmodule DxnnAnalyzerWeb.PopulationListLive do
     socket = assign(socket, :loading, true)
 
     populations = case AnalyzerBridge.get_populations(context) do
-      {:ok, pops} -> pops
+      {:ok, pops} when is_list(pops) -> pops
+      {:ok, _} -> []
+      {:error, _} -> []
       _ -> []
     end
 

@@ -9,6 +9,10 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
       |> assign(:experiments, [])
       |> assign(:show_add_modal, false)
       |> assign(:show_create_modal, false)
+      |> assign(:show_browser, false)
+      |> assign(:current_path, "/app/Documents")
+      |> assign(:directories, [])
+      |> assign(:browser_mode, :add)
       |> load_experiments()
 
     {:ok, socket}
@@ -77,6 +81,69 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
   @impl true
   def handle_event("show_add_modal", _, socket) do
     {:noreply, assign(socket, :show_add_modal, true)}
+  end
+
+  @impl true
+  def handle_event("show_browser", %{"mode" => mode}, socket) do
+    browser_mode = String.to_atom(mode)
+    current_path = socket.assigns.current_path
+    
+    socket =
+      socket
+      |> assign(:show_browser, true)
+      |> assign(:browser_mode, browser_mode)
+      |> load_directories(current_path)
+    
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("close_browser", _, socket) do
+    {:noreply, assign(socket, :show_browser, false)}
+  end
+
+  @impl true
+  def handle_event("navigate_to", %{"path" => path}, socket) do
+    socket = load_directories(socket, path)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("select_folder", %{"path" => path, "name" => name}, socket) do
+    mode = socket.assigns.browser_mode
+    
+    case mode do
+      :add ->
+        case AnalyzerBridge.add_experiment_to_settings(name, path) do
+          :ok ->
+            socket =
+              socket
+              |> load_experiments()
+              |> assign(:show_browser, false)
+              |> put_flash(:info, "Experiment '#{name}' added")
+            {:noreply, socket}
+          
+          {:error, :already_exists} ->
+            {:noreply, put_flash(socket, :error, "Experiment already exists")}
+          
+          {:error, reason} ->
+            {:noreply, put_flash(socket, :error, "Failed: #{inspect(reason)}")}
+        end
+      
+      :create ->
+        case AnalyzerBridge.create_experiment_in_settings(name, path) do
+          :ok ->
+            socket =
+              socket
+              |> load_experiments()
+              |> assign(:show_browser, false)
+              |> put_flash(:info, "Experiment '#{name}' created")
+            {:noreply, socket}
+          
+          {:error, reason} ->
+            {:noreply, put_flash(socket, :error, "Failed: #{inspect(reason)}")}
+        end
+    end
   end
 
   @impl true
@@ -276,6 +343,47 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
     assign(socket, :experiments, experiments_with_status)
   end
 
+  defp load_directories(socket, path) do
+    case File.ls(path) do
+      {:ok, entries} ->
+        directories = entries
+        |> Enum.filter(fn entry ->
+          full_path = Path.join(path, entry)
+          File.dir?(full_path) && !String.starts_with?(entry, ".")
+        end)
+        |> Enum.sort()
+        |> Enum.map(fn dir ->
+          full_path = Path.join(path, dir)
+          has_mnesia = has_mnesia_files?(full_path)
+          %{name: dir, path: full_path, has_mnesia: has_mnesia}
+        end)
+        
+        parent_path = Path.dirname(path)
+        
+        socket
+        |> assign(:current_path, path)
+        |> assign(:parent_path, parent_path)
+        |> assign(:directories, directories)
+      
+      {:error, _reason} ->
+        socket
+        |> assign(:directories, [])
+        |> put_flash(:error, "Cannot read directory: #{path}")
+    end
+  end
+
+  defp has_mnesia_files?(path) do
+    case File.ls(path) do
+      {:ok, files} ->
+        Enum.any?(files, fn f ->
+          String.ends_with?(f, ".DCD") or
+          String.ends_with?(f, ".DCL") or
+          String.ends_with?(f, ".DAT")
+        end)
+      _ -> false
+    end
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -398,13 +506,23 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Folder Path
                   </label>
-                  <input
-                    type="text"
-                    name="path"
-                    placeholder="C:\Users\qbot7\OneDrive\Documents\DXNN\DXNN-Trader-V2\DXNN-Trader-v2\Mnesia.nonode@nohost"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                    required
-                  />
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      name="path"
+                      placeholder="/app/Documents/DXNN_Main/DXNN-Trader-v2"
+                      class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      required
+                    />
+                    <button
+                      type="button"
+                      phx-click="show_browser"
+                      phx-value-mode="add"
+                      class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
+                    >
+                      📁 Browse
+                    </button>
+                  </div>
                   <p class="text-xs text-gray-500 mt-1">
                     Full path to the Mnesia database folder
                   </p>
@@ -455,13 +573,23 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Folder Path
                   </label>
-                  <input
-                    type="text"
-                    name="path"
-                    placeholder="C:\Users\qbot7\OneDrive\Documents\Databases\my_experiment"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
-                    required
-                  />
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      name="path"
+                      placeholder="/app/Documents/Databases/my_experiment"
+                      class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
+                      required
+                    />
+                    <button
+                      type="button"
+                      phx-click="show_browser"
+                      phx-value-mode="create"
+                      class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
+                    >
+                      📁 Browse
+                    </button>
+                  </div>
                   <p class="text-xs text-gray-500 mt-1">
                     Full path where the new Mnesia database will be created
                   </p>
@@ -482,6 +610,85 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Folder Browser Modal -->
+        <%= if @show_browser do %>
+          <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Select Folder</h3>
+                <button
+                  phx-click="close_browser"
+                  class="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div class="mb-4 flex items-center gap-2">
+                <span class="text-sm text-gray-600">Current:</span>
+                <code class="flex-1 bg-gray-100 px-3 py-2 rounded text-sm font-mono"><%= @current_path %></code>
+                <%= if @current_path != "/" do %>
+                  <button
+                    phx-click="navigate_to"
+                    phx-value-path={@parent_path}
+                    class="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600 transition text-sm"
+                  >
+                    ⬆️ Up
+                  </button>
+                <% end %>
+              </div>
+              
+              <div class="flex-1 overflow-y-auto border border-gray-200 rounded">
+                <%= if Enum.empty?(@directories) do %>
+                  <p class="text-gray-500 text-center py-8">No directories found</p>
+                <% else %>
+                  <div class="divide-y divide-gray-200">
+                    <%= for dir <- @directories do %>
+                      <div class="flex items-center justify-between p-3 hover:bg-gray-50">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                          <span class="text-2xl">📁</span>
+                          <div class="flex-1 min-w-0">
+                            <div class="font-medium truncate"><%= dir.name %></div>
+                            <%= if dir.has_mnesia do %>
+                              <span class="text-xs text-green-600">✓ Contains Mnesia files</span>
+                            <% end %>
+                          </div>
+                        </div>
+                        <div class="flex gap-2 ml-4">
+                          <button
+                            phx-click="navigate_to"
+                            phx-value-path={dir.path}
+                            class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition text-sm"
+                          >
+                            Open
+                          </button>
+                          <button
+                            phx-click="select_folder"
+                            phx-value-path={dir.path}
+                            phx-value-name={dir.name}
+                            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition text-sm"
+                          >
+                            Select
+                          </button>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+              
+              <div class="mt-4 flex justify-end">
+                <button
+                  phx-click="close_browser"
+                  class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         <% end %>

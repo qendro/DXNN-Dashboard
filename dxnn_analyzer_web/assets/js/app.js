@@ -8,6 +8,19 @@ import { NetworkGraph } from "./network_graph.js"
 let Hooks = {}
 Hooks.NetworkGraph = NetworkGraph
 
+// Auto-scroll terminal output to bottom
+Hooks.ScrollToBottom = {
+  mounted() {
+    this.scrollToBottom()
+  },
+  updated() {
+    this.scrollToBottom()
+  },
+  scrollToBottom() {
+    this.el.scrollTop = this.el.scrollHeight
+  }
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   params: {_csrf_token: csrfToken},

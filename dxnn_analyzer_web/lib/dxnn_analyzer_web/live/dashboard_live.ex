@@ -85,6 +85,12 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
           </div>
           <div class="flex gap-2">
             <.link
+              navigate={~p"/aws-deployment"}
+              class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition"
+            >
+              ☁️ AWS Deployment
+            </.link>
+            <.link
               navigate={~p"/settings"}
               class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
             >

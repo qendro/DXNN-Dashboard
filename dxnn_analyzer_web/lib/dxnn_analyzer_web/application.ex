@@ -10,7 +10,8 @@ defmodule DxnnAnalyzerWeb.Application do
       {DNSCluster, query: Application.get_env(:dxnn_analyzer_web, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: DxnnAnalyzerWeb.PubSub},
       DxnnAnalyzerWeb.Endpoint,
-      {DxnnAnalyzerWeb.AnalyzerBridge, []}
+      {DxnnAnalyzerWeb.AnalyzerBridge, []},
+      DxnnAnalyzerWeb.AWS.AWSDeploymentServer
     ]
 
     opts = [strategy: :one_for_one, name: DxnnAnalyzerWeb.Supervisor]

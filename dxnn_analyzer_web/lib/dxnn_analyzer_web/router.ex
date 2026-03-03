@@ -26,6 +26,8 @@ defmodule DxnnAnalyzerWeb.Router do
     live "/compare", ComparatorLive, :index
     live "/populations", PopulationListLive, :index
     live "/species", SpecieListLive, :index
+    live "/aws-deployment", AWSDeploymentLive, :index
+    live "/aws-deployment/instance/:instance_id", InstanceDetailsLive, :show
   end
 
   if Application.compile_env(:dxnn_analyzer_web, :dev_routes) do

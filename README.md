@@ -20,6 +20,17 @@ DXNN Analyzer Web Interface combines a powerful Erlang-based analysis engine wit
 - **Topology Visualization** - Interactive neural network structure viewer with D3.js
 - **Mutation Tracking** - Evolution history and mutation pattern analysis
 
+### AWS Deployment Management
+- **AMI Management** - Create, list, and delete custom AMIs with real-time progress terminal
+- **Instance Management** - Launch, monitor, and terminate ALL EC2 instances (not just DXNN)
+- **Instance Details Page** - Dedicated page per instance with tabs for overview, logs, SSH commands, and monitoring
+- **Deployment Tracking** - Persistent tracking of config deployments with status badges
+- **Expandable Instance Details** - Click instance ID to view full details and SSH commands
+- **Config Deployment** - Upload and deploy config.erl files to running instances
+- **Real-time Terminal** - Live streaming output for long-running operations (AMI creation, deployments)
+- **Console Logs** - View EC2 console output directly in browser (requires ec2:GetConsoleOutput permission)
+- **Pending Operations** - Visual indicators for in-progress AMI creations with clickable status
+
 ### Comparison & Statistics
 - **Multi-Agent Comparison** - Side-by-side comparison with similarity scoring
 - **Statistical Analysis** - Comprehensive metrics and distribution analysis
@@ -40,20 +51,63 @@ DXNN Analyzer Web Interface combines a powerful Erlang-based analysis engine wit
 
 ### Prerequisites
 
-- **Docker & Docker Compose** (recommended) OR
-- **Elixir 1.14+**, **Erlang/OTP 26+**, **Node.js 18+**, **Rebar3**
+- **Docker & Docker Compose**
+- **AWS CLI configured** (for AWS deployment features)
+- **AWS IAM Permissions** (for console logs, add ec2:GetConsoleOutput)
+
+### Docker Setup
+
+```bash
+cd DXNN-Dashboard
+docker-compose build
+docker-compose up -d
+```
+
+Access at http://localhost:4000
+
+**AWS Deployment:** http://localhost:4000/aws-deployment
+
+**Instance Details:** Click "📊 Details" on any instance or navigate to:
+http://localhost:4000/aws-deployment/instance/INSTANCE_ID
+
+### AWS IAM Permissions (Optional)
+
+For console log viewing, add this inline policy to your IAM user:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "ec2:GetConsoleOutput",
+            "Resource": "*"
+        }
+    ]
+}
+```
 
 ### Option 1: Docker (Recommended)
 
-1. **Start the application:**
+1. **Ensure AWS credentials are configured:**
+```bash
+aws configure  # If not already done
+```
+
+2. **Start the application:**
 ```bash
 docker-compose up -d
 ```
 
-2. **Access the interface:**
+3. **Access the interface:**
 Open your browser to `http://localhost:4000`
 
-3. **Load a context:**
+4. **Use AWS Deployment Manager:**
+   - Click "☁️ AWS Deployment" button on dashboard
+   - Or navigate to `http://localhost:4000/aws-deployment`
+   - Manage AMIs, launch instances, deploy configs
+
+5. **Load a context:**
    - Navigate to Dashboard
    - Path: `/app/DXNN-Trader-V2/DXNN-Trader-v2/Mnesia.nonode@nohost`
    - Name: `exp1`
@@ -96,6 +150,48 @@ cd dxnn_analyzer_web
 ```
 
 ## Usage Guide
+
+### AWS Deployment Manager
+
+Access at `/aws-deployment`:
+
+**AMI Management:**
+- Create new AMIs with live terminal output (10-15 min)
+- Pending AMI rows show in table immediately (clickable to view logs)
+- Delete AMIs with confirmation
+- View all DXNN AMIs
+
+**Instance Management:**
+- View ALL instances in running/pending/stopped states
+- Launch new instances from config files
+- Terminate instances with confirmation
+- View console logs (requires ec2:GetConsoleOutput IAM permission)
+- Click "📊 Details" for dedicated instance page with:
+  - Overview tab: Instance info and deployment status
+  - Console Logs tab: View EC2 console output
+  - SSH Commands tab: Copy-paste ready commands
+  - Monitoring tab: (Coming soon - live tmux viewer, log streaming)
+
+**Deployment Tracking:**
+- Green "✅ Deployed" badge shows in table when config is deployed
+- Deployment metadata persists across container restarts
+- Stored in: `AWS-Deployment/output/deployments.json`
+- Shows branch, timestamp, and training status
+
+**Config Deployment:**
+- Upload config.erl files via drag-and-drop
+- Deploy to any running instance
+- Select Git branch
+- Option to auto-start DXNN training
+- Real-time deployment terminal
+
+**Real-time Terminal:**
+- Auto-opens for long operations
+- Live streaming output
+- Auto-scrolls to bottom
+- Can close and reopen anytime
+- Operations continue in background
+- Reconnects on page refresh
 
 ### Loading Contexts
 
@@ -194,6 +290,15 @@ volumes:
 
 Then use path `/app/mnesia/Mnesia.nonode@nohost` in the interface.
 
+### AWS Integration
+
+The dashboard automatically mounts:
+- `~/.aws` - AWS credentials (read-only)
+- `../AWS-Deployment` - Deployment scripts (read-only)
+- `aws_deployment_output` - SSH keys and outputs (persistent)
+
+AWS credentials are loaded from `../AWS-Deployment/.env` file.
+
 ### Environment Variables
 
 Create `.env` file:
@@ -247,8 +352,6 @@ docker-compose down
 │   │   ├── population_builder.erl  # Population creation
 │   │   └── master_database.erl     # Master DB management
 │   ├── include/                # Header files
-│   │   ├── records.hrl             # Mnesia record definitions
-│   │   └── analyzer_records.hrl    # Analyzer-specific records
 │   ├── priv/examples/          # Example scripts
 │   └── rebar.config            # Erlang build config
 │
@@ -261,28 +364,24 @@ docker-compose down
 │   │       │   ├── agent_inspector_live.ex # Agent details
 │   │       │   ├── topology_viewer_live.ex # Network topology
 │   │       │   ├── comparator_live.ex      # Agent comparison
-│   │       │   └── master_database_live.ex # Master DB management
+│   │       │   ├── master_database_live.ex # Master DB management
+│   │       │   └── aws_deployment_live.ex  # AWS management
+│   │       ├── aws/                # AWS integration
+│   │       │   ├── aws_bridge.ex           # AWS CLI wrapper
+│   │       │   └── aws_deployment_server.ex # State management
 │   │       ├── components/         # Reusable UI components
 │   │       ├── analyzer_bridge.ex  # Erlang ↔ Elixir bridge
 │   │       ├── application.ex      # Application supervisor
 │   │       ├── endpoint.ex         # Phoenix endpoint
 │   │       └── router.ex           # Route definitions
 │   ├── assets/                 # Frontend assets
-│   │   ├── js/
-│   │   │   ├── app.js              # LiveView JavaScript
-│   │   │   └── network_graph.js    # D3.js visualization
-│   │   └── css/
-│   │       └── app.css             # Tailwind CSS
 │   ├── config/                 # Configuration
 │   └── mix.exs                 # Elixir dependencies
 │
 ├── Databases/                  # Sample Mnesia databases
 ├── Dockerfile                  # Production image
-├── Dockerfile.dev              # Development image
 ├── docker-compose.yml          # Docker orchestration
-├── README.md                   # This file
-├── ARCHITECTURE.md             # Technical architecture
-└── AI_README.md                # AI assistant guide
+└── README.md                   # This file
 ```
 
 ## Configuration
@@ -328,6 +427,24 @@ ports:
 - Check volume mount in `docker-compose.yml`
 - Ensure path is correct and readable
 - Verify file permissions
+
+### AWS Issues
+
+**"Console logs require ec2:GetConsoleOutput permission":**
+- Add the IAM permission shown in Quick Start section
+- Restart container: `docker-compose restart`
+- Wait 2-3 minutes for AWS IAM propagation
+
+**No instances showing:**
+- Dashboard shows ALL instances (no tag filtering)
+- Check AWS region matches your instances
+- Verify AWS credentials are configured
+
+**AMI creation terminal closes:**
+- Operation continues in background
+- Refresh page to reconnect
+- Check pending AMI row (yellow) in AMI table
+- Click pending row to reopen terminal
 
 ### Local Development Issues
 

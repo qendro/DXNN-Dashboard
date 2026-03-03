@@ -36,6 +36,7 @@ defmodule DxnnAnalyzerWeb.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
+      {:yaml_elixir, "~> 2.9"},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",

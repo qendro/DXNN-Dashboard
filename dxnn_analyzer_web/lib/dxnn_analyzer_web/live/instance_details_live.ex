@@ -16,6 +16,22 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
       |> assign(:active_tab, "overview")
       |> assign(:log_content, "")
       |> assign(:log_loading, false)
+      |> assign(:ssh_output, "")
+      |> assign(:ssh_loading, false)
+      |> assign(:ssh_command, "")
+      |> assign(:tmux_output, "")
+      |> assign(:tmux_loading, false)
+      |> assign(:tmux_auto_refresh, false)
+      |> assign(:tmux_timer, nil)
+      |> assign(:checkpoint_status, nil)
+      |> assign(:checkpoint_loading, false)
+      |> assign(:available_logs, [])
+      |> assign(:selected_log, nil)
+      |> assign(:log_lines, 100)
+      |> assign(:log_viewer_content, "")
+      |> assign(:log_viewer_loading, false)
+      |> assign(:s3_checkpoints, [])
+      |> assign(:s3_loading, false)
       |> load_instance_data()
 
     {:ok, socket}
@@ -69,6 +85,160 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   def handle_event("refresh_instance", _, socket) do
     AWSDeploymentServer.refresh()
     {:noreply, put_flash(socket, :info, "Refreshing instance data...")}
+  end
+
+  def handle_event("execute_ssh_command", %{"command" => command}, socket) do
+    socket = assign(socket, :ssh_loading, true)
+    key_file = get_key_path(socket.assigns.instance_id)
+    host = socket.assigns.instance.ip
+
+    case AWSBridge.get_ssh_output(key_file, host, command) do
+      {:ok, output} ->
+        {:noreply, assign(socket, ssh_output: output, ssh_loading: false, ssh_command: command)}
+      {:error, error} ->
+        {:noreply, socket |> assign(:ssh_loading, false) |> put_flash(:error, "SSH command failed: #{error}")}
+    end
+  end
+
+  def handle_event("load_tmux", _, socket) do
+    socket = assign(socket, :tmux_loading, true)
+    key_file = get_key_path(socket.assigns.instance_id)
+    host = socket.assigns.instance.ip
+
+    case AWSBridge.capture_tmux_pane(key_file, host) do
+      {:ok, output} ->
+        {:noreply, assign(socket, tmux_output: output, tmux_loading: false)}
+      {:error, error} ->
+        {:noreply, socket |> assign(:tmux_loading, false) |> put_flash(:error, "Failed to capture tmux: #{error}")}
+    end
+  end
+
+  def handle_event("toggle_tmux_auto_refresh", _, socket) do
+    new_state = !socket.assigns.tmux_auto_refresh
+    
+    socket = if new_state do
+      timer = Process.send_after(self(), :refresh_tmux, 3000)
+      assign(socket, tmux_auto_refresh: true, tmux_timer: timer)
+    else
+      if socket.assigns.tmux_timer, do: Process.cancel_timer(socket.assigns.tmux_timer)
+      assign(socket, tmux_auto_refresh: false, tmux_timer: nil)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_info(:refresh_tmux, socket) do
+    if socket.assigns.tmux_auto_refresh do
+      key_file = get_key_path(socket.assigns.instance_id)
+      host = socket.assigns.instance.ip
+
+      socket = case AWSBridge.capture_tmux_pane(key_file, host) do
+        {:ok, output} -> assign(socket, :tmux_output, output)
+        {:error, _} -> socket
+      end
+
+      timer = Process.send_after(self(), :refresh_tmux, 3000)
+      {:noreply, assign(socket, :tmux_timer, timer)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("force_checkpoint", _, socket) do
+    key_file = get_key_path(socket.assigns.instance_id)
+    host = socket.assigns.instance.ip
+    
+    case AWSBridge.force_checkpoint(key_file, host) do
+      {_, 0} ->
+        {:noreply, put_flash(socket, :info, "Checkpoint created successfully")}
+      {error, _} ->
+        {:noreply, put_flash(socket, :error, "Checkpoint failed: #{error}")}
+    end
+  end
+
+  def handle_event("upload_to_s3", _, socket) do
+    key_file = get_key_path(socket.assigns.instance_id)
+    host = socket.assigns.instance.ip
+    
+    socket = assign(socket, :checkpoint_loading, true)
+    
+    case AWSBridge.trigger_s3_upload(key_file, host) do
+      {_, 0} ->
+        {:noreply, socket |> assign(:checkpoint_loading, false) |> put_flash(:info, "S3 upload initiated")}
+      {error, _} ->
+        {:noreply, socket |> assign(:checkpoint_loading, false) |> put_flash(:error, "S3 upload failed: #{error}")}
+    end
+  end
+
+  def handle_event("load_checkpoint_status", _, socket) do
+    key_file = get_key_path(socket.assigns.instance_id)
+    host = socket.assigns.instance.ip
+    
+    case AWSBridge.get_checkpoint_status(key_file, host) do
+      {:ok, status} ->
+        {:noreply, assign(socket, :checkpoint_status, status)}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to load checkpoint status")}
+    end
+  end
+
+  def handle_event("load_available_logs", _, socket) do
+    if socket.assigns.instance do
+      key_file = get_key_path(socket.assigns.instance_id)
+      host = socket.assigns.instance.ip
+      
+      case AWSBridge.list_log_files(key_file, host) do
+        {:ok, logs} ->
+          {:noreply, assign(socket, :available_logs, logs)}
+        {:error, error} ->
+          {:noreply, put_flash(socket, :error, "Failed to list logs: #{error}")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Instance data not loaded")}
+    end
+  end
+
+  def handle_event("select_log", %{"log" => log_path}, socket) do
+    {:noreply, assign(socket, :selected_log, log_path)}
+  end
+
+  def handle_event("update_log_lines", %{"lines" => lines}, socket) do
+    {:noreply, assign(socket, :log_lines, String.to_integer(lines))}
+  end
+
+  def handle_event("view_log", _, socket) do
+    cond do
+      is_nil(socket.assigns.instance) ->
+        {:noreply, put_flash(socket, :error, "Instance data not loaded")}
+      
+      is_nil(socket.assigns.selected_log) ->
+        {:noreply, put_flash(socket, :error, "Please select a log file")}
+      
+      true ->
+        socket = assign(socket, :log_viewer_loading, true)
+        key_file = get_key_path(socket.assigns.instance_id)
+        host = socket.assigns.instance.ip
+        
+        # read_log_file returns {output, exit_code} tuple from System.cmd
+        case AWSBridge.read_log_file(key_file, host, socket.assigns.selected_log, socket.assigns.log_lines) do
+          {output, 0} ->
+            {:noreply, assign(socket, log_viewer_content: output, log_viewer_loading: false)}
+          {error, exit_code} ->
+            error_msg = if is_binary(error), do: error, else: inspect(error)
+            {:noreply, socket |> assign(:log_viewer_loading, false) |> put_flash(:error, "Failed to read log (exit #{exit_code}): #{error_msg}")}
+        end
+    end
+  end
+
+  def handle_event("load_s3_checkpoints", _, socket) do
+    socket = assign(socket, :s3_loading, true)
+    
+    case AWSBridge.list_instance_s3_checkpoints(socket.assigns.instance_id) do
+      {:ok, checkpoints} ->
+        {:noreply, assign(socket, s3_checkpoints: checkpoints, s3_loading: false)}
+      {:error, _} ->
+        {:noreply, socket |> assign(:s3_loading, false) |> put_flash(:error, "Failed to load S3 checkpoints")}
+    end
   end
 
   defp load_instance_data(socket) do
@@ -155,13 +325,37 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
           <div class="bg-white shadow rounded-lg p-6">
             <%= case @active_tab do %>
               <% "overview" -> %>
-                <.overview_tab instance={@instance} deployment={@deployment} />
+                <.overview_tab 
+                  instance={@instance} 
+                  deployment={@deployment} 
+                  checkpoint_status={@checkpoint_status}
+                  checkpoint_loading={@checkpoint_loading}
+                />
               <% "logs" -> %>
-                <.logs_tab log_content={@log_content} log_loading={@log_loading} />
+                <.logs_tab 
+                  log_content={@log_content} 
+                  log_loading={@log_loading}
+                  available_logs={@available_logs}
+                  selected_log={@selected_log}
+                  log_lines={@log_lines}
+                  log_viewer_content={@log_viewer_content}
+                  log_viewer_loading={@log_viewer_loading}
+                />
               <% "ssh" -> %>
-                <.ssh_tab instance={@instance} deployment={@deployment} />
+                <.ssh_tab 
+                  instance={@instance} 
+                  deployment={@deployment}
+                  ssh_output={@ssh_output}
+                  ssh_loading={@ssh_loading}
+                  ssh_command={@ssh_command}
+                />
               <% "monitoring" -> %>
-                <.monitoring_tab instance={@instance} />
+                <.monitoring_tab 
+                  instance={@instance}
+                  tmux_output={@tmux_output}
+                  tmux_loading={@tmux_loading}
+                  tmux_auto_refresh={@tmux_auto_refresh}
+                />
             <% end %>
           </div>
         <% else %>
@@ -252,6 +446,62 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
           <% end %>
         </div>
       </div>
+
+      <!-- Checkpoint Controls -->
+      <%= if @deployment && @deployment.started do %>
+        <div class="mt-6 pt-6 border-t border-gray-200">
+          <h3 class="font-medium text-gray-700 mb-3">Checkpoint Management</h3>
+          
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <%= if @checkpoint_status do %>
+              <div class="mb-4 space-y-2 text-sm">
+                <div>
+                  <span class="text-gray-600">Last Checkpoint:</span>
+                  <span class="ml-2 font-mono text-gray-900"><%= @checkpoint_status.last_checkpoint || "None" %></span>
+                </div>
+                <div>
+                  <span class="text-gray-600">Total Size:</span>
+                  <span class="ml-2 text-gray-900"><%= @checkpoint_status.total_size %></span>
+                </div>
+                <div>
+                  <span class="text-gray-600">Checkpoint Count:</span>
+                  <span class="ml-2 text-gray-900"><%= @checkpoint_status.count %></span>
+                </div>
+              </div>
+            <% end %>
+            
+            <div class="flex items-center space-x-3">
+              <button
+                phx-click="load_checkpoint_status"
+                class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition text-sm"
+              >
+                🔍 Check Status
+              </button>
+              <button
+                phx-click="force_checkpoint"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              >
+                📸 Create Checkpoint
+              </button>
+              <button
+                phx-click="upload_to_s3"
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                disabled={@checkpoint_loading}
+              >
+                <%= if @checkpoint_loading do %>
+                  ⏳ Uploading...
+                <% else %>
+                  ☁️ Upload to S3
+                <% end %>
+              </button>
+            </div>
+            
+            <p class="text-xs text-gray-600 mt-3">
+              Create Checkpoint: Local backup (~2-5s) • Upload to S3: Full backup with logs
+            </p>
+          </div>
+        </div>
+      <% end %>
     </div>
     """
   end
@@ -269,21 +519,111 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
           <%= if @log_loading do %>
             ⏳ Loading...
           <% else %>
-            🔄 Load Logs
+            🔄 Load Console Logs
           <% end %>
         </button>
       </div>
       
       <%= if @log_content != "" do %>
-        <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto max-h-[600px]">
+        <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto max-h-[600px] mb-6">
           <pre><%= @log_content %></pre>
         </div>
       <% else %>
-        <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <p class="text-gray-600">Click "Load Logs" to view console output.</p>
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center mb-6">
+          <p class="text-gray-600">Click "Load Console Logs" to view EC2 console output.</p>
           <p class="text-gray-500 text-sm mt-2">Note: Requires ec2:GetConsoleOutput IAM permission</p>
         </div>
       <% end %>
+
+      <!-- Log File Browser -->
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <h3 class="text-lg font-semibold mb-4">Log File Browser</h3>
+        
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+          <div class="flex items-center space-x-3 mb-4">
+            <button
+              phx-click="load_available_logs"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+            >
+              📂 List Log Files
+            </button>
+          </div>
+
+          <%= if length(@available_logs) > 0 do %>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Log File</label>
+                <select
+                  phx-change="select_log"
+                  name="log"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="">-- Select a log file --</option>
+                  <%= for log <- @available_logs do %>
+                    <option value={log.path} selected={@selected_log == log.path}>
+                      <%= Path.basename(log.path) %> (<%= log.size %>)
+                    </option>
+                  <% end %>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Lines to Show</label>
+                <select
+                  phx-change="update_log_lines"
+                  name="lines"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="50">Last 50 lines</option>
+                  <option value="100" selected={@log_lines == 100}>Last 100 lines</option>
+                  <option value="200">Last 200 lines</option>
+                  <option value="500">Last 500 lines</option>
+                  <option value="1000">Last 1000 lines</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              phx-click="view_log"
+              class={"#{if @log_viewer_loading || !@selected_log || !@instance, do: "bg-gray-400 cursor-not-allowed", else: "bg-green-600 hover:bg-green-700"} text-white px-4 py-2 rounded transition text-sm"}
+              disabled={@log_viewer_loading || !@selected_log || !@instance}
+            >
+              <%= if @log_viewer_loading do %>
+                ⏳ Loading...
+              <% else %>
+                👁️ View Log
+              <% end %>
+            </button>
+
+            <%= if !@selected_log do %>
+              <p class="text-xs text-gray-500 mt-2">Please select a log file from the dropdown above</p>
+            <% end %>
+
+            <%= if @log_viewer_content != "" do %>
+              <div class="mt-4">
+                <div class="flex justify-between items-center mb-2">
+                  <h4 class="font-medium text-gray-700">
+                    <%= Path.basename(@selected_log) %> (Last <%= @log_lines %> lines)
+                  </h4>
+                  <button
+                    onclick={"navigator.clipboard.writeText(`#{String.replace(@log_viewer_content, "`", "\\`")}`)"}
+                    class="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+                <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto max-h-[500px]">
+                  <pre><%= @log_viewer_content %></pre>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <p class="text-gray-600">Click "List Log Files" to see available logs</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
     </div>
     """
   end
@@ -291,66 +631,95 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   defp ssh_tab(assigns) do
     ~H"""
     <div>
-      <h2 class="text-xl font-semibold mb-4">SSH Commands</h2>
+      <h2 class="text-xl font-semibold mb-4">SSH Terminal Viewer</h2>
       
-      <div class="space-y-4">
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium text-gray-700">Connect to Instance</label>
+      <div class="space-y-6">
+        <!-- Quick Commands -->
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h3 class="font-medium text-gray-700 mb-3">Quick Commands</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <button
-              onclick={"navigator.clipboard.writeText('ssh -i AWS-Deployment/output/#{get_key_filename(@instance.id)} ubuntu@#{@instance.ip}')"}
-              class="text-xs text-blue-600 hover:text-blue-800"
+              phx-click="execute_ssh_command"
+              phx-value-command="uptime"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              disabled={@ssh_loading}
             >
-              📋 Copy
+              📊 System Uptime
             </button>
+            <button
+              phx-click="execute_ssh_command"
+              phx-value-command="free -h"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              disabled={@ssh_loading}
+            >
+              💾 Memory Usage
+            </button>
+            <button
+              phx-click="execute_ssh_command"
+              phx-value-command="df -h"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              disabled={@ssh_loading}
+            >
+              💿 Disk Usage
+            </button>
+            <button
+              phx-click="execute_ssh_command"
+              phx-value-command="ps aux --sort=-%mem | head -10"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              disabled={@ssh_loading}
+            >
+              🔝 Top Processes
+            </button>
+            <%= if @deployment do %>
+              <button
+                phx-click="execute_ssh_command"
+                phx-value-command="tail -50 /var/log/dxnn-run.log"
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                disabled={@ssh_loading}
+              >
+                📜 DXNN Logs
+              </button>
+              <button
+                phx-click="execute_ssh_command"
+                phx-value-command="tmux list-sessions"
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                disabled={@ssh_loading}
+              >
+                🖥️ TMUX Sessions
+              </button>
+            <% end %>
           </div>
-          <code class="block bg-gray-900 text-green-400 p-3 rounded text-sm font-mono break-all select-all">
-            ssh -i AWS-Deployment/output/<%= get_key_filename(@instance.id) %> ubuntu@<%= @instance.ip %>
-          </code>
         </div>
 
-        <%= if @deployment do %>
+        <!-- Output Terminal -->
+        <%= if @ssh_output != "" do %>
           <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-medium text-gray-700">Attach to Training Session</label>
+            <div class="flex justify-between items-center mb-2">
+              <h3 class="font-medium text-gray-700">Output: <%= @ssh_command %></h3>
               <button
-                onclick="navigator.clipboard.writeText('tmux attach -t trader')"
+                onclick={"navigator.clipboard.writeText(`#{String.replace(@ssh_output, "`", "\\`")}`)"}
                 class="text-xs text-blue-600 hover:text-blue-800"
               >
-                📋 Copy
+                📋 Copy Output
               </button>
             </div>
-            <code class="block bg-gray-900 text-green-400 p-3 rounded text-sm font-mono select-all">
-              tmux attach -t trader
-            </code>
-            <p class="text-xs text-gray-500 mt-1">Run this after SSH'ing into the instance</p>
+            <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto max-h-[500px]">
+              <pre id="ssh-output" phx-hook="ScrollToBottom"><%= @ssh_output %></pre>
+            </div>
           </div>
-
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-medium text-gray-700">View Training Logs</label>
-              <button
-                onclick="navigator.clipboard.writeText('tail -f /var/log/dxnn-run.log')"
-                class="text-xs text-blue-600 hover:text-blue-800"
-              >
-                📋 Copy
-              </button>
-            </div>
-            <code class="block bg-gray-900 text-green-400 p-3 rounded text-sm font-mono select-all">
-              tail -f /var/log/dxnn-run.log
-            </code>
-            <p class="text-xs text-gray-500 mt-1">Run this after SSH'ing into the instance</p>
+        <% else %>
+          <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+            <p class="text-gray-600">Click a command above to execute it via SSH</p>
+            <p class="text-gray-500 text-sm mt-2">Output will appear here</p>
           </div>
         <% end %>
 
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-          <h3 class="font-medium text-blue-900 mb-2">SSH Key Location</h3>
-          <p class="text-sm text-blue-800">
-            Key file: <code class="font-mono bg-blue-100 px-2 py-1 rounded"><%= get_key_filename(@instance.id) %></code>
-          </p>
-          <p class="text-xs text-blue-700 mt-2">
-            Located in: <code class="font-mono">AWS-Deployment/output/</code>
-          </p>
+        <!-- SSH Connection Info -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 class="font-medium text-blue-900 mb-2">Manual SSH Connection</h3>
+          <code class="block bg-blue-100 text-blue-900 p-2 rounded text-xs font-mono break-all">
+            ssh -i AWS-Deployment/output/<%= get_key_filename(@instance.id) %> ubuntu@<%= @instance.ip %>
+          </code>
         </div>
       </div>
     </div>
@@ -360,19 +729,66 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   defp monitoring_tab(assigns) do
     ~H"""
     <div>
-      <h2 class="text-xl font-semibold mb-4">Monitoring</h2>
+      <h2 class="text-xl font-semibold mb-4">TMUX Session Viewer</h2>
       
-      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-        <p class="text-yellow-800 font-medium">🚧 Coming Soon</p>
-        <p class="text-yellow-700 text-sm mt-2">
-          Real-time monitoring features will be added here, including:
-        </p>
-        <ul class="text-yellow-700 text-sm mt-3 space-y-1">
-          <li>• Live tmux session viewer</li>
-          <li>• Real-time log streaming</li>
-          <li>• Resource usage metrics</li>
-          <li>• Training progress visualization</li>
-        </ul>
+      <div class="space-y-4">
+        <!-- Controls -->
+        <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div class="flex items-center space-x-4">
+            <button
+              phx-click="load_tmux"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              disabled={@tmux_loading}
+            >
+              <%= if @tmux_loading do %>
+                ⏳ Loading...
+              <% else %>
+                🔄 Refresh TMUX
+              <% end %>
+            </button>
+            
+            <button
+              phx-click="toggle_tmux_auto_refresh"
+              class={"#{if @tmux_auto_refresh, do: "bg-green-600 hover:bg-green-700", else: "bg-gray-600 hover:bg-gray-700"} text-white px-4 py-2 rounded transition text-sm"}
+            >
+              <%= if @tmux_auto_refresh do %>
+                ⏸️ Stop Auto-Refresh
+              <% else %>
+                ▶️ Auto-Refresh (3s)
+              <% end %>
+            </button>
+          </div>
+          
+          <%= if @tmux_auto_refresh do %>
+            <div class="flex items-center space-x-2">
+              <div class="animate-pulse w-2 h-2 rounded-full bg-green-500"></div>
+              <span class="text-green-600 text-sm font-medium">Live</span>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- TMUX Output -->
+        <%= if @tmux_output != "" do %>
+          <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto max-h-[600px] border-2 border-gray-700">
+            <pre id="tmux-output" phx-hook="ScrollToBottom"><%= @tmux_output %></pre>
+          </div>
+        <% else %>
+          <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+            <p class="text-gray-600">Click "Refresh TMUX" to view the trader session</p>
+            <p class="text-gray-500 text-sm mt-2">Shows last 100 lines of the tmux pane</p>
+          </div>
+        <% end %>
+
+        <!-- Info -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 class="font-medium text-blue-900 mb-2">About TMUX Viewer</h3>
+          <ul class="text-blue-800 text-sm space-y-1">
+            <li>• View-only mode (read-only access to tmux session)</li>
+            <li>• Shows last 100 lines of the "trader" session</li>
+            <li>• Auto-refresh updates every 3 seconds when enabled</li>
+            <li>• For interactive control, use SSH directly</li>
+          </ul>
+        </div>
       </div>
     </div>
     """
@@ -390,6 +806,10 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     Calendar.strftime(dt, "%Y-%m-%d %H:%M:%S UTC")
   end
   defp format_datetime(_), do: "Unknown"
+
+  defp get_key_path(instance_id) do
+    "/app/AWS-Deployment/output/#{get_key_filename(instance_id)}"
+  end
 
   defp get_key_filename(instance_id) do
     case File.ls("/app/AWS-Deployment/output") do

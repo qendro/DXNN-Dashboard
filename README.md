@@ -30,6 +30,9 @@ DXNN Analyzer Web Interface combines a powerful Erlang-based analysis engine wit
 - **Real-time Terminal** - Live streaming output for long-running operations (AMI creation, deployments)
 - **Console Logs** - View EC2 console output directly in browser (requires ec2:GetConsoleOutput permission)
 - **Pending Operations** - Visual indicators for in-progress AMI creations with clickable status
+- **Checkpoint Management** - Force checkpoint creation and S3 upload from dashboard
+- **Log File Browser** - View and tail any log file on running instances
+- **S3 Experiments** - Browse, download, and load experiments from S3 checkpoints
 
 ### Comparison & Statistics
 - **Multi-Agent Comparison** - Side-by-side comparison with similarity scoring
@@ -69,6 +72,9 @@ Access at http://localhost:4000
 
 **Instance Details:** Click "📊 Details" on any instance or navigate to:
 http://localhost:4000/aws-deployment/instance/INSTANCE_ID
+
+**S3 Experiments:** Browse and load S3 checkpoints:
+http://localhost:4000/s3-experiments
 
 ### AWS IAM Permissions (Optional)
 
@@ -150,6 +156,83 @@ cd dxnn_analyzer_web
 ```
 
 ## Usage Guide
+
+### Instance Details Page
+
+Access at `/aws-deployment/instance/INSTANCE_ID`:
+
+**Overview Tab:**
+- View instance information and deployment status
+- Checkpoint management controls:
+  - Check Status: View local checkpoint information
+  - Create Checkpoint: Force local Mnesia backup (~2-5s)
+  - Upload to S3: Trigger full S3 upload with logs
+
+**Console Logs Tab:**
+- View EC2 console output (requires ec2:GetConsoleOutput IAM permission)
+- Log file browser with dropdown selection
+- Tail any log file (50/100/200/500/1000 lines)
+- Available logs:
+  - /var/log/dxnn-run.log (main training log)
+  - /var/log/spot-watch.log (spot interruption monitor)
+  - /var/log/dxnn-setup.log (initial setup)
+  - /var/log/cloud-init-output.log (cloud-init)
+  - ~/dxnn-trader/logs/* (application logs)
+
+**SSH Commands Tab:**
+- Quick command buttons (uptime, memory, disk, processes)
+- DXNN-specific commands (logs, tmux sessions)
+- Copy-paste ready SSH connection string
+
+**Monitoring Tab:**
+- TMUX session viewer with auto-refresh
+- View last 100 lines of trader session
+- Live updates every 3 seconds when enabled
+
+### S3 Experiments Browser
+
+Access at `/s3-experiments`:
+
+**Browse S3 Checkpoints:**
+1. Click "🔄" to load job IDs from S3
+2. Select a job ID to view available runs
+3. Select a run to view checkpoint metadata
+4. Click "Load as Context" to download and load into analyzer
+
+**Features:**
+- View checkpoint metadata (status, timestamp, exit code)
+- Download experiments directly from S3
+- Automatic caching in /app/data/s3_cache/
+- Clear cache button to free disk space
+- Loaded contexts named: `s3_<job_id>_<run_id>`
+
+**S3 Structure:**
+```
+s3://dxnn-checkpoints/dxnn/
+├── job-id-1/
+│   ├── run-id-1/
+│   │   ├── Mnesia.nonode@nohost/
+│   │   ├── logs/
+│   │   ├── config.erl
+│   │   ├── _SUCCESS (metadata)
+│   │   └── _MANIFEST
+│   └── run-id-2/
+└── job-id-2/
+```
+
+### Checkpoint Workflow
+
+**From Dashboard:**
+1. Navigate to instance details
+2. Overview tab → Checkpoint Management
+3. "Create Checkpoint" for local backup
+4. "Upload to S3" for full backup with logs
+
+**From S3:**
+1. Navigate to S3 Experiments
+2. Browse and select checkpoint
+3. Load as context in analyzer
+4. Analyze agents, compare runs, extract elite populations
 
 ### AWS Deployment Manager
 

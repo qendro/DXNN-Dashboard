@@ -49,13 +49,25 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
 
   def terminate_instance(instance_id) do
     case System.cmd("aws", ["ec2", "terminate-instances", "--instance-ids", instance_id], stderr_to_stdout: true) do
-      {_output, 0} -> {:ok, "Instance #{instance_id} terminating"}
+      {_output, 0} -> 
+        # Remove from deployments tracking
+        remove_deployment_tracking(instance_id)
+        {:ok, "Instance #{instance_id} terminating"}
       {error, _} -> {:error, error}
     end
   end
 
   def terminate_all_instances do
-    run_script("docker-deploy.sh", ["-x"])
+    # Get all instances before terminating
+    {:ok, instances} = list_instances()
+    instance_ids = Enum.map(instances, & &1.id)
+    
+    result = run_script("docker-deploy.sh", ["-x"])
+    
+    # Remove all from deployments tracking
+    Enum.each(instance_ids, &remove_deployment_tracking/1)
+    
+    result
   end
 
   def get_instance_logs(instance_id) do
@@ -122,6 +134,20 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     end
   end
 
+  def capture_tmux_pane(key_file, host, session \\ "trader") do
+    case ssh_command(key_file, host, "tmux capture-pane -t #{session} -p -S -100 2>/dev/null") do
+      {output, 0} -> {:ok, output}
+      {error, _} -> {:error, error}
+    end
+  end
+
+  def get_ssh_output(key_file, host, command) do
+    case ssh_command(key_file, host, command) do
+      {output, 0} -> {:ok, output}
+      {error, _} -> {:error, error}
+    end
+  end
+
   def start_training(key_file, host) do
     ssh_command(key_file, host, "sudo /usr/local/bin/dxnn-wrapper.sh")
   end
@@ -134,7 +160,161 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     ssh_command(key_file, host, "sudo tail -n #{lines} #{log_file}")
   end
 
+  # Checkpoint Operations
+
+  def force_checkpoint(key_file, host) do
+    ssh_command(key_file, host, "sudo /usr/local/bin/dxnn_ctl checkpoint")
+  end
+
+  def trigger_s3_upload(key_file, host) do
+    # Trigger finalize script to upload current state to S3
+    ssh_command(key_file, host, """
+    export COMPLETION_STATUS=manual
+    export EXIT_CODE=0
+    export S3_BUCKET=${S3_BUCKET:-dxnn-checkpoints}
+    export S3_PREFIX=${S3_PREFIX:-dxnn}
+    export JOB_ID=${JOB_ID:-dxnn-training-001}
+    export RUN_ID=$(date -u +%Y%m%d-%H%M%SZ)
+    export AUTO_TERMINATE=false
+    sudo -E /usr/local/bin/finalize_run.sh
+    """)
+  end
+
+  # Log File Operations
+
+  def list_log_files(key_file, host) do
+    case ssh_command(key_file, host, """
+    (sudo find /var/log -maxdepth 1 -type f \\( -name 'dxnn*.log' -o -name 'spot*.log' -o -name 'cloud-init*.log' \\) 2>/dev/null | \
+    while read f; do
+      size=$(sudo du -h "$f" 2>/dev/null | cut -f1)
+      echo "$f|$size"
+    done) && \
+    (find ~/dxnn-trader/logs -type f 2>/dev/null | \
+    while read f; do
+      size=$(du -h "$f" 2>/dev/null | cut -f1)
+      echo "$f|$size"
+    done) || true
+    """) do
+      {output, 0} -> parse_log_files(output)
+      {error, _} -> {:error, error}
+    end
+  end
+
+  def read_log_file(key_file, host, log_path, lines \\ 100) do
+    ssh_command(key_file, host, "sudo tail -n #{lines} '#{log_path}' 2>/dev/null || tail -n #{lines} '#{log_path}'")
+  end
+
+  def get_checkpoint_status(key_file, host) do
+    case ssh_command(key_file, host, """
+    if [ -d /var/lib/dxnn/checkpoints ]; then
+      last=$(sudo ls -t /var/lib/dxnn/checkpoints/ 2>/dev/null | head -1)
+      size=$(sudo du -sh /var/lib/dxnn/checkpoints 2>/dev/null | cut -f1)
+      count=$(sudo ls /var/lib/dxnn/checkpoints/ 2>/dev/null | wc -l)
+      echo "$last|$size|$count"
+    else
+      echo "none|0|0"
+    fi
+    """) do
+      {output, 0} -> parse_checkpoint_status(output)
+      {error, _} -> {:error, error}
+    end
+  end
+
+  # S3 Operations
+
+  def list_s3_jobs(bucket \\ "dxnn-checkpoints", prefix \\ "dxnn") do
+    case System.cmd("aws", [
+      "s3", "ls",
+      "s3://#{bucket}/#{prefix}/",
+      "--output", "text"
+    ], stderr_to_stdout: true) do
+      {output, 0} -> parse_s3_jobs(output)
+      {error, _} -> {:error, error}
+    end
+  end
+
+  def list_s3_runs(bucket, prefix, job_id) do
+    case System.cmd("aws", [
+      "s3", "ls",
+      "s3://#{bucket}/#{prefix}/#{job_id}/",
+      "--output", "text"
+    ], stderr_to_stdout: true) do
+      {output, 0} -> parse_s3_runs(output, bucket, prefix, job_id)
+      {error, _} -> {:error, error}
+    end
+  end
+
+  def get_s3_checkpoint_metadata(bucket, prefix, job_id, run_id) do
+    temp_file = "/tmp/s3_success_#{:erlang.phash2({bucket, job_id, run_id})}"
+    s3_path = "s3://#{bucket}/#{prefix}/#{job_id}/#{run_id}/_SUCCESS"
+    
+    case System.cmd("aws", ["s3", "cp", s3_path, temp_file], stderr_to_stdout: true) do
+      {_, 0} ->
+        case File.read(temp_file) do
+          {:ok, content} ->
+            File.rm(temp_file)
+            case Jason.decode(content) do
+              {:ok, metadata} -> {:ok, metadata}
+              {:error, _} -> {:error, "Invalid metadata format"}
+            end
+          {:error, reason} -> {:error, reason}
+        end
+      {error, _} ->
+        File.rm(temp_file)
+        {:error, error}
+    end
+  end
+
+  def download_s3_checkpoint(bucket, prefix, job_id, run_id, local_path) do
+    s3_path = "s3://#{bucket}/#{prefix}/#{job_id}/#{run_id}/"
+    
+    File.mkdir_p!(local_path)
+    
+    case System.cmd("aws", [
+      "s3", "sync",
+      s3_path,
+      local_path,
+      "--exclude", "_*",
+      "--no-progress"
+    ], stderr_to_stdout: true) do
+      {_, 0} -> {:ok, local_path}
+      {error, _} -> {:error, error}
+    end
+  end
+
+  def list_instance_s3_checkpoints(instance_id) do
+    # Try to find checkpoints associated with this instance
+    # Uses instance_id as job_id pattern
+    list_s3_jobs()
+    |> case do
+      {:ok, jobs} ->
+        matching = Enum.filter(jobs, fn job -> 
+          String.contains?(job.id, instance_id) || String.contains?(instance_id, job.id)
+        end)
+        {:ok, matching}
+      error -> error
+    end
+  end
+
   # Helper Functions
+
+  defp remove_deployment_tracking(instance_id) do
+    deployments_file = "/app/AWS-Deployment/output/deployments.json"
+    
+    case File.read(deployments_file) do
+      {:ok, content} ->
+        case Jason.decode(content) do
+          {:ok, deployments} ->
+            updated = Map.delete(deployments, instance_id)
+            case Jason.encode(updated, pretty: true) do
+              {:ok, json} -> File.write(deployments_file, json)
+              _ -> :ok
+            end
+          _ -> :ok
+        end
+      _ -> :ok
+    end
+  end
 
   defp run_script(script_name, args) do
     script_path = Path.join(@aws_deployment_path, script_name)
@@ -232,5 +412,63 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
         end
       _ -> nil
     end
+  end
+
+  defp parse_log_files(output) do
+    logs = output
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn line ->
+      case String.split(line, "|", parts: 2) do
+        [path, size] -> %{path: String.trim(path), size: String.trim(size)}
+        _ -> nil
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
+    {:ok, logs}
+  end
+
+  defp parse_checkpoint_status(output) do
+    case String.split(String.trim(output), "|") do
+      [last, size, count] ->
+        {:ok, %{
+          last_checkpoint: if(last == "none", do: nil, else: last),
+          total_size: size,
+          count: String.to_integer(count)
+        }}
+      _ -> {:error, "Invalid checkpoint status"}
+    end
+  end
+
+  defp parse_s3_jobs(output) do
+    jobs = output
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn line ->
+      case Regex.run(~r/PRE\s+(.+)\/$/, line) do
+        [_, job_id] -> %{id: String.trim(job_id), type: "job"}
+        _ -> nil
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
+    {:ok, jobs}
+  end
+
+  defp parse_s3_runs(output, bucket, prefix, job_id) do
+    runs = output
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn line ->
+      case Regex.run(~r/PRE\s+(.+)\/$/, line) do
+        [_, run_id] -> 
+          %{
+            id: String.trim(run_id),
+            job_id: job_id,
+            bucket: bucket,
+            prefix: prefix,
+            s3_path: "s3://#{bucket}/#{prefix}/#{job_id}/#{String.trim(run_id)}/"
+          }
+        _ -> nil
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
+    {:ok, runs}
   end
 end

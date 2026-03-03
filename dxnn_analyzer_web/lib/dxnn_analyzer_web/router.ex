@@ -28,6 +28,7 @@ defmodule DxnnAnalyzerWeb.Router do
     live "/species", SpecieListLive, :index
     live "/aws-deployment", AWSDeploymentLive, :index
     live "/aws-deployment/instance/:instance_id", InstanceDetailsLive, :show
+    live "/s3-experiments", S3ExperimentsLive, :index
   end
 
   if Application.compile_env(:dxnn_analyzer_web, :dev_routes) do

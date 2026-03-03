@@ -843,7 +843,6 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Config</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -870,51 +869,57 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                       <%= instance.state %>
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <%= if Map.get(assigns, :deployments, %{}) |> Map.has_key?(instance.id) do %>
-                      <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 flex items-center space-x-1 w-fit">
-                        <span>✅</span>
-                        <span>Deployed</span>
-                      </span>
-                    <% else %>
-                      <span class="text-gray-400 text-xs">—</span>
-                    <% end %>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm space-x-3">
                     <.link
                       navigate={"/aws-deployment/instance/#{instance.id}"}
-                      class="text-purple-600 hover:text-purple-800"
+                      class="text-purple-600 hover:text-purple-800 text-lg"
+                      title="View Details"
                     >
-                      📊 Details
+                      📊
                     </.link>
                     <button
                       phx-click="show_logs"
                       phx-value-instance_id={instance.id}
-                      class="text-blue-600 hover:text-blue-800"
+                      class="text-blue-600 hover:text-blue-800 text-lg"
+                      title="View Console Logs"
                     >
-                      📋 Logs
+                      📋
                     </button>
-                    <button
-                      phx-click="show_deploy_config_modal"
-                      phx-value-instance_id={instance.id}
-                      phx-value-ip={instance.ip}
-                      class="text-green-600 hover:text-green-800"
-                    >
-                      🚀 Deploy
-                    </button>
+                    <%= if Map.get(assigns, :deployments, %{}) |> Map.has_key?(instance.id) do %>
+                      <button
+                        phx-click="show_deploy_config_modal"
+                        phx-value-instance_id={instance.id}
+                        phx-value-ip={instance.ip}
+                        class="text-green-600 hover:text-green-800 text-lg"
+                        title="Config Deployed - Redeploy"
+                      >
+                        ✅
+                      </button>
+                    <% else %>
+                      <button
+                        phx-click="show_deploy_config_modal"
+                        phx-value-instance_id={instance.id}
+                        phx-value-ip={instance.ip}
+                        class="text-orange-600 hover:text-orange-800 text-lg"
+                        title="Deploy Configuration"
+                      >
+                        🚀
+                      </button>
+                    <% end %>
                     <button
                       phx-click="terminate_instance"
                       phx-value-instance_id={instance.id}
                       data-confirm="Are you sure you want to terminate this instance?"
-                      class="text-red-600 hover:text-red-800"
+                      class="text-red-600 hover:text-red-800 text-lg"
+                      title="Terminate Instance"
                     >
-                      ⛔ Terminate
+                      ⛔
                     </button>
                   </td>
                 </tr>
                 <%= if @expanded_instance == instance.id do %>
                   <tr class="bg-blue-50">
-                    <td colspan="7" class="px-6 py-4">
+                    <td colspan="6" class="px-6 py-4">
                       <div class="bg-white rounded-lg p-4 border-2 border-blue-200">
                         <h4 class="font-semibold text-gray-900 mb-3">Instance Details</h4>
                         <div class="grid grid-cols-2 gap-4 text-sm">

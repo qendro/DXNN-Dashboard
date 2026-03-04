@@ -199,6 +199,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   end
 
   def handle_event("select_log", %{"log" => log_path}, socket) do
+    IO.puts("DEBUG: select_log called with: #{inspect(log_path)}")
     {:noreply, assign(socket, :selected_log, log_path)}
   end
 
@@ -211,7 +212,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
       is_nil(socket.assigns.instance) ->
         {:noreply, put_flash(socket, :error, "Instance data not loaded")}
       
-      is_nil(socket.assigns.selected_log) ->
+      is_nil(socket.assigns.selected_log) || socket.assigns.selected_log == "" ->
         {:noreply, put_flash(socket, :error, "Please select a log file")}
       
       true ->
@@ -585,8 +586,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
 
             <button
               phx-click="view_log"
-              class={"#{if @log_viewer_loading || !@selected_log || !@instance, do: "bg-gray-400 cursor-not-allowed", else: "bg-green-600 hover:bg-green-700"} text-white px-4 py-2 rounded transition text-sm"}
-              disabled={@log_viewer_loading || !@selected_log || !@instance}
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition text-sm"
             >
               <%= if @log_viewer_loading do %>
                 ⏳ Loading...

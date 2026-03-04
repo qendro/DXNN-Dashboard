@@ -33,10 +33,10 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
     end
   end
 
-  def handle_event("select_job", %{"job_id" => job_id}, socket) do
-    socket = assign(socket, loading: true, selected_job: job_id, runs: [], selected_run: nil, run_metadata: nil)
+  def handle_event("select_job", %{"job_id" => lineage_id}, socket) do
+    socket = assign(socket, loading: true, selected_job: lineage_id, runs: [], selected_run: nil, run_metadata: nil)
     
-    case AWSBridge.list_s3_runs(socket.assigns.bucket, socket.assigns.prefix, job_id) do
+    case AWSBridge.list_s3_runs(socket.assigns.bucket, socket.assigns.prefix, lineage_id) do
       {:ok, runs} ->
         {:noreply, assign(socket, runs: runs, loading: false)}
       {:error, error} ->

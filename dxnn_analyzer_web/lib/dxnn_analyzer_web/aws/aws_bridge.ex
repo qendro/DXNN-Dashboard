@@ -134,8 +134,8 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     end
   end
 
-  def capture_tmux_pane(key_file, host, session \\ "trader") do
-    case ssh_command(key_file, host, "tmux capture-pane -t #{session} -p -S -100 2>/dev/null") do
+  def capture_tmux_pane(key_file, host, session \\ "trader", lines \\ 100) do
+    case ssh_command(key_file, host, "tmux capture-pane -t #{session} -p -S -#{lines} 2>/dev/null") do
       {output, 0} -> {:ok, output}
       {error, _} -> {:error, error}
     end
@@ -173,7 +173,6 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     export EXIT_CODE=0
     export S3_BUCKET=${S3_BUCKET:-dxnn-checkpoints}
     export S3_PREFIX=${S3_PREFIX:-dxnn}
-    export JOB_ID=${JOB_ID:-dxnn-training-001}
     export RUN_ID=$(date -u +%Y%m%d-%H%M%SZ)
     export AUTO_TERMINATE=false
     sudo -E /usr/local/bin/finalize_run.sh
@@ -233,20 +232,20 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     end
   end
 
-  def list_s3_runs(bucket, prefix, job_id) do
+  def list_s3_runs(bucket, prefix, lineage_id) do
     case System.cmd("aws", [
       "s3", "ls",
-      "s3://#{bucket}/#{prefix}/#{job_id}/",
+      "s3://#{bucket}/#{prefix}/#{lineage_id}/",
       "--output", "text"
     ], stderr_to_stdout: true) do
-      {output, 0} -> parse_s3_runs(output, bucket, prefix, job_id)
+      {output, 0} -> parse_s3_runs(output, bucket, prefix, lineage_id)
       {error, _} -> {:error, error}
     end
   end
 
-  def get_s3_checkpoint_metadata(bucket, prefix, job_id, run_id) do
-    temp_file = "/tmp/s3_success_#{:erlang.phash2({bucket, job_id, run_id})}"
-    s3_path = "s3://#{bucket}/#{prefix}/#{job_id}/#{run_id}/_SUCCESS"
+  def get_s3_checkpoint_metadata(bucket, prefix, lineage_id, population_id) do
+    temp_file = "/tmp/s3_success_#{:erlang.phash2({bucket, lineage_id, population_id})}"
+    s3_path = "s3://#{bucket}/#{prefix}/#{lineage_id}/#{population_id}/_SUCCESS"
     
     case System.cmd("aws", ["s3", "cp", s3_path, temp_file], stderr_to_stdout: true) do
       {_, 0} ->
@@ -265,8 +264,8 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     end
   end
 
-  def download_s3_checkpoint(bucket, prefix, job_id, run_id, local_path) do
-    s3_path = "s3://#{bucket}/#{prefix}/#{job_id}/#{run_id}/"
+  def download_s3_checkpoint(bucket, prefix, lineage_id, population_id, local_path) do
+    s3_path = "s3://#{bucket}/#{prefix}/#{lineage_id}/#{population_id}/"
     
     File.mkdir_p!(local_path)
     
@@ -284,7 +283,7 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
 
   def list_instance_s3_checkpoints(instance_id) do
     # Try to find checkpoints associated with this instance
-    # Uses instance_id as job_id pattern
+    # Uses instance_id as lineage_id pattern
     list_s3_jobs()
     |> case do
       {:ok, jobs} ->
@@ -444,7 +443,7 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     |> String.split("\n", trim: true)
     |> Enum.map(fn line ->
       case Regex.run(~r/PRE\s+(.+)\/$/, line) do
-        [_, job_id] -> %{id: String.trim(job_id), type: "job"}
+        [_, lineage_id] -> %{id: String.trim(lineage_id), type: "lineage"}
         _ -> nil
       end
     end)
@@ -452,18 +451,18 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     {:ok, jobs}
   end
 
-  defp parse_s3_runs(output, bucket, prefix, job_id) do
+  defp parse_s3_runs(output, bucket, prefix, lineage_id) do
     runs = output
     |> String.split("\n", trim: true)
     |> Enum.map(fn line ->
       case Regex.run(~r/PRE\s+(.+)\/$/, line) do
-        [_, run_id] -> 
+        [_, population_id] -> 
           %{
-            id: String.trim(run_id),
-            job_id: job_id,
+            id: String.trim(population_id),
+            lineage_id: lineage_id,
             bucket: bucket,
             prefix: prefix,
-            s3_path: "s3://#{bucket}/#{prefix}/#{job_id}/#{String.trim(run_id)}/"
+            s3_path: "s3://#{bucket}/#{prefix}/#{lineage_id}/#{String.trim(population_id)}/"
           }
         _ -> nil
       end

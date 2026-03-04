@@ -204,7 +204,7 @@ Access at `/s3-experiments`:
 - Download experiments directly from S3
 - Automatic caching in /app/data/s3_cache/
 - Clear cache button to free disk space
-- Loaded contexts named: `s3_<job_id>_<run_id>`
+- Loaded contexts named: `s3_<lineage_id>_<population_id>`
 
 **S3 Structure:**
 ```

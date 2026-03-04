@@ -23,6 +23,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
       |> assign(:tmux_loading, false)
       |> assign(:tmux_auto_refresh, false)
       |> assign(:tmux_timer, nil)
+      |> assign(:tmux_lines, 100)
       |> assign(:checkpoint_status, nil)
       |> assign(:checkpoint_loading, false)
       |> assign(:available_logs, [])
@@ -104,13 +105,19 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     socket = assign(socket, :tmux_loading, true)
     key_file = get_key_path(socket.assigns.instance_id)
     host = socket.assigns.instance.ip
+    lines = Map.get(socket.assigns, :tmux_lines, 100)
 
-    case AWSBridge.capture_tmux_pane(key_file, host) do
+    case AWSBridge.capture_tmux_pane(key_file, host, "trader", lines) do
       {:ok, output} ->
         {:noreply, assign(socket, tmux_output: output, tmux_loading: false)}
       {:error, error} ->
         {:noreply, socket |> assign(:tmux_loading, false) |> put_flash(:error, "Failed to capture tmux: #{error}")}
     end
+  end
+
+  def handle_event("update_tmux_lines", %{"lines" => lines_str}, socket) do
+    lines = String.to_integer(lines_str)
+    {:noreply, assign(socket, :tmux_lines, lines)}
   end
 
   def handle_event("toggle_tmux_auto_refresh", _, socket) do
@@ -131,8 +138,9 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     if socket.assigns.tmux_auto_refresh do
       key_file = get_key_path(socket.assigns.instance_id)
       host = socket.assigns.instance.ip
+      lines = Map.get(socket.assigns, :tmux_lines, 100)
 
-      socket = case AWSBridge.capture_tmux_pane(key_file, host) do
+      socket = case AWSBridge.capture_tmux_pane(key_file, host, "trader", lines) do
         {:ok, output} -> assign(socket, :tmux_output, output)
         {:error, _} -> socket
       end
@@ -727,6 +735,9 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   end
 
   defp monitoring_tab(assigns) do
+    # Ensure tmux_lines has a default value
+    assigns = assign_new(assigns, :tmux_lines, fn -> 100 end)
+    
     ~H"""
     <div>
       <h2 class="text-xl font-semibold mb-4">TMUX Session Viewer</h2>
@@ -757,6 +768,25 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                 ▶️ Auto-Refresh (3s)
               <% end %>
             </button>
+
+            <div class="flex items-center space-x-2">
+              <label for="tmux-lines" class="text-sm text-gray-700 font-medium">Lines:</label>
+              <select
+                id="tmux-lines"
+                phx-change="update_tmux_lines"
+                name="lines"
+                class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="50" selected={@tmux_lines == 50}>50</option>
+                <option value="100" selected={@tmux_lines == 100}>100</option>
+                <option value="200" selected={@tmux_lines == 200}>200</option>
+                <option value="500" selected={@tmux_lines == 500}>500</option>
+                <option value="1000" selected={@tmux_lines == 1000}>1000</option>
+                <option value="2000" selected={@tmux_lines == 2000}>2000</option>
+                <option value="5000" selected={@tmux_lines == 5000}>5000</option>
+                <option value="10000" selected={@tmux_lines == 10000}>10000</option>
+              </select>
+            </div>
           </div>
           
           <%= if @tmux_auto_refresh do %>
@@ -775,7 +805,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
         <% else %>
           <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
             <p class="text-gray-600">Click "Refresh TMUX" to view the trader session</p>
-            <p class="text-gray-500 text-sm mt-2">Shows last 100 lines of the tmux pane</p>
+            <p class="text-gray-500 text-sm mt-2">Shows last <%= @tmux_lines %> lines of the tmux pane</p>
           </div>
         <% end %>
 
@@ -784,9 +814,10 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
           <h3 class="font-medium text-blue-900 mb-2">About TMUX Viewer</h3>
           <ul class="text-blue-800 text-sm space-y-1">
             <li>• View-only mode (read-only access to tmux session)</li>
-            <li>• Shows last 100 lines of the "trader" session</li>
+            <li>• Shows last <%= @tmux_lines %> lines of the "trader" session</li>
             <li>• Auto-refresh updates every 3 seconds when enabled</li>
             <li>• For interactive control, use SSH directly</li>
+            <li>• 10k lines is feasible but may take a few seconds to load</li>
           </ul>
         </div>
       </div>

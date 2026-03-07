@@ -27,39 +27,51 @@ load_folder(MnesiaPath, ContextName) ->
             application:set_env(mnesia, dir, TempDir),
             mnesia:start(),
             
-            %% Wait for tables
-            mnesia:wait_for_tables([agent, cortex, neuron, sensor, 
-                                   actuator, substrate, population, 
-                                   specie], 5000),
+            %% Check which tables actually exist
+            AllTables = mnesia:system_info(tables),
+            RequiredTables = [agent, cortex, neuron, sensor, 
+                            actuator, substrate, population, specie],
+            ExistingTables = [T || T <- RequiredTables, lists:member(T, AllTables)],
             
-            %% Copy all data to ETS tables
-            Tables = copy_to_ets(ContextName),
-            
-            %% Collect statistics
-            AgentCount = ets:info(table_name(ContextName, agent), size),
-            PopCount = ets:info(table_name(ContextName, population), size),
-            SpecieCount = ets:info(table_name(ContextName, specie), size),
-            
-            %% Store context metadata
-            Context = #mnesia_context{
-                name = ContextName,
-                path = MnesiaPath,
-                loaded_at = erlang:timestamp(),
-                agent_count = AgentCount,
-                population_count = PopCount,
-                specie_count = SpecieCount,
-                tables = Tables
-            },
-            ets:insert(analyzer_contexts, Context),
-            
-            %% Cleanup
-            application:stop(mnesia),
-            cleanup_temp_dir(TempDir),
-            
-            io:format("Context '~p' loaded successfully~n", [ContextName]),
-            io:format("  Agents: ~w, Species: ~w, Populations: ~w~n",
-                     [AgentCount, SpecieCount, PopCount]),
-            {ok, Context}
+            %% If no tables exist, this is an empty checkpoint
+            case ExistingTables of
+                [] ->
+                    application:stop(mnesia),
+                    cleanup_temp_dir(TempDir),
+                    {error, {empty_checkpoint, "No DXNN tables found. Training may have just started."}};
+                _ ->
+                    %% Wait only for tables that exist
+                    mnesia:wait_for_tables(ExistingTables, 5000),
+                    
+                    %% Copy all data to ETS tables
+                    Tables = copy_to_ets(ContextName, ExistingTables),
+                    
+                    %% Collect statistics (safely handle missing tables)
+                    AgentCount = safe_table_size(table_name(ContextName, agent)),
+                    PopCount = safe_table_size(table_name(ContextName, population)),
+                    SpecieCount = safe_table_size(table_name(ContextName, specie)),
+                    
+                    %% Store context metadata
+                    Context = #mnesia_context{
+                        name = ContextName,
+                        path = MnesiaPath,
+                        loaded_at = erlang:timestamp(),
+                        agent_count = AgentCount,
+                        population_count = PopCount,
+                        specie_count = SpecieCount,
+                        tables = Tables
+                    },
+                    ets:insert(analyzer_contexts, Context),
+                    
+                    %% Cleanup
+                    application:stop(mnesia),
+                    cleanup_temp_dir(TempDir),
+                    
+                    io:format("Context '~p' loaded successfully~n", [ContextName]),
+                    io:format("  Agents: ~w, Species: ~w, Populations: ~w~n",
+                             [AgentCount, SpecieCount, PopCount]),
+                    {ok, Context}
+            end
     end.
 
 %% @doc Unload a context and delete ETS tables
@@ -96,10 +108,7 @@ copy_mnesia_files(Source, Dest) ->
         end
     end, Files).
 
-copy_to_ets(ContextName) ->
-    Tables = [agent, cortex, neuron, sensor, actuator, substrate, 
-              population, specie],
-    
+copy_to_ets(ContextName, ExistingTables) ->
     lists:map(fun(TableName) ->
         EtsName = table_name(ContextName, TableName),
         % Use keypos 2 for all tables since record format is {RecordName, Id, ...}
@@ -115,7 +124,7 @@ copy_to_ets(ContextName) ->
         end, AllKeys),
         
         EtsName
-    end, Tables).
+    end, ExistingTables).
 
 table_name(ContextName, TableName) ->
     list_to_atom(atom_to_list(ContextName) ++ "_" ++ atom_to_list(TableName)).
@@ -127,3 +136,9 @@ create_temp_dir() ->
 
 cleanup_temp_dir(Dir) ->
     os:cmd("rm -rf " ++ Dir).
+
+safe_table_size(TableName) ->
+    case ets:info(TableName) of
+        undefined -> 0;
+        _ -> ets:info(TableName, size)
+    end.

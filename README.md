@@ -163,10 +163,10 @@ Access at `/aws-deployment/instance/INSTANCE_ID`:
 
 **Overview Tab:**
 - View instance information and deployment status
-- Checkpoint management controls:
-  - Check Status: View local checkpoint information
-  - Create Checkpoint: Force local Mnesia backup (~2-5s)
-  - Upload to S3: Trigger full S3 upload with logs
+- S3 Upload Management:
+  - Upload to S3: Uploads Mnesia database, logs, and config directly to S3
+  - No checkpoint creation needed - uploads directly from filesystem
+  - Works whether training is running or not
 
 **Console Logs Tab:**
 - View EC2 console output (requires ec2:GetConsoleOutput IAM permission)
@@ -208,29 +208,29 @@ Access at `/s3-experiments`:
 
 **S3 Structure:**
 ```
-s3://dxnn-checkpoints/dxnn/
-├── job-id-1/
-│   ├── run-id-1/
+s3://dxnn-checkpoints/dxnn-prod/
+├── p08s/                                   # Lineage ID (4-char code)
+│   ├── 2026-03-04T01:33:22Z_p08s_run1/    # Population ID (run 1)
 │   │   ├── Mnesia.nonode@nohost/
 │   │   ├── logs/
 │   │   ├── config.erl
 │   │   ├── _SUCCESS (metadata)
 │   │   └── _MANIFEST
-│   └── run-id-2/
-└── job-id-2/
+│   └── 2026-03-04T01:38:45Z_p08s_run2/    # Run 2
+└── 7g6n/                                   # Different lineage
+    └── ...
 ```
 
 ### Checkpoint Workflow
 
 **From Dashboard:**
 1. Navigate to instance details
-2. Overview tab → Checkpoint Management
-3. "Create Checkpoint" for local backup
-4. "Upload to S3" for full backup with logs
+2. Overview tab → S3 Upload Management
+3. Click "Upload to S3" - uploads directly from filesystem (no checkpoint needed)
 
 **From S3:**
 1. Navigate to S3 Experiments
-2. Browse and select checkpoint
+2. Browse and select by lineage_id and population_id
 3. Load as context in analyzer
 4. Analyze agents, compare runs, extract elite populations
 
@@ -262,11 +262,12 @@ Access at `/aws-deployment`:
 - Shows branch, timestamp, and training status
 
 **Config Deployment:**
-- Upload config.erl files via drag-and-drop
+- Upload multiple files via drag-and-drop (any file type)
 - Deploy to any running instance
 - Select Git branch
 - Option to auto-start DXNN training
 - Real-time deployment terminal
+- Files optional - can deploy with GitHub code only
 
 **Real-time Terminal:**
 - Auto-opens for long operations

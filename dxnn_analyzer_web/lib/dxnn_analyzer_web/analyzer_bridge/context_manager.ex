@@ -40,7 +40,8 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.ContextManager do
   """
   def load_context(path, context_name) do
     path_charlist = String.to_charlist(path)
-    context_atom = String.to_atom(context_name)
+    # Handle both string and atom inputs
+    context_atom = if is_atom(context_name), do: context_name, else: String.to_atom(context_name)
 
     :analyzer.load(path_charlist, context_atom)
   end

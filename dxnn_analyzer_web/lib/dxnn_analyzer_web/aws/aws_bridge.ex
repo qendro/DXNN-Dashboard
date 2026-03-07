@@ -108,8 +108,17 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     end
   end
 
-  def deploy_config(key_file, host, config_file, branch \\ nil, start \\ false) do
-    args = ["-i", key_file, "-h", host, "-c", config_file]
+  def deploy_config(key_file, host, config_files, branch \\ nil, start \\ false) do
+    # config_files is now a list (can be empty)
+    args = ["-i", key_file, "-h", host]
+    
+    # Add config files if provided
+    args = if length(config_files) > 0 do
+      args ++ ["-c" | config_files]
+    else
+      args
+    end
+    
     args = if branch, do: args ++ ["-b", branch], else: args
     args = if start, do: args ++ ["--start"], else: args
     run_script_async("deploy-config.sh", args)
@@ -163,17 +172,19 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
   # Checkpoint Operations
 
   def force_checkpoint(key_file, host) do
-    ssh_command(key_file, host, "sudo /usr/local/bin/dxnn_ctl checkpoint")
+    # Checkpoint is no longer needed - just a status check
+    ssh_command(key_file, host, "echo 'Ready for S3 upload'")
   end
 
   def trigger_s3_upload(key_file, host) do
-    # Trigger finalize script to upload current state to S3
+    # Trigger S3 upload directly from filesystem (no checkpoint needed)
     ssh_command(key_file, host, """
     export COMPLETION_STATUS=manual
     export EXIT_CODE=0
+    export POPULATION_ID=manual_$(date +%s)
+    export LINEAGE_ID=manual
     export S3_BUCKET=${S3_BUCKET:-dxnn-checkpoints}
-    export S3_PREFIX=${S3_PREFIX:-dxnn}
-    export RUN_ID=$(date -u +%Y%m%d-%H%M%SZ)
+    export S3_PREFIX=${S3_PREFIX:-dxnn-prod}
     export AUTO_TERMINATE=false
     sudo -E /usr/local/bin/finalize_run.sh
     """)
@@ -221,7 +232,7 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
 
   # S3 Operations
 
-  def list_s3_jobs(bucket \\ "dxnn-checkpoints", prefix \\ "dxnn") do
+  def list_s3_jobs(bucket \\ "dxnn-checkpoints", prefix \\ "dxnn-prod") do
     case System.cmd("aws", [
       "s3", "ls",
       "s3://#{bucket}/#{prefix}/",

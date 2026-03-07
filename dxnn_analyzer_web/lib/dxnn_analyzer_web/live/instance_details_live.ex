@@ -206,8 +206,9 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     end
   end
 
-  def handle_event("select_log", %{"log" => log_path}, socket) do
-    IO.puts("DEBUG: select_log called with: #{inspect(log_path)}")
+  def handle_event("select_log", params, socket) do
+    log_path = params["log"] || ""
+    IO.puts("DEBUG: select_log called with: #{inspect(log_path)}, params: #{inspect(params)}")
     {:noreply, assign(socket, :selected_log, log_path)}
   end
 
@@ -487,12 +488,6 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                 🔍 Check Status
               </button>
               <button
-                phx-click="force_checkpoint"
-                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
-              >
-                📸 Create Checkpoint
-              </button>
-              <button
                 phx-click="upload_to_s3"
                 class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
                 disabled={@checkpoint_loading}
@@ -506,7 +501,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
             </div>
             
             <p class="text-xs text-gray-600 mt-3">
-              Create Checkpoint: Local backup (~2-5s) • Upload to S3: Full backup with logs
+              Upload to S3: Uploads Mnesia database, logs, and config directly from filesystem
             </p>
           </div>
         </div>
@@ -559,30 +554,30 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
           </div>
 
           <%= if length(@available_logs) > 0 do %>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Select Log File</label>
-                <select
-                  phx-change="select_log"
-                  name="log"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                >
-                  <option value="">-- Select a log file --</option>
-                  <%= for log <- @available_logs do %>
-                    <option value={log.path} selected={@selected_log == log.path}>
-                      <%= Path.basename(log.path) %> (<%= log.size %>)
-                    </option>
-                  <% end %>
-                </select>
-              </div>
+            <form phx-change="select_log">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Select Log File</label>
+                  <select
+                    name="log"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  >
+                    <option value="">-- Select a log file --</option>
+                    <%= for log <- @available_logs do %>
+                      <option value={log.path} selected={@selected_log == log.path}>
+                        <%= Path.basename(log.path) %> (<%= log.size %>)
+                      </option>
+                    <% end %>
+                  </select>
+                </div>
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Lines to Show</label>
-                <select
-                  phx-change="update_log_lines"
-                  name="lines"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                >
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Lines to Show</label>
+                  <select
+                    phx-change="update_log_lines"
+                    name="lines"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  >
                   <option value="50">Last 50 lines</option>
                   <option value="100" selected={@log_lines == 100}>Last 100 lines</option>
                   <option value="200">Last 200 lines</option>
@@ -591,6 +586,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                 </select>
               </div>
             </div>
+            </form>
 
             <button
               phx-click="view_log"

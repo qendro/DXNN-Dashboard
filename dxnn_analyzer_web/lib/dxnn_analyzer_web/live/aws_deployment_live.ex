@@ -36,14 +36,12 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
       |> assign(:expanded_instance, nil)
       |> assign(:deploy_key_file, "")
       |> assign(:deploy_host, "")
-      |> assign(:deploy_config_file, nil)
       |> assign(:deploy_branch, "main")
       |> assign(:deploy_start, false)
       |> assign(:deploy_instance_id, nil)
       |> assign(:pending_deployment, nil)
-      |> assign(:uploaded_files, [])
       |> assign(:deployments, %{})  # Track deployments by instance_id
-      |> allow_upload(:config_file, accept: :any, max_entries: 1)
+      |> allow_upload(:config_file, accept: :any, max_entries: 20)
       |> load_state()
       |> check_running_operations()
 
@@ -350,7 +348,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
   end
 
   def handle_event("hide_deploy_config_modal", _, socket) do
-    {:noreply, assign(socket, show_deploy_config_modal: false, selected_instance: nil, deploy_config_file: nil)}
+    {:noreply, assign(socket, show_deploy_config_modal: false, selected_instance: nil)}
   end
 
   def handle_event("update_deploy_field", %{"field" => field, "value" => value}, socket) do
@@ -367,6 +365,10 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
 
   def handle_event("validate_upload", _, socket) do
     {:noreply, socket}
+  end
+
+  def handle_event("cancel_upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :config_file, ref)}
   end
 
   def handle_event("deploy_config", params, socket) do
@@ -399,19 +401,20 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
         value -> value in ["on", "1", 1, true]
       end
 
-    uploaded_files = consume_uploaded_entries(socket, :config_file, fn %{path: path}, _entry ->
-      dest = Path.join([System.tmp_dir!(), "config.erl"])
+    # Consume all uploaded files
+    uploaded_files = consume_uploaded_entries(socket, :config_file, fn %{path: path}, entry ->
+      # Preserve original filename
+      dest = Path.join([System.tmp_dir!(), entry.client_name])
       File.cp!(path, dest)
       {:ok, dest}
     end)
 
-    config_file = if length(uploaded_files) > 0, do: List.first(uploaded_files), else: nil
-
-    if config_file && deploy_key_file && deploy_host && deploy_instance_id do
+    # Deploy even if no files uploaded (will just pull GitHub and compile)
+    if deploy_key_file && deploy_host && deploy_instance_id do
       case AWSBridge.deploy_config(
         deploy_key_file,
         deploy_host,
-        config_file,
+        uploaded_files,  # Pass list of files (can be empty)
         deploy_branch,
         deploy_start
       ) do
@@ -426,7 +429,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
 
           socket =
             socket
-            |> assign(show_deploy_config_modal: false, deploy_config_file: nil)
+            |> assign(show_deploy_config_modal: false)
             |> assign(:show_terminal_modal, true)
             |> assign(:terminal_title, "Deploying Configuration")
             |> assign(:terminal_output, "Starting config deployment...\n")
@@ -1189,7 +1192,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
   defp deploy_config_modal(assigns) do
     ~H"""
     <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-2xl w-full">
+      <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h3 class="text-lg font-semibold mb-4">Deploy Configuration</h3>
         
         <form phx-submit="deploy_config" phx-change="validate_upload">
@@ -1228,25 +1231,46 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Config File (.erl)
+                Files to Upload (Optional)
               </label>
+              <p class="text-xs text-gray-500 mb-2">
+                Upload files to override GitHub versions. Leave empty to use GitHub code only.
+              </p>
               <div
-                class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center"
+                class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition"
                 phx-drop-target={@uploads.config_file.ref}
               >
                 <.live_file_input upload={@uploads.config_file} class="hidden" />
                 <label for={@uploads.config_file.ref} class="cursor-pointer">
                   <div class="text-gray-600">
-                    Click to upload or drag and drop
+                    📁 Click to upload or drag and drop
                   </div>
                   <div class="text-sm text-gray-500 mt-1">
-                    .erl files only
+                    Any file type • Multiple files allowed
                   </div>
                 </label>
               </div>
-              <%= for entry <- @uploads.config_file.entries do %>
-                <div class="mt-2 text-sm text-green-600">
-                  ✓ <%= entry.client_name %>
+              
+              <%= if length(@uploads.config_file.entries) > 0 do %>
+                <div class="mt-3 space-y-2">
+                  <p class="text-sm font-medium text-gray-700">Files to upload:</p>
+                  <%= for entry <- @uploads.config_file.entries do %>
+                    <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded px-3 py-2">
+                      <div class="flex items-center space-x-2">
+                        <span class="text-green-600">✓</span>
+                        <span class="text-sm font-mono"><%= entry.client_name %></span>
+                        <span class="text-xs text-gray-500">(<%= Float.round(entry.client_size / 1024, 1) %> KB)</span>
+                      </div>
+                      <button
+                        type="button"
+                        phx-click="cancel_upload"
+                        phx-value-ref={entry.ref}
+                        class="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  <% end %>
                 </div>
               <% end %>
             </div>
@@ -1278,6 +1302,20 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                 Start DXNN training after deployment
               </label>
             </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p class="text-sm text-blue-800">
+                <strong>Deployment Order:</strong>
+              </p>
+              <ol class="text-xs text-blue-700 mt-2 space-y-1 ml-4 list-decimal">
+                <li>Pull latest code from GitHub branch: <span class="font-mono"><%= @deploy_branch %></span></li>
+                <li>Copy uploaded files (overwriting if exists)</li>
+                <li>Compile all Erlang files</li>
+                <%= if @deploy_start do %>
+                  <li>Start DXNN training</li>
+                <% end %>
+              </ol>
+            </div>
           </div>
 
           <div class="flex justify-end space-x-2 mt-6">
@@ -1292,7 +1330,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
               type="submit"
               class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
             >
-              Deploy Config
+              Deploy
             </button>
           </div>
         </form>

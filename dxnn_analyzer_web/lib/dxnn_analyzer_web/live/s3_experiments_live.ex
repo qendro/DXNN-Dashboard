@@ -8,7 +8,7 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
     socket =
       socket
       |> assign(:bucket, "dxnn-checkpoints")
-      |> assign(:prefix, "dxnn")
+      |> assign(:prefix, "dxnn-prod")
       |> assign(:jobs, [])
       |> assign(:selected_job, nil)
       |> assign(:runs, [])
@@ -80,8 +80,11 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
           mnesia_path = Path.join(path, "Mnesia.nonode@nohost")
           
           if File.dir?(mnesia_path) do
-            # Load into analyzer
-            context_name = "s3_#{socket.assigns.selected_job}_#{socket.assigns.selected_run}"
+            # Load into analyzer - sanitize name for atom conversion
+            # Extract just the lineage_id from job and run number from run
+            lineage_id = socket.assigns.selected_job
+            run_id = socket.assigns.selected_run |> String.split("_") |> List.last()
+            context_name = "s3_#{lineage_id}_#{run_id}"
             
             case AnalyzerBridge.load_context(mnesia_path, String.to_atom(context_name)) do
               :ok ->
@@ -89,6 +92,14 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
                   |> assign(downloading: false, download_progress: "")
                   |> put_flash(:info, "Context loaded successfully as '#{context_name}'")
                   |> push_navigate(to: "/")}
+              {:error, {:empty_checkpoint, message}} ->
+                {:noreply, socket 
+                  |> assign(downloading: false, download_progress: "")
+                  |> put_flash(:error, "Empty checkpoint: #{message}")}
+              {:error, {:aborted, {:no_exists, _}}} ->
+                {:noreply, socket 
+                  |> assign(downloading: false, download_progress: "")
+                  |> put_flash(:error, "This checkpoint has no data yet. The training may have just started or no agents were created.")}
               {:error, reason} ->
                 {:noreply, socket 
                   |> assign(downloading: false, download_progress: "")
@@ -151,7 +162,7 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
           <!-- Jobs List -->
           <div class="bg-white shadow rounded-lg p-6">
             <div class="flex justify-between items-center mb-4">
-              <h2 class="text-lg font-semibold">Job IDs</h2>
+              <h2 class="text-lg font-semibold">Lineage IDs</h2>
               <button
                 phx-click="load_jobs"
                 class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition"
@@ -179,14 +190,14 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
               </div>
             <% else %>
               <div class="text-center py-8 text-gray-500 text-sm">
-                Click refresh to load job IDs
+                Click refresh to load lineage IDs
               </div>
             <% end %>
           </div>
 
           <!-- Runs List -->
           <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-lg font-semibold mb-4">Run IDs</h2>
+            <h2 class="text-lg font-semibold mb-4">Population IDs</h2>
 
             <%= if @selected_job do %>
               <%= if length(@runs) > 0 do %>
@@ -206,13 +217,13 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
                   <%= if @loading do %>
                     Loading runs...
                   <% else %>
-                    No runs found for this job
+                    No runs found for this lineage
                   <% end %>
                 </div>
               <% end %>
             <% else %>
               <div class="text-center py-8 text-gray-500 text-sm">
-                Select a job to view runs
+                Select a lineage to view runs
               </div>
             <% end %>
           </div>
@@ -293,6 +304,8 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
           <h3 class="font-medium text-blue-900 mb-2">About S3 Experiments</h3>
           <ul class="text-blue-800 text-sm space-y-1">
             <li>• Browse checkpoints uploaded from EC2 instances</li>
+            <li>• Lineage ID format: 4-char code (e.g., 7g6n, p08s)</li>
+            <li>• Population ID format: timestamp_code_runN (e.g., 2026-03-04T04:09:10Z_7g6n_run1)</li>
             <li>• Download and load experiments directly into the analyzer</li>
             <li>• Cached downloads stored in /app/data/s3_cache/</li>
             <li>• Use "Clear Cache" to free disk space</li>

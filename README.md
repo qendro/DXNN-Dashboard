@@ -14,7 +14,7 @@ DXNN Analyzer Web Interface combines a powerful Erlang-based analysis engine wit
 ## Features
 
 ### Analysis & Inspection
-- **Multi-Context Management** - Load and analyze multiple Mnesia databases simultaneously
+- **Multi-Context Management** - Load and analyze multiple run bundles (Mnesia + logs + analytics) or Mnesia-only folders
 - **Agent Browser** - View, filter, and search agents with real-time updates
 - **Deep Inspection** - Detailed analysis of fitness, topology, and evolution history
 - **Topology Visualization** - Interactive neural network structure viewer with D3.js
@@ -76,6 +76,9 @@ http://localhost:4000/aws-deployment/instance/INSTANCE_ID
 **S3 Experiments:** Browse and load S3 checkpoints:
 http://localhost:4000/s3-experiments
 
+**Context Artifacts:** View logs and analytics for loaded contexts:
+http://localhost:4000/contexts/<context_name>/artifacts
+
 ### AWS IAM Permissions (Optional)
 
 For console log viewing, add this inline policy to your IAM user:
@@ -115,7 +118,8 @@ Open your browser to `http://localhost:4000`
 
 5. **Load a context:**
    - Navigate to Dashboard
-   - Path: `/app/DXNN-Trader-V2/DXNN-Trader-v2/Mnesia.nonode@nohost`
+   - Path: `/app/Documents/DXNN_Main/DXNN-Dashboard/Databases/AWS_v1/<lineage_id>/<run_id>`
+     (or direct Mnesia path: `/app/.../Mnesia.nonode@nohost`)
    - Name: `exp1`
    - Click "Load Context"
 
@@ -201,10 +205,11 @@ Access at `/s3-experiments`:
 
 **Features:**
 - View checkpoint metadata (status, timestamp, exit code)
-- Download experiments directly from S3
+- Download full run bundles directly from S3 (`Mnesia.nonode@nohost`, `logs`, `_SUCCESS`, `_MANIFEST`, and other run files)
 - Automatic caching in /app/data/s3_cache/
 - Clear cache button to free disk space
-- Loaded contexts named: `s3_<lineage_id>_<population_id>`
+- Loaded contexts named: `s3_<lineage_id>_<run_fragment>`
+- Per-context artifact browser at `/contexts/<context_name>/artifacts`
 
 **S3 Structure:**
 ```
@@ -279,14 +284,16 @@ Access at `/aws-deployment`:
 
 ### Loading Contexts
 
-A "context" is a loaded Mnesia database that you can analyze:
+A "context" is a loaded run that you can analyze:
 
 1. Navigate to Dashboard (`/`)
-2. Enter Mnesia folder path (e.g., `./Databases/Mnesia.nonode@nohost`)
+2. Enter one of:
+   - a run root path containing `Mnesia.nonode@nohost` (recommended), or
+   - a direct Mnesia folder path
 3. Provide context name (e.g., `exp1`, `experiment_2024`)
 4. Click "Load Context"
 
-The context loads into memory as ETS tables for fast querying. Original Mnesia files remain unchanged.
+The context loads Mnesia tables into memory for fast querying. Logs and analytics remain on disk and are accessible from the `Artifacts` button on the dashboard.
 
 ### Viewing & Filtering Agents
 
@@ -363,16 +370,16 @@ Build and manage your collection of elite agents:
 
 ## Docker Configuration
 
-### Custom Mnesia Folder Location
+### Custom Run Folder Location
 
-Edit `docker-compose.yml` to mount your Mnesia folders:
+Edit `docker-compose.yml` to mount your run folders:
 
 ```yaml
 volumes:
-  - /path/to/your/mnesia:/app/mnesia:ro
+  - /path/to/your/runs:/app/runs:ro
 ```
 
-Then use path `/app/mnesia/Mnesia.nonode@nohost` in the interface.
+Then use either `/app/runs/<lineage>/<run_id>` or `/app/runs/<lineage>/<run_id>/Mnesia.nonode@nohost` in the interface.
 
 ### AWS Integration
 

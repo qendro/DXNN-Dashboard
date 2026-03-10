@@ -21,6 +21,7 @@ defmodule DxnnAnalyzerWeb.Router do
 
     live "/", DashboardLive, :index
     live "/settings", SettingsLive, :index
+    live "/analytics", AgentPerformanceLive, :index
     live "/agents", AgentListLive, :index
     live "/agents/:id", AgentInspectorLive, :show
     live "/topology/:id", TopologyViewerLive, :show
@@ -32,6 +33,7 @@ defmodule DxnnAnalyzerWeb.Router do
     live "/aws-deployment/instance/:instance_id", InstanceDetailsLive, :show
     live "/s3-experiments", S3ExperimentsLive, :index
     live "/s3-explorer", S3ExplorerLive, :index
+    live "/contexts/:context/artifacts", ContextArtifactsLive, :show
   end
 
   if Application.compile_env(:dxnn_analyzer_web, :dev_routes) do

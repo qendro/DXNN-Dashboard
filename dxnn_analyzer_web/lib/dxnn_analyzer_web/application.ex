@@ -10,6 +10,7 @@ defmodule DxnnAnalyzerWeb.Application do
       {DNSCluster, query: Application.get_env(:dxnn_analyzer_web, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: DxnnAnalyzerWeb.PubSub},
       DxnnAnalyzerWeb.Endpoint,
+      {DxnnAnalyzerWeb.ContextRegistry, []},
       {DxnnAnalyzerWeb.AnalyzerBridge, []},
       DxnnAnalyzerWeb.AWS.AWSDeploymentServer
     ]

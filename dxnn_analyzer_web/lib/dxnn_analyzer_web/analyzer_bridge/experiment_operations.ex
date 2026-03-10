@@ -3,6 +3,7 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.ExperimentOperations do
   Handles experiment-related operations.
   """
 
+  alias DxnnAnalyzerWeb.ContextRegistry
   alias DxnnAnalyzerWeb.AnalyzerBridge.ContextManager
 
   @doc """
@@ -28,10 +29,12 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.ExperimentOperations do
       experiment_path = Path.join([to_string(default_folder), name])
 
       with :ok <- File.mkdir_p(experiment_path),
-           context_atom = String.to_atom(name),
+           {:ok, context_atom, display_name} <- ContextManager.ensure_context_alias(name),
            {:ok, _} <- :master_database.create_empty(context_atom),
            {:ok, _} <-
              :master_database.save(context_atom, String.to_charlist(experiment_path)) do
+        :analyzer.unload(context_atom)
+        :ok = ContextRegistry.release(display_name)
         {:ok, experiment_path}
       else
         {:error, reason} -> {:error, "Failed to create experiment: #{inspect(reason)}"}
@@ -54,10 +57,8 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.ExperimentOperations do
   Saves an experiment to disk.
   """
   def save_experiment(experiment_name, experiment_path) do
-    experiment_context_atom = String.to_atom(experiment_name)
-
-    with {:ok, ^experiment_context_atom, _} <-
-           ContextManager.validate_context(experiment_context_atom) do
+    with {:ok, experiment_context_atom, _} <-
+           ContextManager.validate_context(experiment_name) do
       clean_path = clean_mnesia_path(experiment_path)
       experiment_path_charlist = String.to_charlist(clean_path)
 
@@ -69,8 +70,9 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.ExperimentOperations do
   Creates an empty experiment context in memory.
   """
   def create_empty_experiment(name) do
-    context_atom = String.to_atom(name)
-    :master_database.create_empty(context_atom)
+    with {:ok, context_atom, _display_name} <- ContextManager.ensure_context_alias(name) do
+      :master_database.create_empty(context_atom)
+    end
   end
 
   # Private helpers

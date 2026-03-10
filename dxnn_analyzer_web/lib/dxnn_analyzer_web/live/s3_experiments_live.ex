@@ -76,39 +76,23 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
         local_path
       ) do
         {:ok, path} ->
-          # Find Mnesia directory
-          mnesia_path = Path.join(path, "Mnesia.nonode@nohost")
-          
-          if File.dir?(mnesia_path) do
-            # Load into analyzer - sanitize name for atom conversion
-            # Extract just the lineage_id from job and run number from run
-            lineage_id = socket.assigns.selected_job
-            run_id = socket.assigns.selected_run |> String.split("_") |> List.last()
-            context_name = "s3_#{lineage_id}_#{run_id}"
-            
-            case AnalyzerBridge.load_context(mnesia_path, String.to_atom(context_name)) do
-              :ok ->
-                {:noreply, socket 
-                  |> assign(downloading: false, download_progress: "")
-                  |> put_flash(:info, "Context loaded successfully as '#{context_name}'")
-                  |> push_navigate(to: "/")}
-              {:error, {:empty_checkpoint, message}} ->
-                {:noreply, socket 
-                  |> assign(downloading: false, download_progress: "")
-                  |> put_flash(:error, "Empty checkpoint: #{message}")}
-              {:error, {:aborted, {:no_exists, _}}} ->
-                {:noreply, socket 
-                  |> assign(downloading: false, download_progress: "")
-                  |> put_flash(:error, "This checkpoint has no data yet. The training may have just started or no agents were created.")}
-              {:error, reason} ->
-                {:noreply, socket 
-                  |> assign(downloading: false, download_progress: "")
-                  |> put_flash(:error, "Failed to load context: #{inspect(reason)}")}
-            end
-          else
-            {:noreply, socket 
-              |> assign(downloading: false, download_progress: "")
-              |> put_flash(:error, "Mnesia directory not found in checkpoint")}
+          context_name = build_s3_context_name(socket.assigns.selected_job, socket.assigns.selected_run)
+
+          case AnalyzerBridge.load_context(path, context_name) do
+            {:ok, _} ->
+              {:noreply, socket 
+                |> assign(downloading: false, download_progress: "")
+                |> put_flash(:info, "Context loaded successfully as '#{context_name}'")
+                |> push_navigate(to: "/")}
+            {:error, {:already_loaded, _}} ->
+              {:noreply, socket 
+                |> assign(downloading: false, download_progress: "")
+                |> put_flash(:info, "Context '#{context_name}' is already loaded")
+                |> push_navigate(to: "/")}
+            {:error, reason} ->
+              {:noreply, socket
+                |> assign(downloading: false, download_progress: "")
+                |> put_flash(:error, "Failed to load context: #{format_load_error(reason)}")}
           end
         {:error, error} ->
           {:noreply, socket 
@@ -290,7 +274,7 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
                 </button>
 
                 <p class="text-xs text-gray-600 text-center">
-                  Downloads checkpoint and loads into analyzer
+                  Downloads run bundle and loads Mnesia context (logs/analytics kept on disk)
                 </p>
               </div>
             <% else %>
@@ -321,4 +305,50 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
     </div>
     """
   end
+
+  defp build_s3_context_name(lineage_id, population_id) do
+    safe_lineage = sanitize_context_fragment(lineage_id)
+    run_fragment =
+      population_id
+      |> String.split("_")
+      |> List.last()
+      |> sanitize_context_fragment()
+
+    "s3_#{safe_lineage}_#{run_fragment}"
+  end
+
+  defp sanitize_context_fragment(value) when is_binary(value) do
+    value
+    |> String.replace(~r/[^a-zA-Z0-9_-]/u, "_")
+    |> String.trim("_")
+    |> case do
+      "" -> "run"
+      cleaned -> cleaned
+    end
+  end
+
+  defp format_load_error({:path_not_accessible, candidate_paths}) do
+    "path not accessible from dashboard container (tried: #{Enum.join(candidate_paths, ", ")})"
+  end
+
+  defp format_load_error({:multiple_runs_found, run_paths}) do
+    sample =
+      run_paths
+      |> Enum.take(3)
+      |> Enum.join(", ")
+
+    "multiple runs found. Select a specific run folder. Examples: #{sample}"
+  end
+
+  defp format_load_error(:no_mnesia_files) do
+    "no Mnesia files found in downloaded run bundle"
+  end
+
+  defp format_load_error({:schema_node_mismatch, owner_nodes, current_node}) do
+    "Mnesia schema belongs to #{inspect(owner_nodes)} but dashboard node is #{inspect(current_node)}"
+  end
+
+  defp format_load_error({:empty_checkpoint, message}), do: "empty checkpoint: #{message}"
+  defp format_load_error({:aborted, {:no_exists, _}}), do: "checkpoint has no agent data yet"
+  defp format_load_error(reason), do: inspect(reason)
 end

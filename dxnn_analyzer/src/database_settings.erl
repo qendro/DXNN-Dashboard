@@ -79,65 +79,74 @@ get_default_folder() ->
 scan_databases(Folder) when is_binary(Folder) ->
     FolderStr = binary_to_list(Folder),
     case filelib:is_dir(FolderStr) of
-        false -> 
-            io:format("Folder does not exist: ~s~n", [FolderStr]),
+        false ->
             [];
         true ->
-            % Check if this folder itself is a Mnesia database directory
-            % A Mnesia database directory contains .DCD, .DCL, or .DAT files
-            IsMnesiaDir = case file:list_dir(FolderStr) of
-                {ok, Files} ->
-                    lists:any(fun(F) -> 
-                        lists:suffix(".DCD", F) orelse 
-                        lists:suffix(".DCL", F) orelse 
-                        lists:suffix(".DAT", F)
-                    end, Files);
-                _ -> false
-            end,
-            
-            case IsMnesiaDir of
-                true ->
-                    % This folder itself is a Mnesia database
-                    Name = list_to_binary(filename:basename(FolderStr)),
-                    io:format("Found Mnesia database at: ~s (name: ~s)~n", [FolderStr, Name]),
-                    [#{path => list_to_binary(FolderStr), name => Name}];
-                false ->
-                    % Scan subdirectories for Mnesia databases
-                    case file:list_dir(FolderStr) of
-                        {ok, Entries} ->
-                            io:format("Scanning subdirectories in: ~s~n", [FolderStr]),
-                            lists:filtermap(fun(Entry) ->
-                                EntryPath = filename:join(FolderStr, Entry),
-                                case filelib:is_dir(EntryPath) of
-                                    true ->
-                                        % Check if this subdirectory is a Mnesia database
-                                        case file:list_dir(EntryPath) of
-                                            {ok, SubFiles} ->
-                                                HasMnesiaFiles = lists:any(fun(F) -> 
-                                                    lists:suffix(".DCD", F) orelse 
-                                                    lists:suffix(".DCL", F) orelse 
-                                                    lists:suffix(".DAT", F)
-                                                end, SubFiles),
-                                                case HasMnesiaFiles of
-                                                    true ->
-                                                        io:format("Found Mnesia database at: ~s~n", [EntryPath]),
-                                                        {true, #{path => list_to_binary(EntryPath), name => list_to_binary(Entry)}};
-                                                    false ->
-                                                        false
-                                                end;
-                                            _ -> false
-                                        end;
-                                    false -> false
-                                end
-                            end, Entries);
-                        {error, Reason} -> 
-                            io:format("Error listing directory ~s: ~p~n", [FolderStr, Reason]),
-                            []
-                    end
-            end
+            discover_databases(FolderStr)
     end.
 
 %% Internal functions
+
+discover_databases(Path) ->
+    case classify_database_path(Path) of
+        {run_root, _MnesiaPath} ->
+            [database_entry(Path)];
+        mnesia_dir ->
+            [database_entry(Path)];
+        none ->
+            case file:list_dir(Path) of
+                {ok, Entries} ->
+                    lists:flatmap(fun(Entry) ->
+                        ChildPath = filename:join(Path, Entry),
+                        case filelib:is_dir(ChildPath) of
+                            true -> discover_databases(ChildPath);
+                            false -> []
+                        end
+                    end, lists:sort(Entries));
+                {error, _Reason} ->
+                    []
+            end
+    end.
+
+classify_database_path(Path) ->
+    RunMnesiaPath = filename:join(Path, "Mnesia.nonode@nohost"),
+    case is_mnesia_directory(RunMnesiaPath) of
+        true ->
+            {run_root, RunMnesiaPath};
+        false ->
+            case is_mnesia_directory(Path) of
+                true -> mnesia_dir;
+                false -> none
+            end
+    end.
+
+database_entry(Path) ->
+    Name = filename:basename(Path),
+    #{
+        path => list_to_binary(Path),
+        name => list_to_binary(Name)
+    }.
+
+is_mnesia_directory(Path) ->
+    case filelib:is_dir(Path) of
+        false ->
+            false;
+        true ->
+            has_mnesia_files(Path)
+    end.
+
+has_mnesia_files(Path) ->
+    case file:list_dir(Path) of
+        {ok, Files} ->
+            lists:any(fun is_mnesia_file/1, Files);
+        {error, _Reason} ->
+            false
+    end.
+
+is_mnesia_file(File) ->
+    lists:suffix(".DCD", File) orelse
+    lists:suffix(".DCL", File) orelse
+    lists:suffix(".DAT", File).
 
 load_settings() ->
     case file:read_file(?SETTINGS_FILE) of

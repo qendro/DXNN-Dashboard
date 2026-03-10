@@ -3,6 +3,8 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.Formatters do
   Formats Erlang data structures into Elixir-friendly maps.
   """
 
+  alias DxnnAnalyzerWeb.ContextRegistry
+
   @doc """
   Formats a generic result tuple.
   """
@@ -25,9 +27,34 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.Formatters do
   Record structure: {mnesia_context, name, path, loaded_at, agent_count, population_count, specie_count, tables}
   """
   def format_context(context) when is_tuple(context) do
+    context_atom = elem(context, 1)
+    record_path = to_string(elem(context, 2))
+
+    display_name =
+      ContextRegistry.display_name_for_atom(context_atom) ||
+        Atom.to_string(context_atom)
+
+    bundle = ContextRegistry.get_bundle(context_atom) || %{}
+
+    bundle_root = Map.get(bundle, :bundle_root) || Map.get(bundle, "bundle_root")
+    mnesia_path = Map.get(bundle, :mnesia_path) || Map.get(bundle, "mnesia_path") || record_path
+    logs_path = Map.get(bundle, :logs_path) || Map.get(bundle, "logs_path")
+    analytics_path = Map.get(bundle, :analytics_path) || Map.get(bundle, "analytics_path")
+    manifest_path = Map.get(bundle, :manifest_path) || Map.get(bundle, "manifest_path")
+    success_path = Map.get(bundle, :success_path) || Map.get(bundle, "success_path")
+    checkpoint_info_path =
+      Map.get(bundle, :checkpoint_info_path) || Map.get(bundle, "checkpoint_info_path")
+
     %{
-      name: to_string(elem(context, 1)),
-      path: to_string(elem(context, 2)),
+      name: display_name,
+      path: bundle_root || record_path,
+      mnesia_path: mnesia_path,
+      bundle_root: bundle_root,
+      logs_path: logs_path,
+      analytics_path: analytics_path,
+      manifest_path: manifest_path,
+      success_path: success_path,
+      checkpoint_info_path: checkpoint_info_path,
       agent_count: elem(context, 4),
       population_count: elem(context, 5),
       specie_count: elem(context, 6)

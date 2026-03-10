@@ -1,6 +1,6 @@
 defmodule DxnnAnalyzerWeb.SettingsLive do
   use DxnnAnalyzerWeb, :live_view
-  alias DxnnAnalyzerWeb.AnalyzerBridge
+  alias DxnnAnalyzerWeb.{AnalyzerBridge, RunBundleResolver}
 
   @impl true
   def mount(_params, _session, socket) do
@@ -58,7 +58,12 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
 
   @impl true
   def handle_event("show_browser", %{"mode" => mode}, socket) do
-    browser_mode = String.to_atom(mode)
+    browser_mode =
+      case mode do
+        "create" -> :create
+        _ -> :add
+      end
+
     current_path = socket.assigns.current_path
     
     socket =
@@ -322,8 +327,8 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
         |> Enum.sort()
         |> Enum.map(fn dir ->
           full_path = Path.join(path, dir)
-          has_mnesia = has_mnesia_files?(full_path)
-          %{name: dir, path: full_path, has_mnesia: has_mnesia}
+          loadable_run = loadable_run_path?(full_path)
+          %{name: dir, path: full_path, loadable_run: loadable_run}
         end)
         
         parent_path = Path.dirname(path)
@@ -340,62 +345,18 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
     end
   end
 
-  defp has_mnesia_files?(path) do
-    case File.ls(path) do
-      {:ok, files} ->
-        Enum.any?(files, &mnesia_file?/1)
-      _ -> false
+  defp loadable_run_path?(path) do
+    case RunBundleResolver.resolve(path, allow_single_nested: true) do
+      {:ok, _bundle} -> true
+      {:error, _reason} -> false
     end
   end
 
   defp load_experiment_context(%{name: name, path: path}) do
-    with {:ok, mnesia_path} <- resolve_mnesia_path(path) do
-      case AnalyzerBridge.load_context(mnesia_path, name) do
-        {:ok, _} -> {:ok, :loaded}
-        {:error, {:already_loaded, _}} -> {:ok, :loaded}
-        {:error, reason} -> {:error, reason}
-      end
-    else
-      {:error, :no_mnesia_files} ->
-        case AnalyzerBridge.create_empty_experiment(name) do
-          {:ok, _} -> {:ok, :empty}
-          {:error, reason} -> {:error, reason}
-        end
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  defp resolve_mnesia_path(path) when is_binary(path) do
-    candidate_paths =
-      [path, Path.join(path, "Mnesia.nonode@nohost")]
-      |> Kernel.++(container_candidates(path))
-      |> Enum.uniq()
-
-    case Enum.find(candidate_paths, &has_mnesia_files?/1) do
-      nil ->
-        cond do
-          Enum.any?(candidate_paths, &File.dir?/1) ->
-            {:error, :no_mnesia_files}
-
-          true ->
-            {:error, {:path_not_accessible, candidate_paths}}
-        end
-
-      mnesia_path ->
-        {:ok, mnesia_path}
-    end
-  end
-
-  defp container_candidates(path) do
-    case String.split(path, "/Documents/", parts: 2) do
-      ["/Users" <> _, suffix] ->
-        candidate = Path.join("/app/Documents", suffix)
-        [candidate, Path.join(candidate, "Mnesia.nonode@nohost")]
-
-      _ ->
-        []
+    case AnalyzerBridge.load_context(path, name) do
+      {:ok, _} -> {:ok, :loaded}
+      {:error, {:already_loaded, _}} -> {:ok, :loaded}
+      {:error, reason} -> {:error, reason}
     end
   end
 
@@ -426,17 +387,24 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
     "path not accessible from dashboard container (tried: #{Enum.join(candidate_paths, ", ")})"
   end
 
+  defp format_load_error({:multiple_runs_found, run_paths}) do
+    sample =
+      run_paths
+      |> Enum.take(3)
+      |> Enum.join(", ")
+
+    "multiple runs found. Select a specific run folder. Examples: #{sample}"
+  end
+
+  defp format_load_error(:no_mnesia_files) do
+    "no Mnesia files found at the configured path"
+  end
+
   defp format_load_error({:schema_node_mismatch, owner_nodes, current_node}) do
     "Mnesia schema belongs to #{inspect(owner_nodes)} but dashboard node is #{inspect(current_node)}"
   end
 
   defp format_load_error(reason), do: inspect(reason)
-
-  defp mnesia_file?(filename) do
-    String.ends_with?(filename, ".DCD") or
-      String.ends_with?(filename, ".DCL") or
-      String.ends_with?(filename, ".DAT")
-  end
 
   @impl true
   def render(assigns) do
@@ -615,7 +583,7 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
                   <input
                     type="text"
                     name="name"
-                    placeholder="Mnesia.nonode@nohost"
+                    placeholder="run_2026_03_10"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                     autofocus
@@ -632,7 +600,7 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
                     <input
                       type="text"
                       name="path"
-                      placeholder="/app/Documents/DXNN_Main/DXNN-Trader-v2"
+                      placeholder="/app/Documents/DXNN_Main/DXNN-Dashboard/Databases/AWS_v1/lineage_id/run_id"
                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                       required
                     />
@@ -646,7 +614,7 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
                     </button>
                   </div>
                   <p class="text-xs text-gray-500 mt-1">
-                    Full path to the Mnesia database folder
+                    Full path to a run folder or direct Mnesia folder
                   </p>
                 </div>
                 <div class="flex gap-2">
@@ -713,7 +681,7 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
                     </button>
                   </div>
                   <p class="text-xs text-gray-500 mt-1">
-                    Full path where the new Mnesia database will be created
+                    Full path where the new experiment folder will be created
                   </p>
                 </div>
                 <div class="flex gap-2">
@@ -775,8 +743,8 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
                           <span class="text-2xl">📁</span>
                           <div class="flex-1 min-w-0">
                             <div class="font-medium truncate"><%= dir.name %></div>
-                            <%= if dir.has_mnesia do %>
-                              <span class="text-xs text-green-600">✓ Contains Mnesia files</span>
+                            <%= if dir.loadable_run do %>
+                              <span class="text-xs text-green-600">✓ Loadable run bundle</span>
                             <% end %>
                           </div>
                         </div>

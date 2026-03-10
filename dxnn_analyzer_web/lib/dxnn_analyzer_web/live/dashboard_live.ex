@@ -38,6 +38,7 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
     socket =
       socket
       |> load_experiments()
+      |> maybe_put_load_all_error(results)
       |> put_flash(:info, "Loaded #{success_count} of #{total_count} experiments")
     
     {:noreply, socket}
@@ -84,6 +85,12 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
             <p class="mt-2 text-gray-600">View and manage loaded experiments</p>
           </div>
           <div class="flex gap-2">
+            <.link
+              navigate={~p"/analytics"}
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition"
+            >
+              📊 Analytics
+            </.link>
             <.link
               navigate={~p"/s3-experiments"}
               class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
@@ -154,13 +161,36 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
                   <div class="text-sm text-gray-600 mb-3">
                     <div>Agents: <span class="font-medium"><%= experiment.agent_count %></span></div>
                     <div>Species: <span class="font-medium"><%= experiment.specie_count %></span></div>
+                    <div class="mt-2 flex flex-wrap gap-1">
+                      <span class="inline-flex bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">
+                        Mnesia
+                      </span>
+                      <%= if experiment.logs_path do %>
+                        <span class="inline-flex bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">
+                          logs
+                        </span>
+                      <% end %>
+                      <%= if experiment.analytics_path do %>
+                        <span class="inline-flex bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">
+                          analytics
+                        </span>
+                      <% end %>
+                    </div>
                   </div>
-                  <.link
-                    navigate={~p"/agents?context=#{experiment.name}"}
-                    class="block text-center bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700 transition"
-                  >
-                    View Experiment
-                  </.link>
+                  <div class="grid grid-cols-2 gap-2">
+                    <.link
+                      navigate={~p"/agents?context=#{experiment.name}"}
+                      class="block text-center bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700 transition"
+                    >
+                      Agents
+                    </.link>
+                    <.link
+                      navigate={~p"/contexts/#{experiment.name}/artifacts"}
+                      class="block text-center bg-slate-700 text-white px-3 py-2 rounded-md text-sm hover:bg-slate-800 transition"
+                    >
+                      Artifacts
+                    </.link>
+                  </div>
                 </div>
               <% end %>
             </div>
@@ -170,4 +200,50 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
     </div>
     """
   end
+
+  defp maybe_put_load_all_error(socket, results) do
+    failures =
+      results
+      |> Enum.filter(fn
+        {:error, _, _} -> true
+        _ -> false
+      end)
+      |> Enum.take(3)
+
+    case failures do
+      [] ->
+        socket
+
+      failed ->
+        sample =
+          Enum.map_join(failed, "; ", fn {:error, exp_name, reason} ->
+            "#{exp_name}: #{format_load_error(reason)}"
+          end)
+
+        put_flash(socket, :error, "Some experiments failed to load: #{sample}")
+    end
+  end
+
+  defp format_load_error({:path_not_accessible, candidate_paths}) do
+    "path not accessible from dashboard container (tried: #{Enum.join(candidate_paths, ", ")})"
+  end
+
+  defp format_load_error({:multiple_runs_found, run_paths}) do
+    sample =
+      run_paths
+      |> Enum.take(3)
+      |> Enum.join(", ")
+
+    "multiple runs found. Select a specific run folder. Examples: #{sample}"
+  end
+
+  defp format_load_error(:no_mnesia_files) do
+    "no Mnesia files found at the configured path"
+  end
+
+  defp format_load_error({:schema_node_mismatch, owner_nodes, current_node}) do
+    "Mnesia schema belongs to #{inspect(owner_nodes)} but dashboard node is #{inspect(current_node)}"
+  end
+
+  defp format_load_error(reason), do: inspect(reason)
 end

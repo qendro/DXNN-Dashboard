@@ -3,6 +3,8 @@
     init/0,
     get_experiments/0,
     add_experiment/2,
+    add_experiment/3,
+    update_experiment/2,
     remove_experiment/1
 ]).
 
@@ -28,6 +30,9 @@ get_experiments() ->
     end.
 
 add_experiment(Name, Path) when is_binary(Name), is_binary(Path) ->
+    add_experiment(Name, Path, #{}).
+
+add_experiment(Name, Path, Metadata) when is_binary(Name), is_binary(Path), is_map(Metadata) ->
     Settings = case load_settings() of
         {ok, S} -> S;
         {error, _} -> #{<<"experiments">> => []}
@@ -43,13 +48,33 @@ add_experiment(Name, Path) when is_binary(Name), is_binary(Path) ->
     case Exists of
         true -> {error, already_exists};
         false ->
-            NewExperiment = #{
+            BaseExperiment = #{
                 <<"name">> => Name,
                 <<"path">> => Path
             },
+            NewExperiment = maps:merge(BaseExperiment, sanitize_metadata(Metadata)),
             NewExperiments = [NewExperiment | Experiments],
             NewSettings = #{<<"experiments">> => NewExperiments},
             save_settings(NewSettings)
+    end.
+
+update_experiment(Name, Metadata) when is_binary(Name), is_map(Metadata) ->
+    case load_settings() of
+        {ok, Settings} ->
+            Experiments = maps:get(<<"experiments">>, Settings, []),
+            CleanMetadata = sanitize_metadata(Metadata),
+            Updated = lists:map(fun(Exp) ->
+                case maps:get(<<"name">>, Exp, <<>>) of
+                    Name ->
+                        maps:merge(Exp, CleanMetadata);
+                    _ ->
+                        Exp
+                end
+            end, Experiments),
+            NewSettings = #{<<"experiments">> => Updated},
+            save_settings(NewSettings);
+        {error, _} ->
+            {error, no_settings}
     end.
 
 remove_experiment(Name) when is_binary(Name) ->
@@ -83,3 +108,20 @@ save_settings(Settings) ->
     Json = jsx:encode(Settings),
     filelib:ensure_dir(?SETTINGS_FILE),
     file:write_file(?SETTINGS_FILE, Json).
+
+sanitize_metadata(Metadata) ->
+    AllowedKeys = [
+        <<"bundle_root">>,
+        <<"mnesia_path">>,
+        <<"logs_path">>,
+        <<"analytics_path">>,
+        <<"manifest_path">>,
+        <<"success_path">>,
+        <<"checkpoint_info_path">>
+    ],
+    maps:fold(fun(Key, Value, Acc) ->
+        case lists:member(Key, AllowedKeys) andalso Value =/= undefined of
+            true -> maps:put(Key, Value, Acc);
+            false -> Acc
+        end
+    end, #{}, Metadata).

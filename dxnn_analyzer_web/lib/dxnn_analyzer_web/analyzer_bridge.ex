@@ -116,6 +116,14 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
     GenServer.call(__MODULE__, {:get_specie, specie_id, context}, 30_000)
   end
 
+  def get_context_artifacts(context) do
+    GenServer.call(__MODULE__, {:get_context_artifacts, context}, 30_000)
+  end
+
+  def generate_analytics(context, format) when format in [:csv, :md, :log] do
+    GenServer.call(__MODULE__, {:generate_analytics, context, format}, 60_000)
+  end
+
   # Database Operations
 
   def create_empty_master(master_context) do
@@ -383,6 +391,24 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
     {:reply, Formatters.format_context_data(result), state}
   end
 
+  @impl true
+  def handle_call({:get_context_artifacts, context}, _from, state) do
+    result = ContextManager.get_context_artifacts(context)
+    {:reply, result, state}
+  end
+
+  @impl true
+  def handle_call({:generate_analytics, context, format}, _from, state) do
+    result =
+      with {:ok, context_atom, _record} <- ContextManager.validate_context(context),
+           {:ok, bundle} <- ContextManager.get_context_artifacts(context),
+           {:ok, output_path} <- analytics_output_path(bundle) do
+        call_generation_analytics(context_atom, format, output_path)
+      end
+
+    {:reply, result, state}
+  end
+
   # Database Operations Handlers
 
   @impl true
@@ -544,6 +570,44 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
   end
 
   # Private Helper Functions
+
+  defp call_generation_analytics(context_atom, format, output_path) do
+    try do
+      case :generation_analytics.generate_report(context_atom, format, output_path: output_path) do
+        {:ok, path} -> {:ok, to_string(path)}
+        {:error, reason} -> {:error, reason}
+      end
+    catch
+      :error, :undef ->
+        {:error, :module_not_loaded}
+      _type, error ->
+        {:error, error}
+    end
+  end
+
+  defp analytics_output_path(bundle) when is_map(bundle) do
+    analytics_path =
+      Map.get(bundle, :analytics_path) ||
+        Map.get(bundle, "analytics_path") ||
+        infer_analytics_path(bundle)
+
+    case analytics_path do
+      nil ->
+        {:error, :missing_bundle_root}
+
+      path ->
+        {:ok, to_string(path)}
+    end
+  end
+
+  defp analytics_output_path(_bundle), do: {:error, :invalid_bundle}
+
+  defp infer_analytics_path(bundle) do
+    case Map.get(bundle, :bundle_root) || Map.get(bundle, "bundle_root") do
+      nil -> nil
+      bundle_root -> Path.join(to_string(bundle_root), "analytics")
+    end
+  end
 
   defp setup_erlang_code_paths do
     analyzer_paths = [

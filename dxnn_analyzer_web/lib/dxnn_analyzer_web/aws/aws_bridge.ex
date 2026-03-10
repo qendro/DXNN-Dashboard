@@ -285,7 +285,6 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
       "s3", "sync",
       s3_path,
       local_path,
-      "--exclude", "_*",
       "--no-progress"
     ], stderr_to_stdout: true) do
       {_, 0} -> {:ok, local_path}

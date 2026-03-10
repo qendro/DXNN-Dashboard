@@ -9,8 +9,8 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
   Lists agents with optional filters.
   """
   def list_agents(opts) do
-    with {:ok, _context_atom, _} <- validate_context_from_opts(opts) do
-      erlang_opts = convert_opts_to_erlang(opts)
+    with {:ok, context_atom, _} <- validate_context_from_opts(opts) do
+      erlang_opts = convert_opts_to_erlang(opts, context_atom)
       result = :analyzer.list_agents(erlang_opts)
       {:ok, result}
     end
@@ -20,9 +20,17 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
   Finds the best N agents.
   """
   def find_best(count, opts) do
-    erlang_opts = convert_opts_to_erlang(opts)
-    result = :analyzer.find_best(count, erlang_opts)
-    {:ok, result}
+    if Keyword.has_key?(opts, :context) do
+      with {:ok, context_atom, _} <- validate_context_from_opts(opts) do
+        erlang_opts = convert_opts_to_erlang(opts, context_atom)
+        result = :analyzer.find_best(count, erlang_opts)
+        {:ok, result}
+      end
+    else
+      erlang_opts = Enum.reject(opts, fn {key, _value} -> key == :context end)
+      result = :analyzer.find_best(count, erlang_opts)
+      {:ok, result}
+    end
   end
 
   @doc """
@@ -59,8 +67,8 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
   Deletes agents from a context.
   """
   def delete_agents(agent_ids, context) do
-    with {:ok, _context_atom, context_record} <- ContextManager.validate_context(context) do
-      agent_table = String.to_atom("#{context}_agent")
+    with {:ok, context_atom, context_record} <- ContextManager.validate_context(context) do
+      agent_table = String.to_atom("#{context_atom}_agent")
 
       deleted_count =
         Enum.reduce(agent_ids, 0, fn agent_id, count ->
@@ -86,9 +94,9 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
     end
   end
 
-  defp convert_opts_to_erlang(opts) do
+  defp convert_opts_to_erlang(opts, context_atom) do
     Enum.map(opts, fn
-      {:context, val} -> {:context, String.to_atom(val)}
+      {:context, _val} -> {:context, context_atom}
       {key, val} -> {key, val}
     end)
   end

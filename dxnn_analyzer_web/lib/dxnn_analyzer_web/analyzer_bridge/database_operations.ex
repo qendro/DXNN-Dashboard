@@ -9,17 +9,21 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.DatabaseOperations do
   Creates an empty master database context.
   """
   def create_empty_master(master_context) do
-    master_context_atom = String.to_atom(master_context)
-    :master_database.create_empty(master_context_atom)
+    with {:ok, master_context_atom, _display_name} <-
+           ContextManager.ensure_context_alias(master_context) do
+      :master_database.create_empty(master_context_atom)
+    end
   end
 
   @doc """
   Loads a master database from disk.
   """
   def load_master(master_path, master_context) do
-    master_path_charlist = String.to_charlist(master_path)
-    master_context_atom = String.to_atom(master_context)
-    :master_database.load(master_path_charlist, master_context_atom)
+    with {:ok, master_context_atom, _display_name} <-
+           ContextManager.ensure_context_alias(master_context) do
+      master_path_charlist = String.to_charlist(master_path)
+      :master_database.load(master_path_charlist, master_context_atom)
+    end
   end
 
   @doc """
@@ -37,9 +41,10 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.DatabaseOperations do
   Saves a master database to disk.
   """
   def save_master(master_context, output_path) do
-    master_context_atom = String.to_atom(master_context)
-    output_path_charlist = String.to_charlist(output_path)
-    :master_database.save(master_context_atom, output_path_charlist)
+    with {:ok, master_context_atom, _record} <- ContextManager.validate_context(master_context) do
+      output_path_charlist = String.to_charlist(output_path)
+      :master_database.save(master_context_atom, output_path_charlist)
+    end
   end
 
   @doc """
@@ -55,8 +60,9 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.DatabaseOperations do
   Creates a new database.
   """
   def create_database(name) do
-    context_atom = String.to_atom(name)
-    :master_database.create_empty(context_atom)
+    with {:ok, context_atom, _display_name} <- ContextManager.ensure_context_alias(name) do
+      :master_database.create_empty(context_atom)
+    end
   end
 
   @doc """
@@ -70,9 +76,10 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.DatabaseOperations do
   Saves a database to disk.
   """
   def save_database_to_disk(context, path) do
-    context_atom = String.to_atom(context)
-    save_path = path || "./data/default/#{context}"
-    :master_database.save(context_atom, String.to_charlist(save_path))
+    with {:ok, context_atom, _record} <- ContextManager.validate_context(context) do
+      save_path = path || "./data/default/#{context}"
+      :master_database.save(context_atom, String.to_charlist(save_path))
+    end
   end
 
   @doc """

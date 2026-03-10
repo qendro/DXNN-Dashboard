@@ -4,9 +4,11 @@ import {Socket} from "../vendor/phoenix.js"
 import {LiveSocket} from "../vendor/phoenix_live_view.js"
 import topbar from "../vendor/topbar"
 import { NetworkGraph } from "./network_graph.js"
+import { PerformanceChart } from "./performance_chart.js"
 
 let Hooks = {}
 Hooks.NetworkGraph = NetworkGraph
+Hooks.PerformanceChart = PerformanceChart
 
 // File downloader hook for S3 Explorer
 Hooks.FileDownloader = {

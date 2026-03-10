@@ -143,6 +143,12 @@ defmodule DxnnAnalyzerWeb.S3ExperimentsLive do
             <p class="mt-2 text-gray-600">Browse and load experiments from S3 checkpoints</p>
           </div>
           <div class="flex space-x-3">
+            <.link
+              navigate={~p"/s3-explorer"}
+              class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition"
+            >
+              🗂️ S3 Explorer
+            </.link>
             <button
               phx-click="clear_cache"
               class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"

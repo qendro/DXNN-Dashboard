@@ -8,6 +8,21 @@ import { NetworkGraph } from "./network_graph.js"
 let Hooks = {}
 Hooks.NetworkGraph = NetworkGraph
 
+// File downloader hook for S3 Explorer
+Hooks.FileDownloader = {
+  mounted() {
+    this.handleEvent("download_file", ({url, filename}) => {
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    })
+  }
+}
+
 // Auto-scroll terminal output to bottom
 Hooks.ScrollToBottom = {
   mounted() {

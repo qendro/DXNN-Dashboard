@@ -38,9 +38,11 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
       |> assign(:deploy_host, "")
       |> assign(:deploy_branch, "main")
       |> assign(:deploy_start, false)
+      |> assign(:deploy_auto_terminate, false)
       |> assign(:deploy_instance_id, nil)
       |> assign(:pending_deployment, nil)
       |> assign(:deployments, %{})  # Track deployments by instance_id
+      |> assign(:available_branches, ["main", "develop", "v2.0.0", "v2.1.0", "v2.2.0"])
       |> allow_upload(:config_file, accept: :any, max_entries: 20)
       |> load_state()
       |> check_running_operations()
@@ -130,6 +132,30 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
       |> assign(:operation_running, false)
       |> assign(:pending_amis, pending_amis)
       |> assign(:pending_deployment, nil)
+    AWSDeploymentServer.refresh()
+    {:noreply, socket}
+  end
+
+  def handle_info({:script_timeout, reason}, socket) do
+    message = "❌ Operation timed out: #{reason}"
+    output = socket.assigns.terminal_output <> "\n\n" <> message
+
+    pending_amis = if socket.assigns.operation_id do
+      Enum.reject(socket.assigns.pending_amis, fn ami ->
+        ami.operation_id == socket.assigns.operation_id
+      end)
+    else
+      socket.assigns.pending_amis
+    end
+
+    socket =
+      socket
+      |> put_flash(:error, message)
+      |> assign(:terminal_output, output)
+      |> assign(:operation_running, false)
+      |> assign(:pending_amis, pending_amis)
+      |> assign(:pending_deployment, nil)
+
     AWSDeploymentServer.refresh()
     {:noreply, socket}
   end
@@ -363,6 +389,14 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
     {:noreply, assign(socket, :deploy_start, !socket.assigns.deploy_start)}
   end
 
+  def handle_event("toggle_auto_terminate", _, socket) do
+    {:noreply, assign(socket, :deploy_auto_terminate, !socket.assigns.deploy_auto_terminate)}
+  end
+
+  def handle_event("update_branch_select", %{"branch" => branch}, socket) do
+    {:noreply, assign(socket, :deploy_branch, branch)}
+  end
+
   def handle_event("validate_upload", _, socket) do
     {:noreply, socket}
   end
@@ -401,6 +435,14 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
         value -> value in ["on", "1", 1, true]
       end
 
+    deploy_auto_terminate =
+      case Map.get(params, "auto_terminate") do
+        nil -> socket.assigns.deploy_auto_terminate
+        "true" -> true
+        "false" -> false
+        value -> value in ["on", "1", 1, true]
+      end
+
     # Consume all uploaded files
     uploaded_files = consume_uploaded_entries(socket, :config_file, fn %{path: path}, entry ->
       # Preserve original filename
@@ -416,7 +458,8 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
         deploy_host,
         uploaded_files,  # Pass list of files (can be empty)
         deploy_branch,
-        deploy_start
+        deploy_start,
+        deploy_auto_terminate
       ) do
         {:ok, :started} ->
           pending_deployment = %{
@@ -424,7 +467,8 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
             key_file: deploy_key_file,
             host: deploy_host,
             branch: deploy_branch,
-            started: deploy_start
+            started: deploy_start,
+            auto_terminate: deploy_auto_terminate
           }
 
           socket =
@@ -436,6 +480,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
             |> assign(:operation_running, true)
             |> assign(:deploy_branch, deploy_branch)
             |> assign(:deploy_start, deploy_start)
+            |> assign(:deploy_auto_terminate, deploy_auto_terminate)
             |> assign(:deploy_instance_id, deploy_instance_id)
             |> assign(:deploy_key_file, deploy_key_file)
             |> assign(:deploy_host, deploy_host)
@@ -643,12 +688,26 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
             <h1 class="text-3xl font-bold text-gray-900">AWS Deployment Manager</h1>
             <p class="mt-2 text-gray-600">Manage AMIs, instances, and deployments</p>
           </div>
-          <button
-            phx-click="refresh"
-            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-          >
-            🔄 Refresh
-          </button>
+          <div class="flex gap-2">
+            <.link
+              navigate={~p"/s3-explorer"}
+              class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition"
+            >
+              🗂️ S3 Explorer
+            </.link>
+            <.link
+              navigate={~p"/"}
+              class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
+            >
+              ← Dashboard
+            </.link>
+            <button
+              phx-click="refresh"
+              class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+            >
+              🔄 Refresh
+            </button>
+          </div>
         </div>
 
         <!-- Tabs -->
@@ -716,7 +775,9 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
           deploy_host={@deploy_host}
           deploy_branch={@deploy_branch}
           deploy_start={@deploy_start}
+          deploy_auto_terminate={@deploy_auto_terminate}
           deploy_instance_id={@deploy_instance_id}
+          available_branches={@available_branches}
         />
       <% end %>
 
@@ -1200,6 +1261,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
           <input type="hidden" name="key_file" value={@deploy_key_file} />
           <input type="hidden" name="host" value={@deploy_host} />
           <input type="hidden" name="start" value={to_string(@deploy_start)} />
+          <input type="hidden" name="auto_terminate" value={to_string(@deploy_auto_terminate)} />
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -1277,29 +1339,63 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Git Branch
+                Git Branch / Version
               </label>
-              <input
-                type="text"
+              <select
                 name="branch"
-                value={@deploy_branch}
-                phx-change="update_deploy_field"
-                phx-value-field="branch"
-                placeholder="main"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
+                phx-change="update_branch_select"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <%= for branch <- @available_branches do %>
+                  <option value={branch} selected={@deploy_branch == branch}>
+                    <%= branch %>
+                  </option>
+                <% end %>
+                <option value="custom" selected={@deploy_branch not in @available_branches}>
+                  Custom (enter below)
+                </option>
+              </select>
+              
+              <%= if @deploy_branch not in @available_branches do %>
+                <input
+                  type="text"
+                  name="branch"
+                  value={@deploy_branch}
+                  phx-change="update_deploy_field"
+                  phx-value-field="branch"
+                  placeholder="Enter custom branch name"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md mt-2"
+                />
+              <% end %>
+              
+              <p class="text-xs text-gray-500 mt-1">
+                Select a branch or version tag. If not selected, defaults to 'main'.
+              </p>
             </div>
 
-            <div class="flex items-center">
+            <div class="flex items-center space-x-2">
               <input
                 type="checkbox"
                 id="deploy_start"
                 checked={@deploy_start}
                 phx-click="toggle_deploy_start"
-                class="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <label for="deploy_start" class="ml-2 text-sm text-gray-700">
+              <label for="deploy_start" class="text-sm text-gray-700 cursor-pointer">
                 Start DXNN training after deployment
+              </label>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="deploy_auto_terminate"
+                checked={@deploy_auto_terminate}
+                phx-click="toggle_auto_terminate"
+                class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+              />
+              <label for="deploy_auto_terminate" class="text-sm text-gray-700 cursor-pointer">
+                Auto-terminate on successful completion
               </label>
             </div>
             
@@ -1313,6 +1409,9 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                 <li>Compile all Erlang files</li>
                 <%= if @deploy_start do %>
                   <li>Start DXNN training</li>
+                <% end %>
+                <%= if @deploy_auto_terminate do %>
+                  <li class="text-red-700 font-medium">⚠️ Terminate instance only when training exits successfully</li>
                 <% end %>
               </ol>
             </div>

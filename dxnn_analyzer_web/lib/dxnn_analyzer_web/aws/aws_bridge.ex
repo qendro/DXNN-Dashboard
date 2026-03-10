@@ -108,7 +108,7 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     end
   end
 
-  def deploy_config(key_file, host, config_files, branch \\ nil, start \\ false) do
+  def deploy_config(key_file, host, config_files, branch \\ nil, start \\ false, auto_terminate \\ false) do
     # config_files is now a list (can be empty)
     args = ["-i", key_file, "-h", host]
     
@@ -121,6 +121,7 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     
     args = if branch, do: args ++ ["-b", branch], else: args
     args = if start, do: args ++ ["--start"], else: args
+    args = if auto_terminate, do: args ++ ["--auto-terminate"], else: args
     run_script_async("deploy-config.sh", args)
   end
 
@@ -367,7 +368,7 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
       {^port, {:exit_status, status}} ->
         send(parent, {:script_complete, status})
       after
-        60_000 -> send(parent, {:script_timeout, "Script timed out"})
+        900_000 -> send(parent, {:script_timeout, "Script timed out after 15 minutes with no output"})
     end
   end
 

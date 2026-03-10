@@ -17,6 +17,8 @@ defmodule DxnnAnalyzerWeb.Router do
   scope "/", DxnnAnalyzerWeb do
     pipe_through :browser
 
+    get "/s3-explorer/download/:token/:filename", S3ExplorerDownloadController, :show
+
     live "/", DashboardLive, :index
     live "/settings", SettingsLive, :index
     live "/agents", AgentListLive, :index
@@ -29,6 +31,7 @@ defmodule DxnnAnalyzerWeb.Router do
     live "/aws-deployment", AWSDeploymentLive, :index
     live "/aws-deployment/instance/:instance_id", InstanceDetailsLive, :show
     live "/s3-experiments", S3ExperimentsLive, :index
+    live "/s3-explorer", S3ExplorerLive, :index
   end
 
   if Application.compile_env(:dxnn_analyzer_web, :dev_routes) do

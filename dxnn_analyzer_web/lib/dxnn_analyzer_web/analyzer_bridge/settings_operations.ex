@@ -90,6 +90,23 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.SettingsOperations do
     end
   end
 
+  @doc """
+  Gets the S3 auto-download path.
+  """
+  def get_s3_auto_download_path do
+    :s3_settings.init()
+    path = :s3_settings.get_auto_download_path()
+    to_string(path)
+  end
+
+  @doc """
+  Sets the S3 auto-download path.
+  """
+  def set_s3_auto_download_path(path) do
+    path_bin = :erlang.list_to_binary(String.to_charlist(path))
+    :s3_settings.set_auto_download_path(path_bin)
+  end
+
   # Private helpers
 
   defp clean_mnesia_path(path) do

@@ -7,6 +7,8 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    auto_download_path = DxnnAnalyzerWeb.AnalyzerBridge.get_s3_auto_download_path()
+    
     socket =
       socket
       |> assign(:bucket, "dxnn-checkpoints")
@@ -19,6 +21,9 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
       |> assign(:deleting, false)
       |> assign(:downloading, false)
       |> assign(:download_progress, "")
+      |> assign(:downloading_to_local, false)
+      |> assign(:local_download_progress, "")
+      |> assign(:auto_download_path, auto_download_path)
 
     {:ok, socket}
   end
@@ -126,6 +131,29 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
     end
   end
 
+  def handle_event("download_to_local", _, socket) do
+    if MapSet.size(socket.assigns.selected_items) == 0 do
+      {:noreply, put_flash(socket, :error, "No items selected")}
+    else
+      selected_list = MapSet.to_list(socket.assigns.selected_items)
+      parent = self()
+      bucket = socket.assigns.bucket
+      current_path = socket.assigns.current_path
+      target_path = socket.assigns.auto_download_path
+      selected_count = length(selected_list)
+
+      Task.start(fn ->
+        result = S3Explorer.download_to_local(bucket, selected_list, target_path, current_path)
+        send(parent, {:local_download_complete, result, selected_count})
+      end)
+
+      {:noreply,
+       socket
+       |> assign(:downloading_to_local, true)
+       |> assign(:local_download_progress, "Downloading #{selected_count} item(s) to local path...")}
+    end
+  end
+
   def handle_event("change_bucket", %{"bucket" => bucket}, socket) do
     socket =
       socket
@@ -213,6 +241,23 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
   def handle_info({:cleanup_download_file, path}, socket) do
     File.rm_rf(path)
     {:noreply, socket}
+  end
+
+  def handle_info({:local_download_complete, {:ok, %{count: count, path: path}}, _selected_count}, socket) do
+    {:noreply,
+     socket
+     |> assign(:downloading_to_local, false)
+     |> assign(:local_download_progress, "")
+     |> assign(:selected_items, MapSet.new())
+     |> put_flash(:info, "Successfully downloaded #{count} item(s) to #{path}")}
+  end
+
+  def handle_info({:local_download_complete, {:error, error}, _selected_count}, socket) do
+    {:noreply,
+     socket
+     |> assign(:downloading_to_local, false)
+     |> assign(:local_download_progress, "")
+     |> put_flash(:error, "Download failed: #{error}")}
   end
 
   defp stage_archive_for_http_download(%{
@@ -327,6 +372,18 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
                   <% end %>
                 </button>
                 <button
+                  phx-click="download_to_local"
+                  class="bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition text-sm"
+                  disabled={@downloading_to_local}
+                  title={"Save to: #{@auto_download_path}"}
+                >
+                  <%= if @downloading_to_local do %>
+                    ⏳ Saving...
+                  <% else %>
+                    💾 Save to Local
+                  <% end %>
+                </button>
+                <button
                   phx-click="show_delete_modal"
                   class="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition text-sm"
                   disabled={@deleting}
@@ -347,6 +404,10 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
 
           <%= if @downloading and @download_progress != "" do %>
             <p class="mt-3 text-sm text-blue-700"><%= @download_progress %></p>
+          <% end %>
+          
+          <%= if @downloading_to_local and @local_download_progress != "" do %>
+            <p class="mt-3 text-sm text-purple-700"><%= @local_download_progress %></p>
           <% end %>
         </div>
         <!-- Breadcrumbs -->
@@ -457,16 +518,18 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
           <ul class="text-blue-800 text-sm space-y-1">
             <li>• Browse S3 buckets and folders</li>
             <li>• Select multiple files/folders for batch operations</li>
-            <li>• Download single files directly to your browser</li>
-            <li>• Download folders and multi-selects as ZIP archives</li>
+            <li>• <strong>📥 Download:</strong> Single files to browser, folders as ZIP</li>
+            <li>• <strong>💾 Save to Local:</strong> Direct download to server path (no ZIP)</li>
             <li>• Delete files and folders (with confirmation)</li>
             <li>• Navigate using breadcrumbs</li>
           </ul>
-          <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-            <p class="text-yellow-800 text-sm">
-              <strong>Note:</strong>
-              Folder and multi-item downloads are packaged into a ZIP before download.
-              Large selections can take time while files are fetched from S3.
+          <div class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded">
+            <p class="text-purple-800 text-sm">
+              <strong>💾 Save to Local Path:</strong>
+              <%= @auto_download_path %>
+            </p>
+            <p class="text-purple-700 text-xs mt-1">
+              Configure this path in Settings page
             </p>
           </div>
         </div>

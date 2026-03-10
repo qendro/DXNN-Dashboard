@@ -200,6 +200,14 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
     GenServer.call(__MODULE__, {:create_experiment_in_settings, name, path}, 30_000)
   end
 
+  def get_s3_auto_download_path do
+    GenServer.call(__MODULE__, :get_s3_auto_download_path)
+  end
+
+  def set_s3_auto_download_path(path) do
+    GenServer.call(__MODULE__, {:set_s3_auto_download_path, path})
+  end
+
   # Experiment Operations
 
   def scan_all_experiments do
@@ -434,6 +442,18 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
   end
 
   # Settings Operations Handlers
+
+  @impl true
+  def handle_call(:get_s3_auto_download_path, _from, state) do
+    path = SettingsOperations.get_s3_auto_download_path()
+    {:reply, path, state}
+  end
+
+  @impl true
+  def handle_call({:set_s3_auto_download_path, path}, _from, state) do
+    result = SettingsOperations.set_s3_auto_download_path(path)
+    {:reply, result, state}
+  end
 
   @impl true
   def handle_call(:get_database_folders, _from, state) do

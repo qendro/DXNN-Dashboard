@@ -4,6 +4,8 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    auto_download_path = AnalyzerBridge.get_s3_auto_download_path()
+    
     socket =
       socket
       |> assign(:experiments, [])
@@ -13,6 +15,8 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
       |> assign(:current_path, "/app/Documents")
       |> assign(:directories, [])
       |> assign(:browser_mode, :add)
+      |> assign(:s3_auto_download_path, auto_download_path)
+      |> assign(:s3_path_edit_mode, false)
       |> load_experiments()
 
     {:ok, socket}
@@ -26,45 +30,13 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
     if Enum.empty?(unloaded_experiments) do
       {:noreply, put_flash(socket, :info, "All experiments are already loaded")}
     else
-      results = Enum.map(unloaded_experiments, fn exp ->
-        # Check if the path exists and has Mnesia files
-        mnesia_path = Path.join(exp.path, "Mnesia.nonode@nohost")
-        
-        has_mnesia_files = case File.ls(exp.path) do
-          {:ok, files} ->
-            direct_files = Enum.any?(files, fn f -> 
-              String.ends_with?(f, ".DCD") or 
-              String.ends_with?(f, ".DCL") or 
-              String.ends_with?(f, ".DAT")
-            end)
-            
-            subdir_files = case File.ls(mnesia_path) do
-              {:ok, subfiles} ->
-                Enum.any?(subfiles, fn f -> 
-                  String.ends_with?(f, ".DCD") or 
-                  String.ends_with?(f, ".DCL") or 
-                  String.ends_with?(f, ".DAT")
-                end)
-              _ -> false
-            end
-            
-            direct_files or subdir_files
-          _ -> false
-        end
-        
-        if has_mnesia_files do
-          case AnalyzerBridge.load_context(exp.path, exp.name) do
-            {:ok, _} -> {:ok, exp.name}
-            {:error, {:already_loaded, _}} -> {:ok, exp.name}
-            {:error, reason} -> {:error, exp.name, reason}
-          end
-        else
-          case AnalyzerBridge.create_empty_experiment(exp.name) do
+      results =
+        Enum.map(unloaded_experiments, fn exp ->
+          case load_experiment_context(exp) do
             {:ok, _} -> {:ok, exp.name}
             {:error, reason} -> {:error, exp.name, reason}
           end
-        end
-      end)
+        end)
       
       success_count = Enum.count(results, fn r -> match?({:ok, _}, r) end)
       total_count = length(unloaded_experiments)
@@ -72,6 +44,7 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
       socket =
         socket
         |> load_experiments()
+        |> maybe_put_load_all_error(results)
         |> put_flash(:info, "Loaded #{success_count} of #{total_count} experiments")
       
       {:noreply, socket}
@@ -202,64 +175,30 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
     experiment = Enum.find(experiments, fn e -> e.name == name end)
     
     if experiment do
-      # Check if the path exists and has Mnesia files
-      # Check both the path itself and the Mnesia.nonode@nohost subdirectory
-      mnesia_path = Path.join(experiment.path, "Mnesia.nonode@nohost")
-      
-      has_mnesia_files = case File.ls(experiment.path) do
-        {:ok, files} ->
-          # Check if files are directly in the path
-          direct_files = Enum.any?(files, fn f -> 
-            String.ends_with?(f, ".DCD") or 
-            String.ends_with?(f, ".DCL") or 
-            String.ends_with?(f, ".DAT")
-          end)
-          
-          # Or check if Mnesia.nonode@nohost subdirectory exists with files
-          subdir_files = case File.ls(mnesia_path) do
-            {:ok, subfiles} ->
-              Enum.any?(subfiles, fn f -> 
-                String.ends_with?(f, ".DCD") or 
-                String.ends_with?(f, ".DCL") or 
-                String.ends_with?(f, ".DAT")
-              end)
-            _ -> false
-          end
-          
-          direct_files or subdir_files
-        _ -> false
-      end
-      
-      if has_mnesia_files do
-        # Try to load the experiment
-        case AnalyzerBridge.load_context(experiment.path, name) do
-          {:ok, _} ->
-            socket =
-              socket
-              |> load_experiments()
-              |> put_flash(:info, "Experiment '#{name}' loaded successfully")
-            {:noreply, socket}
-          
-          {:error, reason} ->
-            socket =
-              socket
-              |> load_experiments()
-              |> put_flash(:error, "Failed to load '#{name}': #{inspect(reason)}")
-            {:noreply, socket}
-        end
-      else
-        # Empty experiment - create it in memory
-        case AnalyzerBridge.create_empty_experiment(name) do
-          {:ok, _} ->
-            socket =
-              socket
-              |> load_experiments()
-              |> put_flash(:info, "Experiment '#{name}' loaded (empty)")
-            {:noreply, socket}
-          
-          {:error, reason} ->
-            {:noreply, put_flash(socket, :error, "Failed to create empty experiment: #{inspect(reason)}")}
-        end
+      case load_experiment_context(experiment) do
+        {:ok, :loaded} ->
+          socket =
+            socket
+            |> load_experiments()
+            |> put_flash(:info, "Experiment '#{name}' loaded successfully")
+
+          {:noreply, socket}
+
+        {:ok, :empty} ->
+          socket =
+            socket
+            |> load_experiments()
+            |> put_flash(:info, "Experiment '#{name}' loaded (empty)")
+
+          {:noreply, socket}
+
+        {:error, reason} ->
+          socket =
+            socket
+            |> load_experiments()
+            |> put_flash(:error, "Failed to load '#{name}': #{format_load_error(reason)}")
+
+          {:noreply, socket}
       end
     else
       {:noreply, put_flash(socket, :error, "Experiment not found")}
@@ -308,6 +247,32 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
     end
   end
 
+  @impl true
+  def handle_event("toggle_s3_path_edit", _, socket) do
+    {:noreply, assign(socket, :s3_path_edit_mode, !socket.assigns.s3_path_edit_mode)}
+  end
+
+  @impl true
+  def handle_event("save_s3_path", %{"path" => path}, socket) do
+    case AnalyzerBridge.set_s3_auto_download_path(path) do
+      :ok ->
+        socket =
+          socket
+          |> assign(:s3_auto_download_path, path)
+          |> assign(:s3_path_edit_mode, false)
+          |> put_flash(:info, "S3 auto-download path updated successfully")
+        {:noreply, socket}
+      
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, "Failed to update path: #{inspect(reason)}")}
+    end
+  end
+
+  @impl true
+  def handle_event("cancel_s3_path_edit", _, socket) do
+    {:noreply, assign(socket, :s3_path_edit_mode, false)}
+  end
+
   defp load_experiments(socket) do
     experiments = AnalyzerBridge.get_experiments_from_settings()
     
@@ -329,7 +294,10 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
       # Check if it's an empty experiment (no agents)
       is_empty = if is_loaded do
         context = Enum.find(loaded_contexts, fn c -> c.name == exp.name end)
-        context && context.agent_count == 0
+        context &&
+          context.agent_count == 0 &&
+          context.population_count == 0 &&
+          context.specie_count == 0
       else
         false
       end
@@ -375,13 +343,99 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
   defp has_mnesia_files?(path) do
     case File.ls(path) do
       {:ok, files} ->
-        Enum.any?(files, fn f ->
-          String.ends_with?(f, ".DCD") or
-          String.ends_with?(f, ".DCL") or
-          String.ends_with?(f, ".DAT")
-        end)
+        Enum.any?(files, &mnesia_file?/1)
       _ -> false
     end
+  end
+
+  defp load_experiment_context(%{name: name, path: path}) do
+    with {:ok, mnesia_path} <- resolve_mnesia_path(path) do
+      case AnalyzerBridge.load_context(mnesia_path, name) do
+        {:ok, _} -> {:ok, :loaded}
+        {:error, {:already_loaded, _}} -> {:ok, :loaded}
+        {:error, reason} -> {:error, reason}
+      end
+    else
+      {:error, :no_mnesia_files} ->
+        case AnalyzerBridge.create_empty_experiment(name) do
+          {:ok, _} -> {:ok, :empty}
+          {:error, reason} -> {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp resolve_mnesia_path(path) when is_binary(path) do
+    candidate_paths =
+      [path, Path.join(path, "Mnesia.nonode@nohost")]
+      |> Kernel.++(container_candidates(path))
+      |> Enum.uniq()
+
+    case Enum.find(candidate_paths, &has_mnesia_files?/1) do
+      nil ->
+        cond do
+          Enum.any?(candidate_paths, &File.dir?/1) ->
+            {:error, :no_mnesia_files}
+
+          true ->
+            {:error, {:path_not_accessible, candidate_paths}}
+        end
+
+      mnesia_path ->
+        {:ok, mnesia_path}
+    end
+  end
+
+  defp container_candidates(path) do
+    case String.split(path, "/Documents/", parts: 2) do
+      ["/Users" <> _, suffix] ->
+        candidate = Path.join("/app/Documents", suffix)
+        [candidate, Path.join(candidate, "Mnesia.nonode@nohost")]
+
+      _ ->
+        []
+    end
+  end
+
+  defp maybe_put_load_all_error(socket, results) do
+    failures =
+      results
+      |> Enum.filter(fn
+        {:error, _, _} -> true
+        _ -> false
+      end)
+      |> Enum.take(3)
+
+    case failures do
+      [] ->
+        socket
+
+      failed ->
+        sample =
+          Enum.map_join(failed, "; ", fn {:error, exp_name, reason} ->
+            "#{exp_name}: #{format_load_error(reason)}"
+          end)
+
+        put_flash(socket, :error, "Some experiments failed to load: #{sample}")
+    end
+  end
+
+  defp format_load_error({:path_not_accessible, candidate_paths}) do
+    "path not accessible from dashboard container (tried: #{Enum.join(candidate_paths, ", ")})"
+  end
+
+  defp format_load_error({:schema_node_mismatch, owner_nodes, current_node}) do
+    "Mnesia schema belongs to #{inspect(owner_nodes)} but dashboard node is #{inspect(current_node)}"
+  end
+
+  defp format_load_error(reason), do: inspect(reason)
+
+  defp mnesia_file?(filename) do
+    String.ends_with?(filename, ".DCD") or
+      String.ends_with?(filename, ".DCL") or
+      String.ends_with?(filename, ".DAT")
   end
 
   @impl true
@@ -476,6 +530,74 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
                   </div>
                 </div>
               <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- S3 Auto-Download Settings -->
+        <div class="bg-white shadow rounded-lg p-6 mt-6">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h2 class="text-xl font-semibold">S3 Auto-Download Settings</h2>
+              <p class="text-sm text-gray-600 mt-1">Configure where S3 files are saved when using "Save to Local" button</p>
+            </div>
+          </div>
+          
+          <%= if @s3_path_edit_mode do %>
+            <form phx-submit="save_s3_path" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Local Download Path
+                </label>
+                <input
+                  type="text"
+                  name="path"
+                  value={@s3_auto_download_path}
+                  placeholder="/app/Documents/DXNN_Main/DXNN-Dashboard/Databases/AWS_v1"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm"
+                  required
+                  autofocus
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                  Files will be downloaded directly to this path (no ZIP extraction needed)
+                </p>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  phx-click="cancel_s3_path_edit"
+                  class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition"
+                >
+                  Save Path
+                </button>
+              </div>
+            </form>
+          <% else %>
+            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-700 mb-1">Current Path:</div>
+                <div class="font-mono text-sm text-gray-900 truncate" title={@s3_auto_download_path}>
+                  <%= @s3_auto_download_path %>
+                </div>
+              </div>
+              <button
+                phx-click="toggle_s3_path_edit"
+                class="ml-4 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition text-sm"
+              >
+                ✏️ Edit
+              </button>
+            </div>
+            <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+              <p class="text-blue-800 text-sm">
+                <strong>Note:</strong> This path is used by the "💾 Save to Local" button in S3 Explorer.
+                Files are downloaded directly without creating ZIP archives.
+              </p>
             </div>
           <% end %>
         </div>

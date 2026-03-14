@@ -29,7 +29,7 @@ defmodule DxnnAnalyzerWeb.AWS.AWSDeploymentServer do
   # Client API
 
   def get_state do
-    GenServer.call(__MODULE__, :get_state)
+    GenServer.call(__MODULE__, :get_state, 30_000)  # 30 second timeout
   end
 
   def refresh do

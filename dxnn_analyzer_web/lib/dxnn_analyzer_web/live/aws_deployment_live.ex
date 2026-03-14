@@ -12,19 +12,36 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
 
     socket =
       socket
-      |> assign(:active_tab, "amis")
+      |> assign(:active_tab, "instances")
       |> assign(:amis, [])
       |> assign(:instances, [])
       |> assign(:configs, [])
+      |> assign(:regions, [])
+      |> assign(:instance_types, [
+        "t3.xlarge",
+        "m5.xlarge", "m5.2xlarge", "m5.4xlarge", "m5.8xlarge",
+        "c5.xlarge", "c5.2xlarge", "c5.4xlarge", "c5.9xlarge", "c5.12xlarge",
+        "c6i.xlarge", "c6i.2xlarge", "c6i.4xlarge", "c6i.8xlarge", "c6i.12xlarge", "c6i.16xlarge", "c6i.24xlarge",
+        "c7i.xlarge", "c7i.2xlarge", "c7i.4xlarge", "c7i.8xlarge", "c7i.12xlarge", "c7i.16xlarge", "c7i.24xlarge"
+      ])
       |> assign(:selected_config, nil)
       |> assign(:selected_ami, nil)
       |> assign(:selected_instance, nil)
+      |> assign(:selected_region, nil)
+      |> assign(:launch_instance_type, nil)
+      |> assign(:launch_availability_zone, nil)
+      |> assign(:launch_ami_id, nil)
+      |> assign(:launch_spot_max_price, nil)
       |> assign(:show_create_ami_modal, false)
       |> assign(:show_launch_instance_modal, false)
       |> assign(:show_deploy_config_modal, false)
       |> assign(:show_logs_modal, false)
       |> assign(:show_terminal_modal, false)
+      |> assign(:show_copy_ami_modal, false)
       |> assign(:ami_name, "")
+      |> assign(:copy_source_ami, nil)
+      |> assign(:copy_source_region, nil)
+      |> assign(:copy_target_region, nil)
       |> assign(:config_content, nil)
       |> assign(:operation_output, [])
       |> assign(:log_content, "")
@@ -48,6 +65,57 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
       |> check_running_operations()
 
     {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(params, _uri, socket) do
+    # Check if we should auto-open launch modal with pre-filled data from spot pricing
+    socket = if params["auto_open_modal"] == "true" && connected?(socket) do
+      # Load regions, AMIs, and availability zones
+      regions = case AWSBridge.list_regions() do
+        {:ok, regions} -> regions
+        _ -> []
+      end
+      
+      amis = case AWSBridge.list_amis() do
+        {:ok, amis} -> 
+          us_regions = ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
+          Enum.filter(amis, fn ami -> 
+            Map.get(ami, :region, "us-east-1") in us_regions
+          end)
+        _ -> []
+      end
+      
+      availability_zones = case AWSBridge.list_availability_zones() do
+        {:ok, zones} -> zones
+        _ -> []
+      end
+      
+      # Get region from params and find matching availability zone
+      region = params["region"]
+      availability_zone = if region do
+        # Find first available zone in the target region
+        Enum.find_value(availability_zones, fn zone ->
+          if zone.region == region, do: zone.name, else: nil
+        end)
+      else
+        nil
+      end
+      
+      socket
+      |> assign(:show_launch_instance_modal, true)
+      |> assign(:regions, regions)
+      |> assign(:amis, amis)
+      |> assign(:availability_zones, availability_zones)
+      |> assign(:launch_instance_type, params["instance_type"])
+      |> assign(:launch_availability_zone, availability_zone)
+      |> assign(:launch_ami_id, nil)
+      |> assign(:launch_spot_max_price, params["spot_max_price"])
+    else
+      socket
+    end
+    
+    {:noreply, socket}
   end
 
   @impl true
@@ -192,16 +260,29 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
 
   # AMI Events
   def handle_event("show_create_ami_modal", _, socket) do
-    {:noreply, assign(socket, :show_create_ami_modal, true)}
+    # Load regions when opening modal
+    regions = case AWSBridge.list_regions() do
+      {:ok, regions} -> regions
+      _ -> []
+    end
+    socket = socket
+    |> assign(:show_create_ami_modal, true)
+    |> assign(:regions, regions)
+    |> assign(:selected_region, get_default_region())
+    {:noreply, socket}
   end
 
   def handle_event("hide_create_ami_modal", _, socket) do
-    {:noreply, assign(socket, show_create_ami_modal: false, ami_name: "")}
+    {:noreply, assign(socket, show_create_ami_modal: false, ami_name: "", selected_region: nil)}
   end
 
   def handle_event("update_ami_name", params, socket) do
     name = Map.get(params, "ami_name", Map.get(params, "value", ""))
     {:noreply, assign(socket, :ami_name, name)}
+  end
+
+  def handle_event("select_region", %{"region" => region}, socket) do
+    {:noreply, assign(socket, :selected_region, region)}
   end
 
   def handle_event("create_ami", params, socket) do
@@ -210,14 +291,20 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
       |> Map.get("ami_name", socket.assigns.ami_name)
       |> normalize_optional_value()
 
+    region =
+      params
+      |> Map.get("region", socket.assigns.selected_region)
+      |> normalize_optional_value()
+
     operation_id = "ami_create_#{:os.system_time(:millisecond)}"
     
-    case AWSBridge.create_ami(name) do
+    case AWSBridge.create_ami(name, region) do
       {:ok, :started} ->
         # Add pending AMI to the list
         pending_ami = %{
           id: operation_id,
           name: name || "Creating...",
+          region: region || get_default_region(),
           created_at: DateTime.utc_now() |> DateTime.to_iso8601(),
           state: "pending",
           operation_id: operation_id
@@ -225,9 +312,9 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
         
         socket =
           socket
-          |> assign(show_create_ami_modal: false, ami_name: "")
+          |> assign(show_create_ami_modal: false, ami_name: "", selected_region: nil)
           |> assign(:show_terminal_modal, true)
-          |> assign(:terminal_title, "Creating AMI (10-15 minutes)")
+          |> assign(:terminal_title, "Creating AMI in #{region || get_default_region()} (10-15 minutes)")
           |> assign(:terminal_output, "Starting AMI creation...\n")
           |> assign(:operation_running, true)
           |> assign(:operation_id, operation_id)
@@ -235,6 +322,66 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
         {:noreply, socket}
       {:error, reason} ->
         {:noreply, put_flash(socket, :error, "Failed to create AMI: #{reason}")}
+    end
+  end
+
+  def handle_event("show_copy_ami_modal", %{"ami_id" => ami_id, "region" => region}, socket) do
+    # Load regions when opening modal
+    regions = case AWSBridge.list_regions() do
+      {:ok, regions} -> regions
+      _ -> []
+    end
+    socket = socket
+    |> assign(:show_copy_ami_modal, true)
+    |> assign(:copy_source_ami, ami_id)
+    |> assign(:copy_source_region, region)
+    |> assign(:copy_target_region, nil)
+    |> assign(:regions, regions)
+    {:noreply, socket}
+  end
+
+  def handle_event("hide_copy_ami_modal", _, socket) do
+    {:noreply, assign(socket, show_copy_ami_modal: false, copy_source_ami: nil, copy_source_region: nil, copy_target_region: nil)}
+  end
+
+  def handle_event("select_target_region", %{"region" => region}, socket) do
+    {:noreply, assign(socket, :copy_target_region, region)}
+  end
+
+  def handle_event("copy_ami", params, socket) do
+    source_ami = socket.assigns.copy_source_ami
+    source_region = socket.assigns.copy_source_region
+    target_region = params |> Map.get("target_region", socket.assigns.copy_target_region) |> normalize_optional_value()
+
+    if source_ami && source_region && target_region do
+      operation_id = "ami_copy_#{:os.system_time(:millisecond)}"
+      
+      case AWSBridge.copy_ami(source_ami, source_region, target_region) do
+        {:ok, :started} ->
+          pending_ami = %{
+            id: operation_id,
+            name: "Copying #{source_ami}...",
+            region: target_region,
+            created_at: DateTime.utc_now() |> DateTime.to_iso8601(),
+            state: "pending",
+            operation_id: operation_id
+          }
+          
+          socket =
+            socket
+            |> assign(show_copy_ami_modal: false, copy_source_ami: nil, copy_source_region: nil, copy_target_region: nil)
+            |> assign(:show_terminal_modal, true)
+            |> assign(:terminal_title, "Copying AMI from #{source_region} to #{target_region} (10-15 minutes)")
+            |> assign(:terminal_output, "Starting AMI copy...\n")
+            |> assign(:operation_running, true)
+            |> assign(:operation_id, operation_id)
+            |> assign(:pending_amis, [pending_ami | socket.assigns.pending_amis])
+          {:noreply, socket}
+        {:error, reason} ->
+          {:noreply, put_flash(socket, :error, "Failed to copy AMI: #{reason}")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Please select a target region")}
     end
   end
 
@@ -250,11 +397,51 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
 
   # Instance Events
   def handle_event("show_launch_instance_modal", _, socket) do
-    {:noreply, assign(socket, :show_launch_instance_modal, true)}
+    # Load regions and AMIs when opening modal
+    regions = case AWSBridge.list_regions() do
+      {:ok, regions} -> regions
+      _ -> []
+    end
+    
+    amis = case AWSBridge.list_amis() do
+      {:ok, amis} -> 
+        # Filter to only US regions
+        us_regions = ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
+        Enum.filter(amis, fn ami -> 
+          Map.get(ami, :region, "us-east-1") in us_regions
+        end)
+      _ -> []
+    end
+    
+    # Get availability zones for all regions
+    availability_zones = case AWSBridge.list_availability_zones() do
+      {:ok, zones} -> zones
+      _ -> []
+    end
+    
+    socket = socket
+    |> assign(:show_launch_instance_modal, true)
+    |> assign(:regions, regions)
+    |> assign(:amis, amis)
+    |> assign(:availability_zones, availability_zones)
+    |> assign(:launch_instance_type, nil)
+    |> assign(:launch_availability_zone, nil)
+    |> assign(:launch_ami_id, nil)
+    |> assign(:launch_spot_max_price, nil)
+    
+    {:noreply, socket}
   end
 
   def handle_event("hide_launch_instance_modal", _, socket) do
-    {:noreply, assign(socket, show_launch_instance_modal: false, selected_config: nil, selected_ami: nil)}
+    {:noreply, assign(socket, 
+      show_launch_instance_modal: false, 
+      selected_config: nil, 
+      selected_ami: nil,
+      launch_instance_type: nil,
+      launch_availability_zone: nil,
+      launch_ami_id: nil,
+      launch_spot_max_price: nil
+    )}
   end
 
   def handle_event("select_config", params, socket) do
@@ -263,7 +450,71 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
       |> Map.get("config", Map.get(params, "value"))
       |> normalize_optional_value()
 
-    {:noreply, assign(socket, :selected_config, selected)}
+    # Load config details to populate overrides
+    config_details = if selected do
+      case AWSBridge.read_config(selected) do
+        {:ok, %{parsed: parsed}} ->
+          %{
+            instance_type: get_in(parsed, ["aws", "instance_type"]),
+            availability_zone: get_in(parsed, ["aws", "availability_zone"]),
+            ami_id: get_in(parsed, ["aws", "ami_id"]),
+            spot_max_price: get_in(parsed, ["aws", "spot_max_price"]),
+            region: get_in(parsed, ["aws", "region"])
+          }
+        _ -> nil
+      end
+    else
+      nil
+    end
+
+    socket = socket
+    |> assign(:selected_config, selected)
+    
+    socket = if config_details do
+      socket
+      |> assign(:launch_instance_type, config_details.instance_type)
+      |> assign(:launch_availability_zone, config_details.availability_zone)
+      |> assign(:launch_ami_id, config_details.ami_id)
+      |> assign(:launch_spot_max_price, config_details.spot_max_price)
+      |> assign(:selected_region, config_details.region)
+    else
+      socket
+    end
+    
+    {:noreply, socket}
+  end
+
+  def handle_event("update_launch_field", params, socket) do
+    # phx-change sends the field name as the key in params
+    # Extract field name from _target or find the field directly
+    {field, value} = cond do
+      # Check _target first (LiveView sends this with phx-change)
+      Map.has_key?(params, "_target") && is_list(params["_target"]) ->
+        field_name = List.first(params["_target"])
+        {field_name, Map.get(params, field_name)}
+      
+      # Fallback to checking each field directly
+      Map.has_key?(params, "instance_type") ->
+        {"instance_type", params["instance_type"]}
+      Map.has_key?(params, "availability_zone") ->
+        {"availability_zone", params["availability_zone"]}
+      Map.has_key?(params, "ami_id") ->
+        {"ami_id", params["ami_id"]}
+      Map.has_key?(params, "spot_max_price") ->
+        {"spot_max_price", params["spot_max_price"]}
+      
+      true ->
+        {nil, nil}
+    end
+    
+    # Only update if we found a valid field
+    socket = if field do
+      assign(socket, String.to_atom("launch_#{field}"), value)
+    else
+      socket
+    end
+    
+    {:noreply, socket}
   end
 
   def handle_event("launch_instance", params, socket) do
@@ -276,8 +527,16 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
       nil ->
         {:noreply, put_flash(socket, :error, "Please select a configuration")}
       config ->
+        # Build launch parameters with overrides
+        overrides = %{
+          instance_type: Map.get(params, "instance_type", socket.assigns.launch_instance_type) |> normalize_optional_value(),
+          availability_zone: Map.get(params, "availability_zone", socket.assigns.launch_availability_zone) |> normalize_optional_value(),
+          ami_id: Map.get(params, "ami_id", socket.assigns.launch_ami_id) |> normalize_optional_value(),
+          spot_max_price: Map.get(params, "spot_max_price", socket.assigns.launch_spot_max_price) |> normalize_optional_value()
+        }
+        
         config_path = "config/#{config}"
-        case AWSBridge.launch_instance(config_path) do
+        case AWSBridge.launch_instance(config_path, overrides) do
           {:ok, :started} ->
             socket =
               socket
@@ -633,6 +892,10 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
   defp normalize_optional_value(""), do: nil
   defp normalize_optional_value(value), do: value
 
+  defp get_default_region do
+    System.get_env("AWS_DEFAULT_REGION", "us-east-1")
+  end
+
   defp format_datetime(%DateTime{} = dt) do
     Calendar.strftime(dt, "%Y-%m-%d %H:%M:%S UTC")
   end
@@ -721,17 +984,17 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
           <nav class="-mb-px flex space-x-8">
             <button
               phx-click="switch_tab"
-              phx-value-tab="amis"
-              class={"#{if @active_tab == "amis", do: "border-blue-500 text-blue-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"} whitespace-nowrap py-4 px-1 border-b-2 font-medium"}
-            >
-              AMI Management
-            </button>
-            <button
-              phx-click="switch_tab"
               phx-value-tab="instances"
               class={"#{if @active_tab == "instances", do: "border-blue-500 text-blue-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"} whitespace-nowrap py-4 px-1 border-b-2 font-medium"}
             >
               Instances
+            </button>
+            <button
+              phx-click="switch_tab"
+              phx-value-tab="amis"
+              class={"#{if @active_tab == "amis", do: "border-blue-500 text-blue-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"} whitespace-nowrap py-4 px-1 border-b-2 font-medium"}
+            >
+              AMI Management
             </button>
             <button
               phx-click="switch_tab"
@@ -744,16 +1007,16 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
         </div>
 
         <!-- Tab Content -->
-        <%= if @active_tab == "amis" do %>
-          <.ami_panel amis={@amis} pending_amis={@pending_amis} />
-        <% end %>
-
         <%= if @active_tab == "instances" do %>
           <.instance_panel
             instances={@instances}
             expanded_instance={@expanded_instance}
             deployments={@deployments}
           />
+        <% end %>
+        
+        <%= if @active_tab == "amis" do %>
+          <.ami_panel amis={@amis} pending_amis={@pending_amis} />
         <% end %>
 
         <%= if @active_tab == "configs" do %>
@@ -763,11 +1026,30 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
 
       <!-- Modals -->
       <%= if @show_create_ami_modal do %>
-        <.create_ami_modal ami_name={@ami_name} />
+        <.create_ami_modal ami_name={@ami_name} regions={@regions} selected_region={@selected_region} />
+      <% end %>
+
+      <%= if @show_copy_ami_modal do %>
+        <.copy_ami_modal 
+          copy_source_ami={@copy_source_ami} 
+          copy_source_region={@copy_source_region}
+          copy_target_region={@copy_target_region}
+          regions={@regions}
+        />
       <% end %>
 
       <%= if @show_launch_instance_modal do %>
-        <.launch_instance_modal configs={@configs} selected_config={@selected_config} />
+        <.launch_instance_modal 
+          configs={@configs} 
+          selected_config={@selected_config}
+          amis={@amis}
+          availability_zones={@availability_zones}
+          instance_types={@instance_types}
+          launch_instance_type={@launch_instance_type}
+          launch_availability_zone={@launch_availability_zone}
+          launch_ami_id={@launch_ami_id}
+          launch_spot_max_price={@launch_spot_max_price}
+        />
       <% end %>
 
       <%= if @show_logs_modal do %>
@@ -823,6 +1105,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">AMI ID</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Region</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -838,6 +1121,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"><%= ami.name %></td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%= Map.get(ami, :region, "us-east-1") %></td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">In progress</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm">
                     <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 animate-pulse">
@@ -860,13 +1144,23 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                 <tr class="hover:bg-gray-50 transition">
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-mono"><%= ami.id %></td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm"><%= ami.name %></td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%= Map.get(ami, :region, System.get_env("AWS_DEFAULT_REGION", "us-east-1")) %></td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm"><%= ami.created_at %></td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm">
                     <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
                       <%= ami.state %>
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                    <button
+                      phx-click="show_copy_ami_modal"
+                      phx-value-ami_id={ami.id}
+                      phx-value-region={Map.get(ami, :region, System.get_env("AWS_DEFAULT_REGION", "us-east-1"))}
+                      class="text-blue-600 hover:text-blue-800"
+                      title="Copy to another region"
+                    >
+                      📋 Copy
+                    </button>
                     <button
                       phx-click="delete_ami"
                       phx-value-ami_id={ami.id}
@@ -912,6 +1206,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Instance ID</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Region</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
@@ -932,8 +1227,9 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                       <span><%= instance.id %></span>
                     </button>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm"><%= instance.name %></td>
+                  <td class="px-6 py-4 text-sm max-w-xs break-words"><%= instance.name %></td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm"><%= instance.type %></td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm"><%= Map.get(instance, :region, "unknown") %></td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm">
                     <span class={"px-2 py-1 text-xs rounded-full #{state_color(instance.state)}"}>
                       <%= instance.state %>
@@ -989,7 +1285,7 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                 </tr>
                 <%= if @expanded_instance == instance.id do %>
                   <tr class="bg-blue-50">
-                    <td colspan="6" class="px-6 py-4">
+                    <td colspan="7" class="px-6 py-4">
                       <div class="bg-white rounded-lg p-4 border-2 border-blue-200">
                         <h4 class="font-semibold text-gray-900 mb-3">Instance Details</h4>
                         <div class="grid grid-cols-2 gap-4 text-sm">
@@ -1168,6 +1464,22 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Region
+            </label>
+            <select
+              name="region"
+              phx-change="select_region"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <%= for region <- @regions do %>
+                <option value={region.name} selected={@selected_region == region.name}>
+                  <%= region.display_name %> (<%= region.name %>)
+                </option>
+              <% end %>
+            </select>
+          </div>
           <p class="text-sm text-gray-600 mb-4">
             This will take approximately 10-15 minutes. You can monitor progress in the terminal.
           </p>
@@ -1192,10 +1504,92 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
     """
   end
 
-  defp launch_instance_modal(assigns) do
+  defp copy_ami_modal(assigns) do
     ~H"""
     <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg p-6 max-w-md w-full">
+        <h3 class="text-lg font-semibold mb-4">Copy AMI to Another Region</h3>
+        <form phx-submit="copy_ami">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Source AMI
+            </label>
+            <input
+              type="text"
+              value={@copy_source_ami}
+              class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+              readonly
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Source Region
+            </label>
+            <input
+              type="text"
+              value={@copy_source_region}
+              class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+              readonly
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Target Region
+            </label>
+            <select
+              name="target_region"
+              phx-change="select_target_region"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">-- Select Target Region --</option>
+              <%= for region <- @regions do %>
+                <%= if region.name != @copy_source_region do %>
+                  <option value={region.name} selected={@copy_target_region == region.name}>
+                    <%= region.display_name %> (<%= region.name %>)
+                  </option>
+                <% end %>
+              <% end %>
+            </select>
+          </div>
+          <p class="text-sm text-gray-600 mb-4">
+            This will take approximately 10-15 minutes. You can monitor progress in the terminal.
+          </p>
+          <div class="flex justify-end space-x-2">
+            <button
+              type="button"
+              phx-click="hide_copy_ami_modal"
+              class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Copy AMI
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    """
+  end
+
+  defp launch_instance_modal(assigns) do
+    # Common instance types
+    instance_types = [
+      "t2.micro", "t2.small", "t2.medium", "t2.large",
+      "t3.micro", "t3.small", "t3.medium", "t3.large",
+      "m5.large", "m5.xlarge", "m5.2xlarge",
+      "c5.large", "c5.xlarge", "c5.2xlarge", "c5.4xlarge",
+      "c7i.large", "c7i.xlarge", "c7i.2xlarge", "c7i.4xlarge"
+    ]
+    
+    assigns = assign(assigns, :instance_types, instance_types)
+    
+    ~H"""
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h3 class="text-lg font-semibold mb-4">Launch Instance</h3>
         <form phx-change="select_config" phx-submit="launch_instance">
           <div class="mb-4">
@@ -1214,7 +1608,92 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
               <% end %>
             </select>
           </div>
-          <div class="flex justify-end space-x-2">
+
+          <%= if @selected_config do %>
+            <div class="border-t pt-4 mt-4">
+              <h4 class="text-sm font-semibold text-gray-700 mb-3">Override Settings (Optional)</h4>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Instance Type
+                  </label>
+                  <select
+                    name="instance_type"
+                    phx-change="update_launch_field"
+                    phx-value-field="instance_type"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <%= for type <- @instance_types do %>
+                      <option value={type} selected={@launch_instance_type == type}>
+                        <%= type %>
+                      </option>
+                    <% end %>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Spot Max Price
+                  </label>
+                  <input
+                    type="text"
+                    name="spot_max_price"
+                    value={@launch_spot_max_price}
+                    phx-change="update_launch_field"
+                    phx-value-field="spot_max_price"
+                    placeholder="0.38"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Availability Zone
+                  </label>
+                  <select
+                    name="availability_zone"
+                    phx-change="update_launch_field"
+                    phx-value-field="availability_zone"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">-- Auto Select --</option>
+                    <%= for zone <- @availability_zones do %>
+                      <option value={zone.name} selected={@launch_availability_zone == zone.name}>
+                        <%= zone.name %> (<%= zone.region %>)
+                      </option>
+                    <% end %>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    AMI ID
+                  </label>
+                  <select
+                    name="ami_id"
+                    phx-change="update_launch_field"
+                    phx-value-field="ami_id"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <%= for ami <- @amis do %>
+                      <option value={ami.id} selected={@launch_ami_id == ami.id}>
+                        <%= ami.id %> - <%= ami.name %> [<%= Map.get(ami, :region, System.get_env("AWS_DEFAULT_REGION", "us-east-1")) %>]
+                      </option>
+                    <% end %>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mt-3 bg-blue-50 border border-blue-200 rounded p-3">
+                <p class="text-xs text-blue-800">
+                  Leave fields unchanged to use config defaults. Override only what you need.
+                </p>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="flex justify-end space-x-2 mt-6">
             <button
               type="button"
               phx-click="hide_launch_instance_modal"

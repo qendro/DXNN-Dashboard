@@ -8,15 +8,63 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
   # AMI Operations
 
   def list_amis do
-    case run_script("ami-manager.sh", ["--list"]) do
+    # Run in parallel for speed
+    case run_script_with_timeout("ami-manager.sh", ["--list"], 25_000) do
       {:ok, output} -> parse_ami_list(output)
       {:error, _} = error -> error
     end
   end
 
-  def create_ami(name \\ nil) do
-    args = if name, do: ["--create", "--name", name], else: ["--create"]
+  def create_ami(name \\ nil, region \\ nil) do
+    args = ["--create"]
+    args = if name, do: args ++ ["--name", name], else: args
+    args = if region, do: args ++ ["--region", region], else: args
     run_script_async("ami-manager.sh", args)
+  end
+
+  def copy_ami(source_ami, source_region, target_region) do
+    run_script_async("copy-ami-to-region.sh", [source_ami, source_region, target_region])
+  end
+
+  def list_regions do
+    # Only return US regions for simplicity and speed
+    {:ok, [
+      %{name: "us-east-1", display_name: "US East (N. Virginia)"},
+      %{name: "us-east-2", display_name: "US East (Ohio)"},
+      %{name: "us-west-1", display_name: "US West (N. California)"},
+      %{name: "us-west-2", display_name: "US West (Oregon)"}
+    ]}
+  end
+
+  def list_availability_zones do
+    # Only check US regions
+    us_regions = ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
+    
+    tasks = Enum.map(us_regions, fn region ->
+      Task.async(fn ->
+        case System.cmd("aws", [
+          "ec2", "describe-availability-zones",
+          "--region", region,
+          "--filters", "Name=state,Values=available",
+          "--query", "AvailabilityZones[*].[ZoneName,RegionName]",
+          "--output", "json"
+        ], stderr_to_stdout: true) do
+          {output, 0} ->
+            case Jason.decode(output) do
+              {:ok, data} when is_list(data) ->
+                Enum.map(data, fn [zone, region] -> %{name: zone, region: region} end)
+              _ -> []
+            end
+          _ -> []
+        end
+      end)
+    end)
+    
+    zones = tasks
+    |> Task.await_many(10_000)
+    |> List.flatten()
+    
+    {:ok, zones}
   end
 
   def delete_ami(ami_id) do
@@ -30,12 +78,12 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
   # Instance Operations
 
   def list_instances do
-    # List ALL instances in running/pending/stopped states
+    # List ALL instances in running/pending/stopped states, including availability zone
     case System.cmd("aws", [
       "ec2", "describe-instances",
       "--filters",
       "Name=instance-state-name,Values=pending,running,stopping,stopped",
-      "--query", "Reservations[*].Instances[*].[InstanceId,PublicIpAddress,InstanceType,State.Name,LaunchTime,Tags[?Key=='Name'].Value|[0]]",
+      "--query", "Reservations[*].Instances[*].[InstanceId,PublicIpAddress,InstanceType,State.Name,LaunchTime,Tags[?Key=='Name'].Value|[0],Placement.AvailabilityZone]",
       "--output", "json"
     ], stderr_to_stdout: true) do
       {output, 0} -> parse_instance_list(output)
@@ -43,8 +91,16 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     end
   end
 
-  def launch_instance(config_file) do
-    run_script_async("docker-deploy.sh", ["-c", config_file])
+  def launch_instance(config_file, overrides \\ %{}) do
+    args = ["-c", config_file]
+    
+    # Add override arguments if provided
+    args = if overrides[:instance_type], do: args ++ ["--instance-type", overrides[:instance_type]], else: args
+    args = if overrides[:availability_zone], do: args ++ ["--availability-zone", overrides[:availability_zone]], else: args
+    args = if overrides[:ami_id], do: args ++ ["--ami-id", overrides[:ami_id]], else: args
+    args = if overrides[:spot_max_price], do: args ++ ["--spot-max-price", overrides[:spot_max_price]], else: args
+    
+    run_script_async("docker-deploy.sh", args)
   end
 
   def terminate_instance(instance_id) do
@@ -334,6 +390,19 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     end
   end
 
+  defp run_script_with_timeout(script_name, args, timeout) do
+    script_path = Path.join(@aws_deployment_path, script_name)
+    task = Task.async(fn ->
+      System.cmd("bash", [script_path | args], cd: @aws_deployment_path, stderr_to_stdout: true)
+    end)
+    
+    case Task.yield(task, timeout) || Task.shutdown(task) do
+      {:ok, {output, 0}} -> {:ok, output}
+      {:ok, {error, _}} -> {:error, error}
+      nil -> {:error, "Command timed out after #{timeout}ms"}
+    end
+  end
+
   defp run_script_async(script_name, args) do
     script_path = Path.join(@aws_deployment_path, script_name)
     parent = self()
@@ -374,9 +443,10 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
   defp parse_ami_list(output) do
     lines = String.split(output, "\n", trim: true)
     amis = Enum.reduce(lines, [], fn line, acc ->
-      case Regex.run(~r/(ami-[a-z0-9]+)\s+(.+?)\s+(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/, line) do
-        [_, ami_id, name, created_at] ->
-          [%{id: ami_id, name: String.trim(name), created_at: created_at, state: "available"} | acc]
+      # Updated regex to capture region
+      case Regex.run(~r/(ami-[a-z0-9]+)\s+(.+?)\s+([a-z]+-[a-z]+-\d+)\s+(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/, line) do
+        [_, ami_id, name, region, created_at] ->
+          [%{id: ami_id, name: String.trim(name), region: region, created_at: created_at, state: "available"} | acc]
         _ -> acc
       end
     end)
@@ -388,16 +458,25 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
       {:ok, data} when is_list(data) ->
         instances = data
         |> List.flatten()
-        |> Enum.chunk_every(6)
+        |> Enum.chunk_every(7)
         |> Enum.map(fn
-          [id, ip, type, state, launch_time, name] when is_binary(id) ->
+          [id, ip, type, state, launch_time, name, availability_zone] when is_binary(id) ->
+            # Extract region from availability zone (e.g., "us-east-1a" -> "us-east-1")
+            region = if availability_zone && String.length(availability_zone) > 0 do
+              String.slice(availability_zone, 0..-2//1)
+            else
+              "unknown"
+            end
+            
             %{
               id: id,
               ip: ip || "N/A",
               type: type,
               state: state,
               launch_time: launch_time,
-              name: name || "unnamed"
+              name: name || "unnamed",
+              availability_zone: availability_zone || "unknown",
+              region: region
             }
           _ -> nil
         end)
@@ -480,5 +559,27 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     end)
     |> Enum.reject(&is_nil/1)
     {:ok, runs}
+  end
+
+  defp format_region_name(region) do
+    # Convert region codes to friendly names
+    case region do
+      "us-east-1" -> "US East (N. Virginia)"
+      "us-east-2" -> "US East (Ohio)"
+      "us-west-1" -> "US West (N. California)"
+      "us-west-2" -> "US West (Oregon)"
+      "eu-west-1" -> "EU (Ireland)"
+      "eu-west-2" -> "EU (London)"
+      "eu-west-3" -> "EU (Paris)"
+      "eu-central-1" -> "EU (Frankfurt)"
+      "ap-southeast-1" -> "Asia Pacific (Singapore)"
+      "ap-southeast-2" -> "Asia Pacific (Sydney)"
+      "ap-northeast-1" -> "Asia Pacific (Tokyo)"
+      "ap-northeast-2" -> "Asia Pacific (Seoul)"
+      "ap-south-1" -> "Asia Pacific (Mumbai)"
+      "sa-east-1" -> "South America (São Paulo)"
+      "ca-central-1" -> "Canada (Central)"
+      _ -> region
+    end
   end
 end

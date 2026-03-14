@@ -102,6 +102,16 @@ defmodule DxnnAnalyzerWeb.SpotPricingLive do
     if sort_order == :desc, do: Enum.reverse(sorted), else: sorted
   end
 
+  defp build_launch_url(instance) do
+    # Add $0.10 buffer to lowest price for max spot price
+    max_price = (String.to_float(instance.lowest_price) + 0.10)
+    |> Float.round(2)
+    |> Float.to_string()
+    
+    # Build URL with query params
+    "/aws-deployment?instance_type=#{URI.encode(instance.instance_type)}&region=#{URI.encode(instance.lowest_region)}&spot_max_price=#{max_price}&auto_open_modal=true"
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -248,6 +258,9 @@ defmodule DxnnAnalyzerWeb.SpotPricingLive do
                         <% end %>
                       </button>
                     </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -296,6 +309,18 @@ defmodule DxnnAnalyzerWeb.SpotPricingLive do
                           <span class="text-sm font-semibold text-purple-700">
                             $<%= instance.price_per_gib %>
                           </span>
+                        <% else %>
+                          <span class="text-sm text-gray-400">N/A</span>
+                        <% end %>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <%= if instance.lowest_price && instance.lowest_region do %>
+                          <.link
+                            navigate={build_launch_url(instance)}
+                            class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition"
+                          >
+                            🚀 Launch
+                          </.link>
                         <% else %>
                           <span class="text-sm text-gray-400">N/A</span>
                         <% end %>

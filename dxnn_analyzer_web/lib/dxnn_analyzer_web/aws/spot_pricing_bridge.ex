@@ -6,11 +6,16 @@ defmodule DxnnAnalyzerWeb.AWS.SpotPricingBridge do
 
   # Instance types suitable for DXNN (compute-optimized and general purpose)
   @dxnn_instance_types [
-    "c7i.xlarge", "c7i.2xlarge", "c7i.4xlarge",
-    "c5.large", "c5.xlarge", "c5.2xlarge", "c5.4xlarge",
-    "m5.large", "m5.xlarge", "m5.2xlarge",
-    "t3.medium", "t3.large", "t3.xlarge",
-    "t2.medium", "t2.large"
+    # T3 - Dev/test only
+    "t3.xlarge",
+    # C7i - Latest compute-optimized (Intel 4th gen)
+    "c7i.xlarge", "c7i.2xlarge", "c7i.4xlarge", "c7i.8xlarge", "c7i.12xlarge", "c7i.16xlarge", "c7i.24xlarge",
+    # C6i - Compute-optimized (Intel 3rd gen)
+    "c6i.xlarge", "c6i.2xlarge", "c6i.4xlarge", "c6i.8xlarge", "c6i.12xlarge", "c6i.16xlarge", "c6i.24xlarge",
+    # C5 - Compute-optimized
+    "c5.xlarge", "c5.2xlarge", "c5.4xlarge", "c5.9xlarge", "c5.12xlarge",
+    # M5 - General purpose (balanced)
+    "m5.xlarge", "m5.2xlarge", "m5.4xlarge", "m5.8xlarge"
   ]
 
   # Regions to check for lowest pricing
@@ -21,21 +26,35 @@ defmodule DxnnAnalyzerWeb.AWS.SpotPricingBridge do
 
   # Instance specs (vCPUs and Memory)
   @instance_specs %{
+    # T3 - Dev/test
+    "t3.xlarge" => %{vcpus: 4, memory: 16, family: "T3 (Burstable)"},
+    # C7i - Latest compute-optimized
     "c7i.xlarge" => %{vcpus: 4, memory: 8, family: "C7i (Compute)"},
     "c7i.2xlarge" => %{vcpus: 8, memory: 16, family: "C7i (Compute)"},
     "c7i.4xlarge" => %{vcpus: 16, memory: 32, family: "C7i (Compute)"},
-    "c5.large" => %{vcpus: 2, memory: 4, family: "C5 (Compute)"},
+    "c7i.8xlarge" => %{vcpus: 32, memory: 64, family: "C7i (Compute)"},
+    "c7i.12xlarge" => %{vcpus: 48, memory: 96, family: "C7i (Compute)"},
+    "c7i.16xlarge" => %{vcpus: 64, memory: 128, family: "C7i (Compute)"},
+    "c7i.24xlarge" => %{vcpus: 96, memory: 192, family: "C7i (Compute)"},
+    # C6i - Compute-optimized
+    "c6i.xlarge" => %{vcpus: 4, memory: 8, family: "C6i (Compute)"},
+    "c6i.2xlarge" => %{vcpus: 8, memory: 16, family: "C6i (Compute)"},
+    "c6i.4xlarge" => %{vcpus: 16, memory: 32, family: "C6i (Compute)"},
+    "c6i.8xlarge" => %{vcpus: 32, memory: 64, family: "C6i (Compute)"},
+    "c6i.12xlarge" => %{vcpus: 48, memory: 96, family: "C6i (Compute)"},
+    "c6i.16xlarge" => %{vcpus: 64, memory: 128, family: "C6i (Compute)"},
+    "c6i.24xlarge" => %{vcpus: 96, memory: 192, family: "C6i (Compute)"},
+    # C5 - Compute-optimized
     "c5.xlarge" => %{vcpus: 4, memory: 8, family: "C5 (Compute)"},
     "c5.2xlarge" => %{vcpus: 8, memory: 16, family: "C5 (Compute)"},
     "c5.4xlarge" => %{vcpus: 16, memory: 32, family: "C5 (Compute)"},
-    "m5.large" => %{vcpus: 2, memory: 8, family: "M5 (General)"},
+    "c5.9xlarge" => %{vcpus: 36, memory: 72, family: "C5 (Compute)"},
+    "c5.12xlarge" => %{vcpus: 48, memory: 96, family: "C5 (Compute)"},
+    # M5 - General purpose
     "m5.xlarge" => %{vcpus: 4, memory: 16, family: "M5 (General)"},
     "m5.2xlarge" => %{vcpus: 8, memory: 32, family: "M5 (General)"},
-    "t3.medium" => %{vcpus: 2, memory: 4, family: "T3 (Burstable)"},
-    "t3.large" => %{vcpus: 2, memory: 8, family: "T3 (Burstable)"},
-    "t3.xlarge" => %{vcpus: 4, memory: 16, family: "T3 (Burstable)"},
-    "t2.medium" => %{vcpus: 2, memory: 4, family: "T2 (Burstable)"},
-    "t2.large" => %{vcpus: 2, memory: 8, family: "T2 (Burstable)"}
+    "m5.4xlarge" => %{vcpus: 16, memory: 64, family: "M5 (General)"},
+    "m5.8xlarge" => %{vcpus: 32, memory: 128, family: "M5 (General)"}
   }
 
   def get_spot_pricing do

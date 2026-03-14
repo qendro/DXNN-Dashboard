@@ -110,6 +110,12 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
               ☁️ AWS Deployment
             </.link>
             <.link
+              navigate={~p"/spot-pricing"}
+              class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
+            >
+              💰 Spot Pricing
+            </.link>
+            <.link
               navigate={~p"/settings"}
               class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
             >

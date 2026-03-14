@@ -5,6 +5,7 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
   @impl true
   def mount(_params, _session, socket) do
     auto_download_path = AnalyzerBridge.get_s3_auto_download_path()
+    saved_copy_destination = load_saved_copy_destination()
     
     socket =
       socket
@@ -17,6 +18,15 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
       |> assign(:browser_mode, :add)
       |> assign(:s3_auto_download_path, auto_download_path)
       |> assign(:s3_path_edit_mode, false)
+      |> assign(:copy_source_path, "")
+      |> assign(:copy_destination_path, saved_copy_destination || "/app/Documents/DXNN_Main/DXNN-Dashboard/Databases/Local_v1")
+      |> assign(:copying, false)
+      |> assign(:copy_result, nil)
+      |> assign(:copy_validation_error, nil)
+      |> assign(:show_copy_browser, false)
+      |> assign(:copy_browser_mode, :source)
+      |> assign(:copy_browse_path, "/app/Documents/DXNN_Main")
+      |> assign(:copy_browse_folders, [])
       |> load_experiments()
 
     {:ok, socket}
@@ -278,6 +288,125 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
     {:noreply, assign(socket, :s3_path_edit_mode, false)}
   end
 
+  # Copy Experiment handlers
+  @impl true
+  def handle_event("validate_copy_source", %{"source_path" => path}, socket) do
+    validation_error = validate_copy_source_path(path)
+    {:noreply, assign(socket, copy_source_path: path, copy_validation_error: validation_error)}
+  end
+
+  @impl true
+  def handle_event("update_copy_destination", %{"destination_path" => path}, socket) do
+    {:noreply, assign(socket, copy_destination_path: path)}
+  end
+
+  @impl true
+  def handle_event("browse_copy_source", _, socket) do
+    folders = list_copy_folders(socket.assigns.copy_browse_path)
+    
+    socket =
+      socket
+      |> assign(:show_copy_browser, true)
+      |> assign(:copy_browser_mode, :source)
+      |> assign(:copy_browse_folders, folders)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("browse_copy_destination", _, socket) do
+    folders = list_copy_folders(socket.assigns.copy_browse_path)
+    
+    socket =
+      socket
+      |> assign(:show_copy_browser, true)
+      |> assign(:copy_browser_mode, :destination)
+      |> assign(:copy_browse_folders, folders)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("close_copy_browser", _, socket) do
+    {:noreply, assign(socket, show_copy_browser: false)}
+  end
+
+  @impl true
+  def handle_event("navigate_copy_to", %{"path" => path}, socket) do
+    folders = list_copy_folders(path)
+    {:noreply, assign(socket, copy_browse_path: path, copy_browse_folders: folders)}
+  end
+
+  @impl true
+  def handle_event("select_copy_folder", %{"path" => path}, socket) do
+    if socket.assigns.copy_browser_mode == :source do
+      validation_error = validate_copy_source_path(path)
+      
+      socket =
+        socket
+        |> assign(:copy_source_path, path)
+        |> assign(:copy_validation_error, validation_error)
+        |> assign(:show_copy_browser, false)
+      
+      {:noreply, socket}
+    else
+      socket =
+        socket
+        |> assign(:copy_destination_path, path)
+        |> assign(:show_copy_browser, false)
+      
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("copy_experiment", _, socket) do
+    source = String.trim(socket.assigns.copy_source_path)
+    destination = String.trim(socket.assigns.copy_destination_path)
+
+    with :ok <- validate_copy_inputs(source, destination, socket.assigns.copy_validation_error) do
+      socket = assign(socket, copying: true, copy_result: nil)
+      
+      parent = self()
+      Task.start(fn ->
+        result = DxnnAnalyzerWeb.ExperimentCopier.copy_experiment(source, destination)
+        send(parent, {:copy_complete, result})
+      end)
+      
+      {:noreply, socket}
+    else
+      {:error, message} ->
+        {:noreply, put_flash(socket, :error, message)}
+    end
+  end
+
+  @impl true
+  def handle_event("stop_propagation", _, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:copy_complete, {:ok, new_path}}, socket) do
+    save_copy_destination(socket.assigns.copy_destination_path)
+    
+    socket =
+      socket
+      |> assign(copying: false, copy_result: {:ok, new_path})
+      |> put_flash(:info, "Experiment copied successfully to: #{new_path}")
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:copy_complete, {:error, reason}}, socket) do
+    socket =
+      socket
+      |> assign(copying: false, copy_result: {:error, reason})
+      |> put_flash(:error, "Copy failed: #{reason}")
+
+    {:noreply, socket}
+  end
+
   defp load_experiments(socket) do
     experiments = AnalyzerBridge.get_experiments_from_settings()
     
@@ -405,6 +534,87 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
   end
 
   defp format_load_error(reason), do: inspect(reason)
+
+  # Copy Experiment helper functions
+  defp validate_copy_source_path(path) do
+    trimmed = String.trim(path)
+    
+    cond do
+      trimmed == "" -> nil
+      not File.exists?(trimmed) -> "Source path does not exist"
+      not File.dir?(trimmed) -> "Source path must be a directory"
+      not has_copy_required_files?(trimmed) -> "Missing required files (Mnesia.nonode@nohost/, logs/, config.erl, exp_runner.erl)"
+      true -> nil
+    end
+  end
+
+  defp validate_copy_inputs(source, destination, validation_error) do
+    cond do
+      source == "" -> {:error, "Please enter a source path"}
+      destination == "" -> {:error, "Please enter a destination path"}
+      validation_error != nil -> {:error, validation_error}
+      true -> :ok
+    end
+  end
+
+  defp has_copy_required_files?(path) do
+    required = [
+      {"Mnesia.nonode@nohost", &File.dir?/1},
+      {"logs", &File.dir?/1},
+      {"config.erl", &File.exists?/1},
+      {"exp_runner.erl", &File.exists?/1}
+    ]
+
+    Enum.all?(required, fn {name, check_fn} ->
+      path |> Path.join(name) |> check_fn.()
+    end)
+  end
+
+  defp list_copy_folders(path) do
+    case File.ls(path) do
+      {:ok, items} ->
+        items
+        |> Enum.map(&Path.join(path, &1))
+        |> Enum.filter(&File.dir?/1)
+        |> Enum.map(fn full_path ->
+          %{
+            name: Path.basename(full_path),
+            path: full_path,
+            has_required: has_copy_required_files?(full_path)
+          }
+        end)
+        |> Enum.sort_by(& &1.name)
+      
+      {:error, _} ->
+        []
+    end
+  end
+
+  defp load_saved_copy_destination do
+    settings_file = copy_settings_file_path()
+    
+    with {:ok, content} <- File.read(settings_file),
+         {:ok, %{"destination_path" => path}} <- Jason.decode(content) do
+      path
+    else
+      _ -> nil
+    end
+  end
+
+  defp save_copy_destination(path) do
+    settings_file = copy_settings_file_path()
+    
+    settings_file
+    |> Path.dirname()
+    |> File.mkdir_p()
+    
+    content = Jason.encode!(%{destination_path: path}, pretty: true)
+    File.write(settings_file, content)
+  end
+
+  defp copy_settings_file_path do
+    Path.join([File.cwd!(), "data", "copy_experiment_settings.json"])
+  end
 
   @impl true
   def render(assigns) do
@@ -569,6 +779,204 @@ defmodule DxnnAnalyzerWeb.SettingsLive do
             </div>
           <% end %>
         </div>
+
+        <!-- Copy Experiment Section -->
+        <div class="bg-white shadow rounded-lg p-6 mt-6">
+          <div class="mb-4">
+            <h2 class="text-xl font-semibold">Copy Experiment</h2>
+            <p class="text-sm text-gray-600 mt-1">Copy an active DXNN-Trader-v2 experiment to the dashboard database</p>
+          </div>
+
+          <form phx-submit="copy_experiment" class="space-y-4">
+            <!-- Source Path -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Source Path (DXNN-Trader-v2 Directory)
+              </label>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  name="source_path"
+                  value={@copy_source_path}
+                  phx-change="validate_copy_source"
+                  placeholder="/Users/qendrim/Documents/DXNN_Main/DXNN-Trader-v2"
+                  class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  disabled={@copying}
+                />
+                <button
+                  type="button"
+                  phx-click="browse_copy_source"
+                  disabled={@copying}
+                  class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition disabled:bg-gray-400"
+                >
+                  📁 Browse
+                </button>
+              </div>
+              <%= if @copy_validation_error do %>
+                <p class="mt-2 text-sm text-red-600">
+                  <%= @copy_validation_error %>
+                </p>
+              <% end %>
+              <p class="mt-2 text-sm text-gray-500">
+                Must contain: Mnesia.nonode@nohost/, logs/, config.erl, and exp_runner.erl
+              </p>
+            </div>
+
+            <!-- Destination Path -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Destination Directory
+              </label>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  name="destination_path"
+                  value={@copy_destination_path}
+                  phx-change="update_copy_destination"
+                  class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  disabled={@copying}
+                />
+                <button
+                  type="button"
+                  phx-click="browse_copy_destination"
+                  disabled={@copying}
+                  class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition disabled:bg-gray-400"
+                >
+                  📁 Browse
+                </button>
+              </div>
+              <p class="mt-2 text-sm text-gray-500">
+                A timestamped folder will be created here
+              </p>
+            </div>
+
+            <!-- Copy Button -->
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                disabled={@copying || @copy_validation_error != nil || String.trim(@copy_source_path) == ""}
+                class="bg-orange-600 text-white px-6 py-2 rounded-md hover:bg-orange-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <%= if @copying do %>
+                  <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Copying...
+                <% else %>
+                  📋 Copy Experiment
+                <% end %>
+              </button>
+            </div>
+          </form>
+
+          <!-- Copy Result -->
+          <%= if @copy_result do %>
+            <div class={"mt-4 p-4 rounded-md #{if match?({:ok, _}, @copy_result), do: "bg-green-50 border border-green-200", else: "bg-red-50 border border-red-200"}"}>
+              <%= case @copy_result do %>
+                <% {:ok, new_path} -> %>
+                  <div class="flex items-start gap-3">
+                    <span class="text-2xl">✅</span>
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-green-900 mb-2">Copy Successful!</h3>
+                      <p class="text-sm text-green-800 mb-2">Experiment copied to:</p>
+                      <code class="block bg-green-100 text-green-900 px-3 py-2 rounded text-sm break-all">
+                        <%= new_path %>
+                      </code>
+                    </div>
+                  </div>
+                <% {:error, reason} -> %>
+                  <div class="flex items-start gap-3">
+                    <span class="text-2xl">❌</span>
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-red-900 mb-2">Copy Failed</h3>
+                      <p class="text-sm text-red-800"><%= reason %></p>
+                    </div>
+                  </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Copy Folder Browser Modal -->
+        <%= if @show_copy_browser do %>
+          <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" phx-click="close_copy_browser">
+            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col" phx-click="stop_propagation">
+              <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-lg font-semibold">
+                  <%= if @copy_browser_mode == :source, do: "Select Source Folder", else: "Select Destination Folder" %>
+                </h3>
+                <button phx-click="close_copy_browser" class="text-gray-500 hover:text-gray-700">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="p-4 bg-gray-50 border-b">
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="font-medium">Current:</span>
+                  <code class="flex-1 bg-white px-3 py-1 rounded border"><%= @copy_browse_path %></code>
+                  <%= if @copy_browse_path != "/app" do %>
+                    <button
+                      phx-click="navigate_copy_to"
+                      phx-value-path={Path.dirname(@copy_browse_path)}
+                      class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                    >
+                      ⬆️ Up
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+
+              <div class="flex-1 overflow-y-auto p-4">
+                <%= if Enum.empty?(@copy_browse_folders) do %>
+                  <p class="text-gray-500 text-center py-8">No folders found</p>
+                <% else %>
+                  <div class="space-y-2">
+                    <%= for folder <- @copy_browse_folders do %>
+                      <div class="flex items-center gap-2 p-3 border rounded hover:bg-gray-50">
+                        <div class="flex-1 flex items-center gap-2">
+                          <span class="text-2xl">📁</span>
+                          <span class="font-medium"><%= folder.name %></span>
+                          <%= if folder.has_required do %>
+                            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">✓ Valid</span>
+                          <% end %>
+                        </div>
+                        <div class="flex gap-2">
+                          <button
+                            phx-click="navigate_copy_to"
+                            phx-value-path={folder.path}
+                            class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                          >
+                            Open
+                          </button>
+                          <button
+                            phx-click="select_copy_folder"
+                            phx-value-path={folder.path}
+                            class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                          >
+                            Select
+                          </button>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+
+              <div class="p-4 border-t bg-gray-50">
+                <button
+                  phx-click="select_copy_folder"
+                  phx-value-path={@copy_browse_path}
+                  class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Select Current Folder
+                </button>
+              </div>
+            </div>
+          </div>
+        <% end %>
 
         <!-- Add Existing Experiment Modal -->
         <%= if @show_add_modal do %>

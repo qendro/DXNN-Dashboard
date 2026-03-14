@@ -23,18 +23,44 @@ export const PerformanceChart = {
       return
     }
 
+    // Handle both old format (array) and new format (object with raw/sma)
+    const rawData = chartConfig.data.raw || chartConfig.data
+    const smaData = chartConfig.data.sma || []
+
+    console.log('=== CHART INIT DEBUG ===')
+    console.log('chartConfig.data:', chartConfig.data)
+    console.log('rawData length:', rawData.length)
+    console.log('smaData length:', smaData.length)
+    console.log('First 3 raw points:', rawData.slice(0, 3))
+    console.log('First 3 SMA points:', smaData.slice(0, 3))
+    console.log('Last 3 SMA points:', smaData.slice(-3))
+
     this.chart = new Chart(ctx, {
       type: 'line',
       data: {
-        datasets: [{
+        datasets: [
+        {
+          label: '200-Point SMA',
+          data: smaData,
+          borderColor: 'rgb(239, 68, 68)',
+          backgroundColor: 'rgba(239, 68, 68, 0)',
+          borderWidth: 3,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          tension: 0.4,
+          spanGaps: true,
+          order: 1
+        },
+        {
           label: chartConfig.label,
-          data: chartConfig.data,
+          data: rawData,
           borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderWidth: 2,
-          pointRadius: 2,
-          pointHoverRadius: 4,
-          tension: 0.1
+          backgroundColor: 'rgba(59, 130, 246, 0)',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          tension: 0.1,
+          order: 2
         }]
       },
       options: {
@@ -85,8 +111,16 @@ export const PerformanceChart = {
       return
     }
     
-    this.chart.data.datasets[0].data = chartConfig.data
-    this.chart.data.datasets[0].label = chartConfig.label
+    // Handle both old format (array) and new format (object with raw/sma)
+    const rawData = chartConfig.data.raw || chartConfig.data
+    const smaData = chartConfig.data.sma || []
+
+    console.log('Updating chart data:', { rawData: rawData.length, smaData: smaData.length })
+    
+    // Dataset 0 is SMA, Dataset 1 is raw data
+    this.chart.data.datasets[0].data = smaData
+    this.chart.data.datasets[1].data = rawData
+    this.chart.data.datasets[1].label = chartConfig.label
     this.chart.options.scales.y.title.text = chartConfig.label
     this.chart.update()
     this.chart.resize()

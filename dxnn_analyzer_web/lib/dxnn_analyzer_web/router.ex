@@ -31,6 +31,7 @@ defmodule DxnnAnalyzerWeb.Router do
     live "/species", SpecieListLive, :index
     live "/aws-deployment", AWSDeploymentLive, :index
     live "/aws-deployment/instance/:instance_id", InstanceDetailsLive, :show
+    live "/spot-pricing", SpotPricingLive, :index
     live "/s3-experiments", S3ExperimentsLive, :index
     live "/s3-explorer", S3ExplorerLive, :index
     live "/contexts/:context/artifacts", ContextArtifactsLive, :show

@@ -690,6 +690,12 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
           </div>
           <div class="flex gap-2">
             <.link
+              navigate={~p"/spot-pricing"}
+              class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
+            >
+              💰 Spot Pricing
+            </.link>
+            <.link
               navigate={~p"/s3-explorer"}
               class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition"
             >

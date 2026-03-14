@@ -1,7 +1,7 @@
 -module(generation_analytics).
 -export([generate_report/2, generate_report/3]).
 
--include("records.hrl").
+-include("../include/records.hrl").
 -include("../include/analyzer_records.hrl").
 
 -record(metrics, {
@@ -19,8 +19,11 @@ generate_report(ContextName, OutputFormat, Opts) when is_atom(ContextName), is_l
             {ok, _Context, []} ->
                 {error, no_agents};
             {ok, Context, Agents} ->
+                % Parse agent_trades.log to get trading metrics
+                TradesMap = parse_agent_trades_log(Context),
+                
                 GenerationData = group_by_generation(Agents),
-                Stats = calculate_generation_stats(GenerationData),
+                Stats = calculate_generation_stats(GenerationData, TradesMap),
 
                 case determine_output_path(Context, Opts) of
                     {ok, OutputPath} ->
@@ -61,13 +64,17 @@ group_by_generation(Agents) ->
     Generations = dict:to_list(Dict),
     lists:keysort(1, Generations).
 
-calculate_generation_stats(GenerationData) ->
+calculate_generation_stats(GenerationData, TradesMap) ->
     lists:map(fun({Generation, Agents}) ->
         Fitnesses = [A#agent.fitness || A <- Agents],
 
-        Metrics = lists:map(fun(Agent) ->
-            extract_metrics(Agent)
-        end, Agents),
+        % Get all metrics for this generation from the log
+        GenMetrics = maps:get(Generation, TradesMap, []),
+        
+        % Extract P/L and trade data
+        RealizedPLs = [M#metrics.realized_pl || M <- GenMetrics],
+        UnrealizedPLs = [M#metrics.unrealized_pl || M <- GenMetrics],
+        Trades = [M#metrics.trades || M <- GenMetrics],
 
         #{
             generation => Generation,
@@ -75,31 +82,162 @@ calculate_generation_stats(GenerationData) ->
             fitness_avg => safe_avg(Fitnesses),
             fitness_high => safe_max(Fitnesses),
             fitness_low => safe_min(Fitnesses),
-            realized_pl_avg => safe_avg([M#metrics.realized_pl || M <- Metrics]),
-            realized_pl_high => safe_max([M#metrics.realized_pl || M <- Metrics]),
-            realized_pl_low => safe_min([M#metrics.realized_pl || M <- Metrics]),
-            unrealized_pl_avg => safe_avg([M#metrics.unrealized_pl || M <- Metrics]),
-            unrealized_pl_high => safe_max([M#metrics.unrealized_pl || M <- Metrics]),
-            unrealized_pl_low => safe_min([M#metrics.unrealized_pl || M <- Metrics]),
-            trades_avg => safe_avg([M#metrics.trades || M <- Metrics]),
-            trades_high => safe_max([M#metrics.trades || M <- Metrics]),
-            trades_low => safe_min([M#metrics.trades || M <- Metrics])
+            realized_pl_avg => safe_avg(RealizedPLs),
+            realized_pl_high => safe_max(RealizedPLs),
+            realized_pl_low => safe_min(RealizedPLs),
+            unrealized_pl_avg => safe_avg(UnrealizedPLs),
+            unrealized_pl_high => safe_max(UnrealizedPLs),
+            unrealized_pl_low => safe_min(UnrealizedPLs),
+            trades_avg => safe_avg([float(T) || T <- Trades]),
+            trades_high => safe_max(Trades),
+            trades_low => safe_min(Trades)
         }
     end, GenerationData).
 
-extract_metrics(Agent) ->
-    #metrics{
-        realized_pl = get_agent_metric(Agent, realized_pl, 0.0),
-        unrealized_pl = get_agent_metric(Agent, unrealized_pl, 0.0),
-        trades = get_agent_metric(Agent, trades, 0)
-    }.
+extract_metrics_from_trades(Agent, TradesMap) ->
+    % This function is no longer used - keeping for compatibility
+    #metrics{realized_pl = 0.0, unrealized_pl = 0.0, trades = 0}.
 
-get_agent_metric(Agent, MetricName, Default) ->
-    case Agent#agent.constraint of
-        undefined -> Default;
-        Constraint when is_list(Constraint) ->
-            proplists:get_value(MetricName, Constraint, Default);
-        _ -> Default
+parse_agent_trades_log(Context) ->
+    % Find the logs/Benchmarker/agent_trades.log file
+    MnesiaPath = Context#mnesia_context.path,
+    BundleRoot = case filename:basename(MnesiaPath) of
+        "Mnesia.nonode@nohost" -> filename:dirname(MnesiaPath);
+        _ -> MnesiaPath
+    end,
+    
+    LogPath = filename:join([BundleRoot, "logs", "Benchmarker", "agent_trades.log"]),
+    
+    io:format("DEBUG: Looking for log at: ~s~n", [LogPath]),
+    
+    case filelib:is_file(LogPath) of
+        true ->
+            case file:read_file(LogPath) of
+                {ok, Binary} ->
+                    Lines = binary:split(Binary, <<"\n">>, [global]),
+                    io:format("DEBUG: Read ~p lines from log~n", [length(Lines)]),
+                    % Simply parse all FITNESS_EVAL lines and group by generation number from the line itself
+                    % This is more robust than trying to track run boundaries
+                    Result = parse_all_fitness_lines(Lines, maps:new(), 0),
+                    io:format("DEBUG: Parsed metrics for generations: ~p~n", [maps:keys(Result)]),
+                    lists:foreach(fun(Gen) ->
+                        Metrics = maps:get(Gen, Result),
+                        io:format("DEBUG: Generation ~p has ~p metrics~n", [Gen, length(Metrics)])
+                    end, maps:keys(Result)),
+                    Result;
+                {error, Reason} ->
+                    io:format("DEBUG: Failed to read log: ~p~n", [Reason]),
+                    maps:new()
+            end;
+        false ->
+            io:format("DEBUG: Log file not found~n"),
+            maps:new()
+    end.
+
+parse_all_fitness_lines(Lines, Acc) ->
+    parse_all_fitness_lines(Lines, Acc, 0).
+
+parse_all_fitness_lines([], Acc, _) ->
+    Acc;
+parse_all_fitness_lines([Line | Rest], Acc, CurrentGen) ->
+    % Check for generation_start to track current generation
+    NewGen = case parse_generation_start(Line) of
+        {ok, Gen} -> 
+            if Gen =< 5 -> io:format("DEBUG: Found generation_start for gen ~p~n", [Gen]);
+               true -> ok
+            end,
+            Gen;
+        error -> CurrentGen
+    end,
+    
+    % Try to parse FITNESS_EVAL line
+    NewAcc = case parse_fitness_eval_line(Line, NewGen) of
+        {ok, Metrics} ->
+            % Add metrics to the list for this generation
+            GenMetrics = maps:get(NewGen, Acc, []),
+            if NewGen =< 5 andalso length(GenMetrics) < 3 -> 
+                io:format("DEBUG: Adding metrics to gen ~p: ~p~n", [NewGen, Metrics]);
+               true -> ok
+            end,
+            maps:put(NewGen, GenMetrics ++ [Metrics], Acc);
+        error ->
+            Acc
+    end,
+    parse_all_fitness_lines(Rest, NewAcc, NewGen).
+
+parse_generation_start(Line) ->
+    try
+        BinLine = case is_binary(Line) of
+            true -> Line;
+            false -> list_to_binary(Line)
+        end,
+        
+        case re:run(BinLine, <<"generation_start.*generation:\\s*([0-9]+)">>, [{capture, all_but_first, binary}]) of
+            {match, [GenBin]} ->
+                {ok, binary_to_integer(GenBin)};
+            _ ->
+                error
+        end
+    catch
+        _:_ -> error
+    end.
+
+parse_fitness_eval_line(Line, Generation) ->
+    % Parse lines like: [2026-03-10 17:21:17] | [AGENT:<0.483.0>] FITNESS_EVAL | fitness=51.30547769909516 | ... | realized_pl=0 | unrealized_pl=18.328889999999767 | realized_trades=0 | ...
+    try
+        BinLine = case is_binary(Line) of
+            true -> Line;
+            false -> list_to_binary(Line)
+        end,
+        
+        case binary:match(BinLine, <<"FITNESS_EVAL">>) of
+            nomatch ->
+                error;
+            _ ->
+                % Extract realized_pl
+                RealizedPL = case re:run(BinLine, <<"realized_pl=([0-9.-]+)">>, [{capture, all_but_first, binary}]) of
+                    {match, [RPL]} -> binary_to_float_safe(RPL);
+                    _ -> 0.0
+                end,
+                
+                % Extract unrealized_pl
+                UnrealizedPL = case re:run(BinLine, <<"unrealized_pl=([0-9.-]+)">>, [{capture, all_but_first, binary}]) of
+                    {match, [UPL]} -> binary_to_float_safe(UPL);
+                    _ -> 0.0
+                end,
+                
+                % Extract realized_trades
+                Trades = case re:run(BinLine, <<"realized_trades=([0-9]+)">>, [{capture, all_but_first, binary}]) of
+                    {match, [T]} -> binary_to_integer(T);
+                    _ -> 0
+                end,
+                
+                Metrics = #metrics{
+                    realized_pl = RealizedPL,
+                    unrealized_pl = UnrealizedPL,
+                    trades = Trades
+                },
+                {ok, Metrics}
+        end
+    catch
+        _:_ -> error
+    end.
+
+binary_to_float_safe(Bin) ->
+    try
+        Str = binary_to_list(Bin),
+        case string:to_float(Str) of
+            {error, no_float} ->
+                % Try as integer first
+                case string:to_integer(Str) of
+                    {Int, _} -> float(Int);
+                    _ -> 0.0
+                end;
+            {Float, _} ->
+                Float
+        end
+    catch
+        _:_ -> 0.0
     end.
 
 safe_avg([]) -> 0.0;

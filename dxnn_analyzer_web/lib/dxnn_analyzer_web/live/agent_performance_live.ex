@@ -167,6 +167,7 @@ defmodule DxnnAnalyzerWeb.AgentPerformanceLive do
                   <option value="raw_total_profit" selected={@selected_metric == "raw_total_profit"}>Raw Total Profit</option>
                   <option value="realized_pl" selected={@selected_metric == "realized_pl"}>Realized P/L</option>
                   <option value="unrealized_pl" selected={@selected_metric == "unrealized_pl"}>Unrealized P/L</option>
+                  <option value="realized_trades" selected={@selected_metric == "realized_trades"}>Trades</option>
                 </select>
               </form>
               <span class="text-sm text-gray-600">
@@ -178,7 +179,7 @@ defmodule DxnnAnalyzerWeb.AgentPerformanceLive do
             <div class="bg-white shadow rounded-lg p-6 mb-6">
               <h2 class="text-xl font-semibold mb-4">Performance Over Time</h2>
               <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-4 text-sm text-blue-800">
-                💡 <strong>Chart:</strong> Shows <%= metric_label(@selected_metric) %> progression across all agent evaluations
+                💡 <strong>Chart:</strong> Shows <%= metric_label(@selected_metric) %> progression across all agent evaluations with 200-point Simple Moving Average (red line)
               </div>
               <div
                 id="performanceChartContainer"
@@ -407,10 +408,34 @@ defmodule DxnnAnalyzerWeb.AgentPerformanceLive do
   end
 
   defp prepare_chart_data(chart_data, metric) do
-    chart_data
+    raw_data = chart_data
     |> Enum.with_index(1)
     |> Enum.map(fn {data, idx} ->
       %{x: idx, y: Map.get(data, String.to_atom(metric), 0)}
+    end)
+
+    sma_data = calculate_sma(raw_data, 200)
+
+    %{
+      raw: raw_data,
+      sma: sma_data
+    }
+  end
+
+  defp calculate_sma(data, window_size) do
+    values = Enum.map(data, & &1.y)
+    
+    data
+    |> Enum.with_index()
+    |> Enum.map(fn {point, idx} ->
+      if idx >= window_size - 1 do
+        window_values = Enum.slice(values, (idx - window_size + 1)..idx)
+        avg = Enum.sum(window_values) / window_size
+        %{x: point.x, y: avg}
+      else
+        # For points before we have enough data, return nil
+        %{x: point.x, y: nil}
+      end
     end)
   end
 
@@ -418,6 +443,7 @@ defmodule DxnnAnalyzerWeb.AgentPerformanceLive do
   defp metric_label("raw_total_profit"), do: "Raw Total Profit"
   defp metric_label("realized_pl"), do: "Realized P/L"
   defp metric_label("unrealized_pl"), do: "Unrealized P/L"
+  defp metric_label("realized_trades"), do: "Trades"
   defp metric_label(_), do: "Value"
 
   defp format_number(num) when is_float(num) do

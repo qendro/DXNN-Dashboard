@@ -68,6 +68,12 @@ docker-compose up -d
 
 Access at http://localhost:4000
 
+**Reset Experiment Links (if needed):**
+```bash
+./reset-experiments.sh
+docker-compose restart
+```
+
 **AWS Deployment:** http://localhost:4000/aws-deployment
 
 **Instance Details:** Click "📊 Details" on any instance or navigate to:
@@ -282,16 +288,37 @@ Access at `/aws-deployment`:
 - Operations continue in background
 - Reconnects on page refresh
 
+### Managing Experiment Links
+
+Experiment links are stored persistently in the Docker volume and survive container restarts.
+
+**Adding Experiments:**
+1. Navigate to Settings (`/settings`) or click "⚙️ Manage Experiments"
+2. Click "+ Add Existing" to add an experiment folder
+3. Browse or enter path (e.g., `/app/Documents/DXNN_Main/DXNN-Dashboard/Databases/AWS_v1/<lineage_id>/<run_id>`)
+4. Give it a name and click "Add"
+
+**Removing Experiments:**
+- Click "Remove" next to any experiment in the settings page
+- This only removes the link, not the actual files
+
+**Persistence:**
+- Experiment links are stored in `/app/data/experiments.json`
+- This file is persisted in the `dxnn_data` Docker volume
+- Links survive container restarts automatically
+- To reset: delete the file and restart the container
+
 ### Loading Contexts
 
 A "context" is a loaded run that you can analyze:
 
-1. Navigate to Dashboard (`/`)
-2. Enter one of:
+1. Navigate to Dashboard (`/`) or Settings (`/settings`)
+2. Click "Load" next to any configured experiment
+3. Or manually enter:
    - a run root path containing `Mnesia.nonode@nohost` (recommended), or
    - a direct Mnesia folder path
-3. Provide context name (e.g., `exp1`, `experiment_2024`)
-4. Click "Load Context"
+4. Provide context name (e.g., `exp1`, `experiment_2024`)
+5. Click "Load Context"
 
 The context loads Mnesia tables into memory for fast querying. Logs and analytics remain on disk and are accessible from the `Artifacts` button on the dashboard.
 
@@ -518,6 +545,12 @@ ports:
 - Check volume mount in `docker-compose.yml`
 - Ensure path is correct and readable
 - Verify file permissions
+
+**Old/stale experiment links:**
+- Experiment links are persisted in Docker volume
+- To reset: `rm DXNN-Dashboard/dxnn_analyzer_web/data/experiments.json`
+- Or edit the file directly to remove unwanted entries
+- Restart container: `docker-compose restart`
 
 ### AWS Issues
 

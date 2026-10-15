@@ -12,7 +12,9 @@ defmodule DxnnAnalyzerWeb.Application do
       DxnnAnalyzerWeb.Endpoint,
       {DxnnAnalyzerWeb.ContextRegistry, []},
       {DxnnAnalyzerWeb.AnalyzerBridge, []},
-      DxnnAnalyzerWeb.AWS.AWSDeploymentServer
+      DxnnAnalyzerWeb.AWS.AWSDeploymentServer,
+      {Task.Supervisor, name: DxnnAnalyzerWeb.OCI.TaskSupervisor},
+      {DxnnAnalyzerWeb.OCI.OCIServer, []}
     ]
 
     opts = [strategy: :one_for_one, name: DxnnAnalyzerWeb.Supervisor]

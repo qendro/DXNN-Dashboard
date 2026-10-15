@@ -33,6 +33,13 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
       |> assign(:launch_ami_id, nil)
       |> assign(:launch_spot_max_price, nil)
       |> assign(:show_create_ami_modal, false)
+      |> assign(:show_delete_ami_modal, false)
+      |> assign(:ami_to_delete, nil)
+      |> assign(:ami_to_delete_name, nil)
+      |> assign(:ami_to_delete_region, nil)
+      |> assign(:show_terminate_instance_modal, false)
+      |> assign(:instance_to_terminate, nil)
+      |> assign(:instance_to_terminate_name, nil)
       |> assign(:show_launch_instance_modal, false)
       |> assign(:show_deploy_config_modal, false)
       |> assign(:show_logs_modal, false)
@@ -385,12 +392,56 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
     end
   end
 
+  def handle_event("show_delete_ami_modal", %{"ami_id" => ami_id, "ami_name" => ami_name, "ami_region" => ami_region}, socket) do
+    socket = socket
+    |> assign(:show_delete_ami_modal, true)
+    |> assign(:ami_to_delete, ami_id)
+    |> assign(:ami_to_delete_name, ami_name)
+    |> assign(:ami_to_delete_region, ami_region)
+    {:noreply, socket}
+  end
+
+  def handle_event("hide_delete_ami_modal", _, socket) do
+    {:noreply, assign(socket, show_delete_ami_modal: false, ami_to_delete: nil, ami_to_delete_name: nil, ami_to_delete_region: nil)}
+  end
+
+  def handle_event("confirm_delete_ami", _, socket) do
+    ami_id = socket.assigns.ami_to_delete
+    ami_region = socket.assigns.ami_to_delete_region
+    require Logger
+    Logger.info("Confirming delete for AMI: #{ami_id} in region: #{ami_region}")
+
+    case AWSBridge.delete_ami(ami_id, ami_region) do
+      {:ok, _} ->
+        Logger.info("AMI #{ami_id} deleted successfully")
+        AWSDeploymentServer.refresh()
+        socket = socket
+        |> assign(:show_delete_ami_modal, false)
+        |> assign(:ami_to_delete, nil)
+        |> assign(:ami_to_delete_name, nil)
+        |> assign(:ami_to_delete_region, nil)
+        |> put_flash(:info, "AMI #{ami_id} deleted successfully")
+        {:noreply, socket}
+      {:error, reason} ->
+        Logger.error("Failed to delete AMI #{ami_id}: #{reason}")
+        socket = socket
+        |> assign(:show_delete_ami_modal, false)
+        |> put_flash(:error, "Failed to delete AMI: #{reason}")
+        {:noreply, socket}
+    end
+  end
+
   def handle_event("delete_ami", %{"ami_id" => ami_id}, socket) do
+    require Logger
+    Logger.info("Delete AMI event received for: #{ami_id}")
+
     case AWSBridge.delete_ami(ami_id) do
       {:ok, _} ->
+        Logger.info("AMI #{ami_id} deleted successfully")
         AWSDeploymentServer.refresh()
         {:noreply, put_flash(socket, :info, "AMI #{ami_id} deleted")}
       {:error, reason} ->
+        Logger.error("Failed to delete AMI #{ami_id}: #{reason}")
         {:noreply, put_flash(socket, :error, "Failed to delete AMI: #{reason}")}
     end
   end
@@ -549,6 +600,37 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
           {:error, reason} ->
             {:noreply, put_flash(socket, :error, "Failed to launch instance: #{reason}")}
         end
+    end
+  end
+
+  def handle_event("show_terminate_instance_modal", %{"instance_id" => instance_id, "instance_name" => instance_name}, socket) do
+    socket = socket
+    |> assign(:show_terminate_instance_modal, true)
+    |> assign(:instance_to_terminate, instance_id)
+    |> assign(:instance_to_terminate_name, instance_name)
+    {:noreply, socket}
+  end
+
+  def handle_event("hide_terminate_instance_modal", _, socket) do
+    {:noreply, assign(socket, show_terminate_instance_modal: false, instance_to_terminate: nil, instance_to_terminate_name: nil)}
+  end
+
+  def handle_event("confirm_terminate_instance", _, socket) do
+    instance_id = socket.assigns.instance_to_terminate
+    case AWSBridge.terminate_instance(instance_id) do
+      {:ok, _} ->
+        AWSDeploymentServer.refresh()
+        socket = socket
+        |> assign(:show_terminate_instance_modal, false)
+        |> assign(:instance_to_terminate, nil)
+        |> assign(:instance_to_terminate_name, nil)
+        |> put_flash(:info, "Instance #{instance_id} terminating")
+        {:noreply, socket}
+      {:error, reason} ->
+        socket = socket
+        |> assign(:show_terminate_instance_modal, false)
+        |> put_flash(:error, "Failed to terminate instance: #{reason}")
+        {:noreply, socket}
     end
   end
 
@@ -913,11 +995,21 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
 
   defp load_state(socket) do
     state = AWSDeploymentServer.get_state()
+
+    # Filter deployments to only show those for currently running instances
+    running_instance_ids = MapSet.new(state.instances, & &1.id)
+    filtered_deployments =
+      state.deployments
+      |> Enum.filter(fn {instance_id, _deployment} ->
+        MapSet.member?(running_instance_ids, instance_id)
+      end)
+      |> Map.new()
+
     socket
     |> assign(:amis, state.amis)
     |> assign(:instances, state.instances)
     |> assign(:configs, state.configs)
-    |> assign(:deployments, state.deployments || %{})
+    |> assign(:deployments, filtered_deployments)
   end
 
   defp check_running_operations(socket) do
@@ -1025,6 +1117,14 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
       </div>
 
       <!-- Modals -->
+      <%= if @show_delete_ami_modal do %>
+        <.delete_ami_modal ami_id={@ami_to_delete} ami_name={@ami_to_delete_name} ami_region={@ami_to_delete_region} />
+      <% end %>
+
+      <%= if @show_terminate_instance_modal do %>
+        <.terminate_instance_modal instance_id={@instance_to_terminate} instance_name={@instance_to_terminate_name} />
+      <% end %>
+
       <%= if @show_create_ami_modal do %>
         <.create_ami_modal ami_name={@ami_name} regions={@regions} selected_region={@selected_region} />
       <% end %>
@@ -1162,9 +1262,10 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                       📋 Copy
                     </button>
                     <button
-                      phx-click="delete_ami"
+                      phx-click="show_delete_ami_modal"
                       phx-value-ami_id={ami.id}
-                      data-confirm="Are you sure you want to delete this AMI?"
+                      phx-value-ami_name={ami.name}
+                      phx-value-ami_region={Map.get(ami, :region, "us-east-1")}
                       class="text-red-600 hover:text-red-800"
                     >
                       🗑️ Delete
@@ -1273,9 +1374,9 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
                       </button>
                     <% end %>
                     <button
-                      phx-click="terminate_instance"
+                      phx-click="show_terminate_instance_modal"
                       phx-value-instance_id={instance.id}
-                      data-confirm="Are you sure you want to terminate this instance?"
+                      phx-value-instance_name={instance.name}
                       class="text-red-600 hover:text-red-800 text-lg"
                       title="Terminate Instance"
                     >
@@ -1446,6 +1547,75 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
     """
   end
 
+  defp delete_ami_modal(assigns) do
+    ~H"""
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 max-w-md w-full">
+        <h3 class="text-lg font-semibold mb-4 text-red-600">⚠️ Delete AMI</h3>
+        <div class="mb-6">
+          <p class="text-gray-700 mb-2">Are you sure you want to delete this AMI?</p>
+          <div class="bg-gray-50 p-3 rounded border border-gray-200">
+            <p class="text-sm"><span class="font-medium">AMI ID:</span> <span class="font-mono"><%= @ami_id %></span></p>
+            <p class="text-sm"><span class="font-medium">Name:</span> <%= @ami_name %></p>
+            <p class="text-sm"><span class="font-medium">Region:</span> <%= @ami_region %></p>
+          </div>
+          <p class="text-sm text-red-600 mt-3">⚠️ This action cannot be undone. The AMI and its associated snapshot will be permanently deleted.</p>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button
+            type="button"
+            phx-click="hide_delete_ami_modal"
+            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            phx-click="confirm_delete_ami"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Delete AMI
+          </button>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp terminate_instance_modal(assigns) do
+    ~H"""
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 max-w-md w-full">
+        <h3 class="text-lg font-semibold mb-4 text-red-600">⚠️ Terminate Instance</h3>
+        <div class="mb-6">
+          <p class="text-gray-700 mb-2">Are you sure you want to terminate this instance?</p>
+          <div class="bg-gray-50 p-3 rounded border border-gray-200">
+            <p class="text-sm"><span class="font-medium">Instance ID:</span> <span class="font-mono"><%= @instance_id %></span></p>
+            <p class="text-sm"><span class="font-medium">Name:</span> <%= @instance_name %></p>
+          </div>
+          <p class="text-sm text-red-600 mt-3">⚠️ This will permanently terminate the instance. All data will be lost unless backed up to S3.</p>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button
+            type="button"
+            phx-click="hide_terminate_instance_modal"
+            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            phx-click="confirm_terminate_instance"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Terminate Instance
+          </button>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   defp create_ami_modal(assigns) do
     ~H"""
     <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
@@ -1576,17 +1746,6 @@ defmodule DxnnAnalyzerWeb.AWSDeploymentLive do
   end
 
   defp launch_instance_modal(assigns) do
-    # Common instance types
-    instance_types = [
-      "t2.micro", "t2.small", "t2.medium", "t2.large",
-      "t3.micro", "t3.small", "t3.medium", "t3.large",
-      "m5.large", "m5.xlarge", "m5.2xlarge",
-      "c5.large", "c5.xlarge", "c5.2xlarge", "c5.4xlarge",
-      "c7i.large", "c7i.xlarge", "c7i.2xlarge", "c7i.4xlarge"
-    ]
-    
-    assigns = assign(assigns, :instance_types, instance_types)
-    
     ~H"""
     <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">

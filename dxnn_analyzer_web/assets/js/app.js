@@ -5,10 +5,32 @@ import {LiveSocket} from "../vendor/phoenix_live_view.js"
 import topbar from "../vendor/topbar"
 import { NetworkGraph } from "./network_graph.js"
 import { PerformanceChart } from "./performance_chart.js"
+import { InstanceTime } from "./instance_time.js"
 
 let Hooks = {}
 Hooks.NetworkGraph = NetworkGraph
 Hooks.PerformanceChart = PerformanceChart
+Hooks.InstanceTime = InstanceTime
+
+Hooks.CopySSH = {
+  mounted() {
+    this.copy = async () => {
+      const input = this.el.querySelector("input")
+      const button = this.el.querySelector("button")
+      try {
+        await navigator.clipboard.writeText(input.value)
+        button.textContent = "Copied"
+      } catch (_) {
+        input.focus()
+        input.select()
+        button.textContent = "Select and copy"
+      }
+    }
+    this.el.querySelector("button").addEventListener("click", this.copy)
+  },
+  updated() { this.el.querySelector("button").textContent = "Copy SSH command" },
+  destroyed() { this.el.querySelector("button").removeEventListener("click", this.copy) }
+}
 
 // File downloader hook for S3 Explorer
 Hooks.FileDownloader = {

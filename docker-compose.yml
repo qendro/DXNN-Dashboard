@@ -1,0 +1,37 @@
+services:
+  dxnn_analyzer_web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    env_file:
+      - ../AWS-Deployment/.env
+    environment:
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - HOST_AWS_DEPLOYMENT_PATH=${HOST_AWS_DEPLOYMENT_PATH:-${PWD}/../AWS-Deployment}
+      # Paths below are paths on the Docker host, not /app paths.
+      - OCI_HOST_HOME=${OCI_HOST_HOME:-${HOME}}
+      - OCI_CREDENTIALS_DIR=${OCI_CREDENTIALS_DIR:-${HOST_AWS_DEPLOYMENT_PATH:-${PWD}/../AWS-Deployment}/output/oci-auth}
+      - OCI_CONFIG_FILE=${OCI_CONFIG_FILE:-${OCI_CREDENTIALS_DIR:-${HOST_AWS_DEPLOYMENT_PATH:-${PWD}/../AWS-Deployment}/output/oci-auth}/config}
+      - OCI_PROFILE=${OCI_PROFILE:-DEFAULT}
+      - OCI_SIGNING_KEY_FILE=${OCI_SIGNING_KEY_FILE:-}
+      - OCI_DEPLOYMENT_IMAGE=${OCI_DEPLOYMENT_IMAGE:-aws-deployment:latest}
+      - HOST_OCI_ADAPTER_PATH=${HOST_OCI_ADAPTER_PATH:-${PWD}/scripts/oci_dashboard.py}
+    volumes:
+      # Mount your Documents folder so you can browse any experiment
+      - ${HOME}/Documents:/app/Documents
+      # Mount local Databases folder
+      - ./Databases:/app/Databases
+      # Persist master database and data
+      - dxnn_data:/app/data
+      # AWS credentials (read-only)
+      - ~/.aws:/root/.aws:ro
+      # AWS Deployment scripts
+      - ../AWS-Deployment:/app/AWS-Deployment
+      # Docker socket for docker-deploy.sh
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+volumes:
+  dxnn_data:

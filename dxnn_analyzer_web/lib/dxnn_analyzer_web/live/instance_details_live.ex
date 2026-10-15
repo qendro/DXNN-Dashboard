@@ -33,6 +33,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
       |> assign(:log_viewer_loading, false)
       |> assign(:s3_checkpoints, [])
       |> assign(:s3_loading, false)
+      |> assign(:s3_auto_terminate, false)
       |> load_instance_data()
 
     {:ok, socket}
@@ -164,15 +165,25 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     end
   end
 
+  def handle_event("toggle_s3_auto_terminate", _, socket) do
+    {:noreply, assign(socket, :s3_auto_terminate, !socket.assigns.s3_auto_terminate)}
+  end
+
   def handle_event("upload_to_s3", _, socket) do
     key_file = get_key_path(socket.assigns.instance_id)
     host = socket.assigns.instance.ip
+    auto_terminate = socket.assigns.s3_auto_terminate
     
     socket = assign(socket, :checkpoint_loading, true)
     
-    case AWSBridge.trigger_s3_upload(key_file, host) do
+    case AWSBridge.trigger_s3_upload(key_file, host, auto_terminate) do
       {_, 0} ->
-        {:noreply, socket |> assign(:checkpoint_loading, false) |> put_flash(:info, "S3 upload initiated")}
+        message = if auto_terminate do
+          "S3 upload initiated. Instance will terminate after successful upload."
+        else
+          "S3 upload initiated"
+        end
+        {:noreply, socket |> assign(:checkpoint_loading, false) |> put_flash(:info, message)}
       {error, _} ->
         {:noreply, socket |> assign(:checkpoint_loading, false) |> put_flash(:error, "S3 upload failed: #{error}")}
     end
@@ -340,6 +351,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                   deployment={@deployment} 
                   checkpoint_status={@checkpoint_status}
                   checkpoint_loading={@checkpoint_loading}
+                  s3_auto_terminate={@s3_auto_terminate}
                 />
               <% "logs" -> %>
                 <.logs_tab 
@@ -480,24 +492,39 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
               </div>
             <% end %>
             
-            <div class="flex items-center space-x-3">
-              <button
-                phx-click="load_checkpoint_status"
-                class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition text-sm"
-              >
-                🔍 Check Status
-              </button>
-              <button
-                phx-click="upload_to_s3"
-                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
-                disabled={@checkpoint_loading}
-              >
-                <%= if @checkpoint_loading do %>
-                  ⏳ Uploading...
-                <% else %>
-                  ☁️ Upload to S3
-                <% end %>
-              </button>
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="s3_auto_terminate"
+                  phx-click="toggle_s3_auto_terminate"
+                  checked={@s3_auto_terminate}
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label for="s3_auto_terminate" class="text-sm text-gray-700">
+                  Auto-terminate instance after successful upload
+                </label>
+              </div>
+
+              <div class="flex items-center space-x-3">
+                <button
+                  phx-click="load_checkpoint_status"
+                  class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition text-sm"
+                >
+                  🔍 Check Status
+                </button>
+                <button
+                  phx-click="upload_to_s3"
+                  class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                  disabled={@checkpoint_loading}
+                >
+                  <%= if @checkpoint_loading do %>
+                    ⏳ Uploading...
+                  <% else %>
+                    ☁️ Upload to S3
+                  <% end %>
+                </button>
+              </div>
             </div>
             
             <p class="text-xs text-gray-600 mt-3">

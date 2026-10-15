@@ -1,0 +1,37 @@
+# Elixir/Phoenix
+dxnn_analyzer_web/_build/
+dxnn_analyzer_web/deps/
+dxnn_analyzer_web/assets/node_modules/
+dxnn_analyzer_web/.elixir_ls/
+
+# Erlang
+dxnn_analyzer/_build/
+dxnn_analyzer/.rebar3/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+AI_README.md
+ARCHITECTURE.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Host credentials and local experiment data
+.env*
+.aws/
+.oci/
+*.pem
+*.key
+/Databases/
+/Documents/
+/data/

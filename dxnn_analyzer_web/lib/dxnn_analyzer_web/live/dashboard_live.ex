@@ -109,6 +109,9 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
             >
               ☁️ AWS Deployment
             </.link>
+            <.link navigate={~p"/oracle-instances"} class="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition">
+              Oracle Instances
+            </.link>
             <.link
               navigate={~p"/spot-pricing"}
               class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"

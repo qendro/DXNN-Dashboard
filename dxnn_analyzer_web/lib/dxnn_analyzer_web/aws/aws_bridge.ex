@@ -67,8 +67,30 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     {:ok, zones}
   end
 
-  def delete_ami(ami_id) do
-    run_script("ami-manager.sh", ["--delete", ami_id])
+  def delete_ami(ami_id, region \\ "us-east-1") do
+    require Logger
+    Logger.info("AWSBridge: Deleting AMI #{ami_id} in region #{region}")
+    result = run_script("ami-manager.sh", ["--delete", ami_id, "--force", "--region", region])
+
+    # Strip ANSI color codes from error messages
+    case result do
+      {:ok, output} ->
+        clean_output = strip_ansi_codes(output)
+        Logger.info("AWSBridge: Delete successful: #{clean_output}")
+        {:ok, clean_output}
+      {:error, error} ->
+        clean_error = strip_ansi_codes(error)
+        Logger.error("AWSBridge: Delete failed: #{clean_error}")
+        {:error, clean_error}
+    end
+  end
+
+  defp strip_ansi_codes(text) do
+    # Remove ANSI escape sequences (color codes, etc.)
+    text
+    |> String.replace(~r/\e\[[0-9;]*m/, "")
+    |> String.replace(~r/\[0;[0-9]+m/, "")
+    |> String.replace(~r/\[0m/, "")
   end
 
   def delete_all_amis do
@@ -233,16 +255,37 @@ defmodule DxnnAnalyzerWeb.AWS.AWSBridge do
     ssh_command(key_file, host, "echo 'Ready for S3 upload'")
   end
 
-  def trigger_s3_upload(key_file, host) do
+  def trigger_s3_upload(key_file, host, auto_terminate \\ false) do
     # Trigger S3 upload directly from filesystem (no checkpoint needed)
+    # Generate timestamp-based job_id and population_id with lineage_id from instance
+    timestamp = DateTime.utc_now() |> DateTime.to_iso8601() |> String.replace(":", "-")
+    auto_terminate_value = if auto_terminate, do: "true", else: "false"
+
     ssh_command(key_file, host, """
-    export COMPLETION_STATUS=manual
+    # Get or generate lineage_id (4-char code)
+    if [[ -f /var/lib/dxnn/lineage_id ]]; then
+      LINEAGE_ID=$(cat /var/lib/dxnn/lineage_id)
+    else
+      LINEAGE_ID=$(od -An -N2 -tx1 /dev/urandom | tr -d ' \\n')
+      echo "$LINEAGE_ID" | sudo tee /var/lib/dxnn/lineage_id >/dev/null
+    fi
+
+    # Create job_id and population_id with timestamp and manual suffix
+    TIMESTAMP="#{timestamp}"
+    JOB_ID="${TIMESTAMP}_${LINEAGE_ID}"
+    POPULATION_ID="${TIMESTAMP}_${LINEAGE_ID}_manual"
+
+    export COMPLETION_STATUS=normal
     export EXIT_CODE=0
-    export POPULATION_ID=manual_$(date +%s)
-    export LINEAGE_ID=manual
+    export JOB_ID="$JOB_ID"
+    export POPULATION_ID="$POPULATION_ID"
+    export LINEAGE_ID="$LINEAGE_ID"
     export S3_BUCKET=${S3_BUCKET:-dxnn-checkpoints}
     export S3_PREFIX=${S3_PREFIX:-dxnn-prod}
-    export AUTO_TERMINATE=false
+    export AUTO_TERMINATE=#{auto_terminate_value}
+
+    echo "Uploading to: s3://$S3_BUCKET/$S3_PREFIX/$JOB_ID/$POPULATION_ID/"
+    echo "AUTO_TERMINATE=#{auto_terminate_value}"
     sudo -E /usr/local/bin/finalize_run.sh
     """)
   end

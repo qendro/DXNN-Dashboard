@@ -62,8 +62,8 @@ DXNN Analyzer Web Interface combines a powerful Erlang-based analysis engine wit
 
 ```bash
 cd DXNN-Dashboard
-docker-compose build
-docker-compose up -d
+./compose.sh build
+./compose.sh up -d
 ```
 
 Access at http://localhost:4000
@@ -75,6 +75,15 @@ docker-compose restart
 ```
 
 **AWS Deployment:** http://localhost:4000/aws-deployment
+
+**Oracle Instances:** http://localhost:4000/oracle-instances (also in navigation).
+Select an existing OCI YAML from `AWS-Deployment/config`, review its free-only/paid
+summary, then launch/resume. Start, stop, reboot, refresh, and copy SSH commands
+are available inline. Termination requires an explicit preserve/delete boot-volume
+choice; preserving storage can continue allocation/billing, deleting destroys its
+data. The page preserves network resources and lists only CLI-recorded instances.
+Expand **Stats & SSH** for launch time and elapsed time since launch; elapsed time
+includes stopped periods and does not measure continuous uptime.
 
 **Instance Details:** Click "📊 Details" on any instance or navigate to:
 http://localhost:4000/aws-deployment/instance/INSTANCE_ID
@@ -416,6 +425,29 @@ The dashboard automatically mounts:
 - `aws_deployment_output` - SSH keys and outputs (persistent)
 
 AWS credentials are loaded from `../AWS-Deployment/.env` file.
+
+For OCI, first build the shared deployment image through Docker:
+`docker build -t aws-deployment:latest ../AWS-Deployment`.
+The local Compose setup uses `AWS-Deployment/output/oci-auth/config`, profile
+`DEFAULT`; select `oci-local.yml` on the page to review the qbot launch summary.
+The dashboard mounts the deployment repository and Docker socket as above; it
+starts OCI containers with signing credentials and external SSH keys read-only,
+and persists CLI records/generated keys in the existing ignored `output/oci`.
+Set `HOST_AWS_DEPLOYMENT_PATH`, `OCI_HOST_HOME`, `OCI_CREDENTIALS_DIR`,
+`OCI_CONFIG_FILE`, and `HOST_OCI_ADAPTER_PATH` to absolute **Docker-host** paths
+when using a different checkout/layout. The adapter path is
+`DXNN-Dashboard/scripts/oci_dashboard.py`; signing keys outside the credential
+directory are discovered by the CLI mount planner (`OCI_SIGNING_KEY_FILE` can
+override the profile's key path). `OCI_PROFILE` defaults to `DEFAULT`.
+The SDK stays in the deployment image. No OCI credentials or private keys need
+to be mounted into the dashboard itself. SSH commands use host key paths.
+`./compose.sh` resolves host paths from the current checkout and can be invoked
+from any directory. After moving the checkout, run
+`./compose.sh up -d --force-recreate` to update the running container's paths and
+bind mounts; restarting an existing container retains its old paths. A missing
+deployment mount prevents the dashboard from refreshing an otherwise running VM.
+Operations survive browser reloads; after a dashboard restart, refresh and inspect
+saved CLI progress before resuming an uncertain launch with the same YAML.
 
 ### Environment Variables
 

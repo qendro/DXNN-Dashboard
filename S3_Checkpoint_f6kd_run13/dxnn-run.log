@@ -1,0 +1,1623 @@
+[2026-03-04T05:23:17Z] INFO: WRAPPER_INIT - Starting DXNN wrapper with Run ID: 20260304-052317Z
+[2026-03-04T05:23:17Z] INFO: WRAPPER_CONFIG - S3 destination: s3://dxnn-checkpoints/dxnn-prod/<lineage_id>/<population_id>/
+[2026-03-04T05:23:17Z] INFO: WRAPPER_EXEC - Launching DXNN process...
+[2026-03-04T05:23:17Z] INFO: WRAPPER_START - Starting DXNN training
+[2026-03-04T05:23:17Z] INFO: DXNN_START - Launching tmux session trader
+[2026-03-04T05:23:17Z] INFO: TMUX_SESSION_START - Starting DXNN training
+[2026-03-04T05:23:17Z] INFO: S3 Config: S3_BUCKET=dxnn-checkpoints S3_PREFIX=dxnn-prod
+[2026-03-04T05:23:17Z] INFO: Starting with distributed Erlang: dxnn@ip-172-31-35-36.ec2.internal
+[2026-03-04T05:23:17Z] INFO: DXNN_WAITING - Monitoring tmux session completion...
+[2026-03-04T05:23:31Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:23:31Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:23:33Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:23:33Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:23:33Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772601811
+[2026-03-04T05:23:33Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772601811
+[2026-03-04T05:23:33Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:23:33Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:23:33Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772601811 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1
+[2026-03-04T05:23:33Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772601811 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1
+[2026-03-04T05:23:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_CHECKPOINT_INFO
+[2026-03-04T05:23:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_CHECKPOINT_INFO
+[2026-03-04T05:23:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_CHECKPOINT_INFO
+[2026-03-04T05:23:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_CHECKPOINT_INFO
+[2026-03-04T05:23:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/config.erl
+[2026-03-04T05:23:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/config.erl
+[2026-03-04T05:23:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/config.erl
+[2026-03-04T05:23:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/config.erl
+[2026-03-04T05:23:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:23:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:23:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:23:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:23:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:23:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:23:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:23:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:23:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:23:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:23:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:23:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:23:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:23:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:23:39Z] INFO: Another finalization process is running - exiting
+[2026-03-04T05:23:39Z] INFO: Another finalization process is running - exiting
+[2026-03-04T05:23:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:23:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:23:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:23:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:23:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:23:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:23:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:23:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:23:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:23:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:23:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:23:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:23:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:23:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:23:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:23:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:23:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:23:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:23:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:23:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:23:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:23:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:23:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:23:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:23:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:23:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:23:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:23:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:23:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:23:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:23:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:23:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:23:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:23:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:23:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:23:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:23:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:23:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:23:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:23:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:23:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:23:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:23:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/pid_map.log
+[2026-03-04T05:23:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/pid_map.log
+[2026-03-04T05:23:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/pid_map.log
+[2026-03-04T05:23:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/Benchmarker/pid_map.log
+[2026-03-04T05:23:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/System/qStatus.log
+[2026-03-04T05:23:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/System/qStatus.log
+[2026-03-04T05:23:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/System/qStatus.log
+[2026-03-04T05:23:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/System/qStatus.log
+[2026-03-04T05:23:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/exp_runner/exp_runner.log
+[2026-03-04T05:23:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/exp_runner/exp_runner.log
+[2026-03-04T05:23:53Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/exp_runner/exp_runner.log
+[2026-03-04T05:23:53Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/logs/exp_runner/exp_runner.log
+[2026-03-04T05:23:53Z] INFO: Uploaded 19 checkpoint files
+[2026-03-04T05:23:53Z] INFO: Uploaded 19 checkpoint files
+[2026-03-04T05:23:53Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/dxnn-run.log
+[2026-03-04T05:23:53Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/dxnn-run.log
+[2026-03-04T05:23:54Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/dxnn-run.log
+[2026-03-04T05:23:54Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/dxnn-run.log
+[2026-03-04T05:23:54Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_MANIFEST
+[2026-03-04T05:23:54Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_MANIFEST
+[2026-03-04T05:23:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_MANIFEST
+[2026-03-04T05:23:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_MANIFEST
+[2026-03-04T05:23:55Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_MANIFEST
+[2026-03-04T05:23:55Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_MANIFEST
+[2026-03-04T05:23:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_SUCCESS
+[2026-03-04T05:23:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_SUCCESS
+[2026-03-04T05:23:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_SUCCESS
+[2026-03-04T05:23:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_SUCCESS
+[2026-03-04T05:23:56Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_SUCCESS
+[2026-03-04T05:23:56Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1/_SUCCESS
+[2026-03-04T05:23:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:23:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:23:58Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:23:58Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:23:58Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:23:28Z_f6kd_run1
+[2026-03-04T05:23:58Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:23:28Z_f6kd_run1
+[2026-03-04T05:23:58Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1
+[2026-03-04T05:23:58Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:28Z_f6kd_run1
+[2026-03-04T05:23:58Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:23:58Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:23:58Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:23:58Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:23:58Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:23:58Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:24:02Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:24:02Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:24:04Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:24:04Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:24:04Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772601842
+[2026-03-04T05:24:04Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772601842
+[2026-03-04T05:24:04Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:24:04Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:24:04Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772601842 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3
+[2026-03-04T05:24:04Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772601842 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3
+[2026-03-04T05:24:04Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_CHECKPOINT_INFO
+[2026-03-04T05:24:04Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_CHECKPOINT_INFO
+[2026-03-04T05:24:05Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_CHECKPOINT_INFO
+[2026-03-04T05:24:05Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_CHECKPOINT_INFO
+[2026-03-04T05:24:05Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/config.erl
+[2026-03-04T05:24:05Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/config.erl
+[2026-03-04T05:24:06Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/config.erl
+[2026-03-04T05:24:06Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/config.erl
+[2026-03-04T05:24:06Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:24:06Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:24:07Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:24:07Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:24:07Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:24:07Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:24:08Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:24:08Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:24:08Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:24:08Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:24:10Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:24:10Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:24:10Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:24:10Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:24:11Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:24:11Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:24:11Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:24:11Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:24:12Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:24:12Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:24:12Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:24:12Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:24:13Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:24:13Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:24:13Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:24:13Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:24:15Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:24:15Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:24:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:24:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:24:16Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:24:16Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:24:16Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:24:16Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:24:17Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:24:17Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:24:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:24:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:24:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:24:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:24:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:24:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:24:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:24:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:24:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:24:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:24:21Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:24:21Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:24:21Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:24:21Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:24:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:24:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:24:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:24:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:24:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:24:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:24:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/pid_map.log
+[2026-03-04T05:24:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/pid_map.log
+[2026-03-04T05:24:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/pid_map.log
+[2026-03-04T05:24:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/Benchmarker/pid_map.log
+[2026-03-04T05:24:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/System/qStatus.log
+[2026-03-04T05:24:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/System/qStatus.log
+[2026-03-04T05:24:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/System/qStatus.log
+[2026-03-04T05:24:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/System/qStatus.log
+[2026-03-04T05:24:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/exp_runner/exp_runner.log
+[2026-03-04T05:24:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/exp_runner/exp_runner.log
+[2026-03-04T05:24:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/exp_runner/exp_runner.log
+[2026-03-04T05:24:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/logs/exp_runner/exp_runner.log
+[2026-03-04T05:24:28Z] INFO: Uploaded 19 checkpoint files
+[2026-03-04T05:24:28Z] INFO: Uploaded 19 checkpoint files
+[2026-03-04T05:24:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/dxnn-run.log
+[2026-03-04T05:24:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/dxnn-run.log
+[2026-03-04T05:24:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/dxnn-run.log
+[2026-03-04T05:24:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/dxnn-run.log
+[2026-03-04T05:24:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_MANIFEST
+[2026-03-04T05:24:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_MANIFEST
+[2026-03-04T05:24:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_MANIFEST
+[2026-03-04T05:24:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_MANIFEST
+[2026-03-04T05:24:30Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_MANIFEST
+[2026-03-04T05:24:30Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_MANIFEST
+[2026-03-04T05:24:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_SUCCESS
+[2026-03-04T05:24:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_SUCCESS
+[2026-03-04T05:24:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_SUCCESS
+[2026-03-04T05:24:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_SUCCESS
+[2026-03-04T05:24:31Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_SUCCESS
+[2026-03-04T05:24:31Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3/_SUCCESS
+[2026-03-04T05:24:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:24:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:24:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:24:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:24:33Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:23:39Z_f6kd_run3
+[2026-03-04T05:24:33Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:23:39Z_f6kd_run3
+[2026-03-04T05:24:33Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3
+[2026-03-04T05:24:33Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:23:39Z_f6kd_run3
+[2026-03-04T05:24:33Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:24:33Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:24:33Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:24:33Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:24:33Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:24:33Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:27:14Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:27:14Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:27:15Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:27:15Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:27:15Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602034
+[2026-03-04T05:27:15Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602034
+[2026-03-04T05:27:15Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:27:15Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:27:15Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602034 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4
+[2026-03-04T05:27:15Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602034 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4
+[2026-03-04T05:27:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_CHECKPOINT_INFO
+[2026-03-04T05:27:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_CHECKPOINT_INFO
+[2026-03-04T05:27:17Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_CHECKPOINT_INFO
+[2026-03-04T05:27:17Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_CHECKPOINT_INFO
+[2026-03-04T05:27:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/config.erl
+[2026-03-04T05:27:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/config.erl
+[2026-03-04T05:27:18Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/config.erl
+[2026-03-04T05:27:18Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/config.erl
+[2026-03-04T05:27:18Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:27:18Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:27:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:27:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:27:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:27:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:27:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:27:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:27:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:27:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:27:21Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:27:21Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:27:21Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:27:21Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:27:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:27:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:27:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:27:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:27:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:27:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:27:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:27:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:27:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:27:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:27:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:27:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:27:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:27:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:27:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:27:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:27:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:27:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:27:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:27:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:27:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:27:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:27:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:27:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:27:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:27:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:27:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:27:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:27:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:27:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:27:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:27:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:27:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:27:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:27:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:27:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:27:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:27:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:27:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:27:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:27:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:27:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:27:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:27:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:27:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:27:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:27:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:27:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:27:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:27:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:27:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:27:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:27:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:27:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:27:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:27:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:27:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:27:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:27:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:27:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:27:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:27:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:27:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:27:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:27:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:27:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:27:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:27:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:27:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:27:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:27:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:27:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:27:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:27:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:27:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:27:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:27:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:27:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:27:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/pid_map.log
+[2026-03-04T05:27:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/pid_map.log
+[2026-03-04T05:27:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/pid_map.log
+[2026-03-04T05:27:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/Benchmarker/pid_map.log
+[2026-03-04T05:27:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/System/qStatus.log
+[2026-03-04T05:27:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/System/qStatus.log
+[2026-03-04T05:27:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/System/qStatus.log
+[2026-03-04T05:27:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/System/qStatus.log
+[2026-03-04T05:27:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/exp_runner/exp_runner.log
+[2026-03-04T05:27:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/exp_runner/exp_runner.log
+[2026-03-04T05:27:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/exp_runner/exp_runner.log
+[2026-03-04T05:27:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/logs/exp_runner/exp_runner.log
+[2026-03-04T05:27:52Z] INFO: Uploaded 28 checkpoint files
+[2026-03-04T05:27:52Z] INFO: Uploaded 28 checkpoint files
+[2026-03-04T05:27:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/dxnn-run.log
+[2026-03-04T05:27:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/dxnn-run.log
+[2026-03-04T05:27:54Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/dxnn-run.log
+[2026-03-04T05:27:54Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/dxnn-run.log
+[2026-03-04T05:27:54Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_MANIFEST
+[2026-03-04T05:27:54Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_MANIFEST
+[2026-03-04T05:27:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_MANIFEST
+[2026-03-04T05:27:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_MANIFEST
+[2026-03-04T05:27:55Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_MANIFEST
+[2026-03-04T05:27:55Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_MANIFEST
+[2026-03-04T05:27:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_SUCCESS
+[2026-03-04T05:27:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_SUCCESS
+[2026-03-04T05:27:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_SUCCESS
+[2026-03-04T05:27:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_SUCCESS
+[2026-03-04T05:27:56Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_SUCCESS
+[2026-03-04T05:27:56Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4/_SUCCESS
+[2026-03-04T05:27:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:27:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:27:58Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:27:58Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:27:58Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:24:02Z_f6kd_run4
+[2026-03-04T05:27:58Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:24:02Z_f6kd_run4
+[2026-03-04T05:27:58Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4
+[2026-03-04T05:27:58Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:24:02Z_f6kd_run4
+[2026-03-04T05:27:58Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:27:58Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:27:58Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:27:58Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:27:58Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:27:58Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:31:19Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:31:19Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:31:20Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:31:20Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:31:20Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602279
+[2026-03-04T05:31:20Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602279
+[2026-03-04T05:31:20Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:31:20Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:31:20Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602279 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5
+[2026-03-04T05:31:20Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602279 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5
+[2026-03-04T05:31:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_CHECKPOINT_INFO
+[2026-03-04T05:31:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_CHECKPOINT_INFO
+[2026-03-04T05:31:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_CHECKPOINT_INFO
+[2026-03-04T05:31:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_CHECKPOINT_INFO
+[2026-03-04T05:31:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/config.erl
+[2026-03-04T05:31:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/config.erl
+[2026-03-04T05:31:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/config.erl
+[2026-03-04T05:31:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/config.erl
+[2026-03-04T05:31:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:31:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:31:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:31:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:31:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:31:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:31:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:31:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:31:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:31:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:31:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:31:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:31:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:31:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:31:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:31:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:31:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:31:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:31:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:31:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:31:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:31:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:31:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:31:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:31:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:31:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:31:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:31:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:31:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:31:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:31:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:31:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:31:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:31:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:31:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:31:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:31:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:31:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:31:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:31:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:31:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:31:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:31:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:31:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:31:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:31:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:31:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:31:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:31:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:31:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:31:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:31:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:31:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:31:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:31:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:31:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:31:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:31:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:31:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:31:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:31:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/pid_map.log
+[2026-03-04T05:31:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/pid_map.log
+[2026-03-04T05:31:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/pid_map.log
+[2026-03-04T05:31:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/Benchmarker/pid_map.log
+[2026-03-04T05:31:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/System/qStatus.log
+[2026-03-04T05:31:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/System/qStatus.log
+[2026-03-04T05:31:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/System/qStatus.log
+[2026-03-04T05:31:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/System/qStatus.log
+[2026-03-04T05:31:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/exp_runner/exp_runner.log
+[2026-03-04T05:31:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/exp_runner/exp_runner.log
+[2026-03-04T05:31:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/exp_runner/exp_runner.log
+[2026-03-04T05:31:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/logs/exp_runner/exp_runner.log
+[2026-03-04T05:31:46Z] INFO: Uploaded 20 checkpoint files
+[2026-03-04T05:31:46Z] INFO: Uploaded 20 checkpoint files
+[2026-03-04T05:31:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/dxnn-run.log
+[2026-03-04T05:31:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/dxnn-run.log
+[2026-03-04T05:31:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/dxnn-run.log
+[2026-03-04T05:31:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/dxnn-run.log
+[2026-03-04T05:31:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_MANIFEST
+[2026-03-04T05:31:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_MANIFEST
+[2026-03-04T05:31:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_MANIFEST
+[2026-03-04T05:31:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_MANIFEST
+[2026-03-04T05:31:48Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_MANIFEST
+[2026-03-04T05:31:48Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_MANIFEST
+[2026-03-04T05:31:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_SUCCESS
+[2026-03-04T05:31:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_SUCCESS
+[2026-03-04T05:31:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_SUCCESS
+[2026-03-04T05:31:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_SUCCESS
+[2026-03-04T05:31:49Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_SUCCESS
+[2026-03-04T05:31:49Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5/_SUCCESS
+[2026-03-04T05:31:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:31:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:31:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:31:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:31:51Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:27:14Z_f6kd_run5
+[2026-03-04T05:31:51Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:27:14Z_f6kd_run5
+[2026-03-04T05:31:51Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5
+[2026-03-04T05:31:51Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:27:14Z_f6kd_run5
+[2026-03-04T05:31:51Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:31:51Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:31:51Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:31:51Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:31:51Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:31:51Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:34:23Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:34:23Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:34:25Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:34:25Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:34:25Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602463
+[2026-03-04T05:34:25Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602463
+[2026-03-04T05:34:25Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:34:25Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:34:25Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602463 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6
+[2026-03-04T05:34:25Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602463 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6
+[2026-03-04T05:34:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_CHECKPOINT_INFO
+[2026-03-04T05:34:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_CHECKPOINT_INFO
+[2026-03-04T05:34:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_CHECKPOINT_INFO
+[2026-03-04T05:34:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_CHECKPOINT_INFO
+[2026-03-04T05:34:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/config.erl
+[2026-03-04T05:34:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/config.erl
+[2026-03-04T05:34:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/config.erl
+[2026-03-04T05:34:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/config.erl
+[2026-03-04T05:34:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:34:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:34:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:34:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:34:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:34:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:34:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:34:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:34:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:34:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:34:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:34:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:34:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:34:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:34:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:34:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:34:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:34:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:34:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:34:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:34:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:34:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:34:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:34:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:34:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:34:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:34:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:34:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:34:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:34:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:34:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:34:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:34:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:34:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:34:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:34:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:34:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:34:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:34:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:34:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:34:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:34:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:34:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:34:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:34:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:34:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:34:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:34:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:34:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:34:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:34:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:34:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:34:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:34:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:34:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:34:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:34:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:34:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:34:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:34:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:34:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:34:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:34:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:34:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:34:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:34:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:34:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:34:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:34:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:34:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:34:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:34:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:34:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:34:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:34:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:34:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:34:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:34:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:34:54Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:34:54Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:34:54Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:34:54Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:34:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:34:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:34:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:34:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:34:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:34:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:34:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:34:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:34:58Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:34:58Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:34:58Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/pid_map.log
+[2026-03-04T05:34:58Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/pid_map.log
+[2026-03-04T05:34:59Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/pid_map.log
+[2026-03-04T05:34:59Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/Benchmarker/pid_map.log
+[2026-03-04T05:34:59Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/System/qStatus.log
+[2026-03-04T05:34:59Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/System/qStatus.log
+[2026-03-04T05:35:00Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/System/qStatus.log
+[2026-03-04T05:35:00Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/System/qStatus.log
+[2026-03-04T05:35:01Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/exp_runner/exp_runner.log
+[2026-03-04T05:35:01Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/exp_runner/exp_runner.log
+[2026-03-04T05:35:01Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/exp_runner/exp_runner.log
+[2026-03-04T05:35:01Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/logs/exp_runner/exp_runner.log
+[2026-03-04T05:35:01Z] INFO: Uploaded 28 checkpoint files
+[2026-03-04T05:35:01Z] INFO: Uploaded 28 checkpoint files
+[2026-03-04T05:35:01Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/dxnn-run.log
+[2026-03-04T05:35:01Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/dxnn-run.log
+[2026-03-04T05:35:02Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/dxnn-run.log
+[2026-03-04T05:35:02Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/dxnn-run.log
+[2026-03-04T05:35:02Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_MANIFEST
+[2026-03-04T05:35:02Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_MANIFEST
+[2026-03-04T05:35:03Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_MANIFEST
+[2026-03-04T05:35:03Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_MANIFEST
+[2026-03-04T05:35:03Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_MANIFEST
+[2026-03-04T05:35:03Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_MANIFEST
+[2026-03-04T05:35:03Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_SUCCESS
+[2026-03-04T05:35:03Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_SUCCESS
+[2026-03-04T05:35:04Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_SUCCESS
+[2026-03-04T05:35:04Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_SUCCESS
+[2026-03-04T05:35:04Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_SUCCESS
+[2026-03-04T05:35:04Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6/_SUCCESS
+[2026-03-04T05:35:04Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:35:04Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:35:06Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:35:06Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:35:06Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:31:19Z_f6kd_run6
+[2026-03-04T05:35:06Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:31:19Z_f6kd_run6
+[2026-03-04T05:35:06Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6
+[2026-03-04T05:35:06Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:31:19Z_f6kd_run6
+[2026-03-04T05:35:06Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:35:06Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:35:06Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:35:06Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:35:06Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:35:06Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:38:16Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:38:16Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:38:18Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:38:18Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:38:18Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602696
+[2026-03-04T05:38:18Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602696
+[2026-03-04T05:38:18Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:38:18Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:38:18Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602696 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7
+[2026-03-04T05:38:18Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602696 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7
+[2026-03-04T05:38:18Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_CHECKPOINT_INFO
+[2026-03-04T05:38:18Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_CHECKPOINT_INFO
+[2026-03-04T05:38:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_CHECKPOINT_INFO
+[2026-03-04T05:38:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_CHECKPOINT_INFO
+[2026-03-04T05:38:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/config.erl
+[2026-03-04T05:38:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/config.erl
+[2026-03-04T05:38:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/config.erl
+[2026-03-04T05:38:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/config.erl
+[2026-03-04T05:38:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:38:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:38:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:38:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:38:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:38:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:38:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:38:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:38:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:38:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:38:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:38:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:38:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:38:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:38:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:38:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T05:38:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:38:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:38:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:38:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:38:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:38:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:38:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:38:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:38:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:38:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:38:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:38:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:38:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:38:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:38:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:38:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:38:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:38:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:38:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:38:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:38:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:38:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:38:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:38:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:38:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:38:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:38:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:38:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:38:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:38:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:38:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:38:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:38:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:38:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:38:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:38:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:38:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:38:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:38:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:38:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:38:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:38:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:38:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:38:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:38:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:38:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:38:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:38:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:38:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/pid_map.log
+[2026-03-04T05:38:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/pid_map.log
+[2026-03-04T05:38:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/pid_map.log
+[2026-03-04T05:38:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/Benchmarker/pid_map.log
+[2026-03-04T05:38:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/System/qStatus.log
+[2026-03-04T05:38:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/System/qStatus.log
+[2026-03-04T05:38:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/System/qStatus.log
+[2026-03-04T05:38:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/System/qStatus.log
+[2026-03-04T05:38:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/exp_runner/exp_runner.log
+[2026-03-04T05:38:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/exp_runner/exp_runner.log
+[2026-03-04T05:38:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/exp_runner/exp_runner.log
+[2026-03-04T05:38:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/logs/exp_runner/exp_runner.log
+[2026-03-04T05:38:44Z] INFO: Uploaded 21 checkpoint files
+[2026-03-04T05:38:44Z] INFO: Uploaded 21 checkpoint files
+[2026-03-04T05:38:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/dxnn-run.log
+[2026-03-04T05:38:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/dxnn-run.log
+[2026-03-04T05:38:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/dxnn-run.log
+[2026-03-04T05:38:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/dxnn-run.log
+[2026-03-04T05:38:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_MANIFEST
+[2026-03-04T05:38:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_MANIFEST
+[2026-03-04T05:38:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_MANIFEST
+[2026-03-04T05:38:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_MANIFEST
+[2026-03-04T05:38:47Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_MANIFEST
+[2026-03-04T05:38:47Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_MANIFEST
+[2026-03-04T05:38:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_SUCCESS
+[2026-03-04T05:38:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_SUCCESS
+[2026-03-04T05:38:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_SUCCESS
+[2026-03-04T05:38:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_SUCCESS
+[2026-03-04T05:38:49Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_SUCCESS
+[2026-03-04T05:38:49Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7/_SUCCESS
+[2026-03-04T05:38:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:38:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:38:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:38:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:38:50Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:34:23Z_f6kd_run7
+[2026-03-04T05:38:50Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:34:23Z_f6kd_run7
+[2026-03-04T05:38:50Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7
+[2026-03-04T05:38:50Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:34:23Z_f6kd_run7
+[2026-03-04T05:38:50Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:38:50Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:38:50Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:38:50Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:38:50Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:38:50Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:43:08Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:43:08Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:43:10Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:43:10Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:43:10Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602988
+[2026-03-04T05:43:10Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772602988
+[2026-03-04T05:43:10Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:43:10Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:43:10Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602988 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8
+[2026-03-04T05:43:10Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772602988 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8
+[2026-03-04T05:43:10Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_CHECKPOINT_INFO
+[2026-03-04T05:43:10Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_CHECKPOINT_INFO
+[2026-03-04T05:43:11Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_CHECKPOINT_INFO
+[2026-03-04T05:43:11Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_CHECKPOINT_INFO
+[2026-03-04T05:43:11Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/config.erl
+[2026-03-04T05:43:11Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/config.erl
+[2026-03-04T05:43:13Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/config.erl
+[2026-03-04T05:43:13Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/config.erl
+[2026-03-04T05:43:13Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:43:13Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:43:14Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:43:14Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:43:14Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:43:14Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:43:15Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:43:15Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:43:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:43:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:43:16Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:43:16Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:43:16Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:43:16Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:43:17Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:43:17Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:43:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:43:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:43:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:43:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:43:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:43:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:43:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:43:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:43:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:43:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:43:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:43:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:43:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:43:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:43:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:43:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:43:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:43:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:43:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:43:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:43:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:43:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:43:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:43:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:43:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:43:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:43:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:43:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:43:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:43:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:43:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:43:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:43:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:43:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:43:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:43:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:43:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:43:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:43:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:43:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:43:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:43:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:43:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:43:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:43:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:43:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:43:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:43:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:43:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:43:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:43:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:43:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:43:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:43:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:43:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:43:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:43:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:43:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:43:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:43:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:43:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:43:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:43:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:43:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:43:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:43:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:43:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:43:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:43:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:43:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:43:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:43:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:43:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/pid_map.log
+[2026-03-04T05:43:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/pid_map.log
+[2026-03-04T05:43:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/pid_map.log
+[2026-03-04T05:43:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/Benchmarker/pid_map.log
+[2026-03-04T05:43:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/System/qStatus.log
+[2026-03-04T05:43:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/System/qStatus.log
+[2026-03-04T05:43:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/System/qStatus.log
+[2026-03-04T05:43:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/System/qStatus.log
+[2026-03-04T05:43:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/exp_runner/exp_runner.log
+[2026-03-04T05:43:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/exp_runner/exp_runner.log
+[2026-03-04T05:43:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/exp_runner/exp_runner.log
+[2026-03-04T05:43:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/logs/exp_runner/exp_runner.log
+[2026-03-04T05:43:46Z] INFO: Uploaded 27 checkpoint files
+[2026-03-04T05:43:46Z] INFO: Uploaded 27 checkpoint files
+[2026-03-04T05:43:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/dxnn-run.log
+[2026-03-04T05:43:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/dxnn-run.log
+[2026-03-04T05:43:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/dxnn-run.log
+[2026-03-04T05:43:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/dxnn-run.log
+[2026-03-04T05:43:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_MANIFEST
+[2026-03-04T05:43:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_MANIFEST
+[2026-03-04T05:43:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_MANIFEST
+[2026-03-04T05:43:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_MANIFEST
+[2026-03-04T05:43:48Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_MANIFEST
+[2026-03-04T05:43:48Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_MANIFEST
+[2026-03-04T05:43:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_SUCCESS
+[2026-03-04T05:43:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_SUCCESS
+[2026-03-04T05:43:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_SUCCESS
+[2026-03-04T05:43:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_SUCCESS
+[2026-03-04T05:43:49Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_SUCCESS
+[2026-03-04T05:43:49Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8/_SUCCESS
+[2026-03-04T05:43:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:43:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:43:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:43:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:43:51Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:38:16Z_f6kd_run8
+[2026-03-04T05:43:51Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:38:16Z_f6kd_run8
+[2026-03-04T05:43:51Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8
+[2026-03-04T05:43:51Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:38:16Z_f6kd_run8
+[2026-03-04T05:43:51Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:43:51Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:43:51Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:43:51Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:43:51Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:43:51Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:48:03Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:48:03Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:48:04Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:48:04Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:48:04Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772603283
+[2026-03-04T05:48:04Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772603283
+[2026-03-04T05:48:04Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:48:04Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:48:04Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772603283 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9
+[2026-03-04T05:48:04Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772603283 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9
+[2026-03-04T05:48:04Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_CHECKPOINT_INFO
+[2026-03-04T05:48:04Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_CHECKPOINT_INFO
+[2026-03-04T05:48:06Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_CHECKPOINT_INFO
+[2026-03-04T05:48:06Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_CHECKPOINT_INFO
+[2026-03-04T05:48:06Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/config.erl
+[2026-03-04T05:48:06Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/config.erl
+[2026-03-04T05:48:07Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/config.erl
+[2026-03-04T05:48:07Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/config.erl
+[2026-03-04T05:48:07Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:48:07Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:48:09Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:48:09Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:48:09Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:48:09Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:48:10Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:48:10Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:48:10Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:48:10Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:48:11Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:48:11Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:48:11Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:48:11Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:48:12Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:48:12Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:48:12Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:48:12Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:48:13Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:48:13Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:48:13Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:48:13Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:48:15Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:48:15Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:48:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:48:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:48:16Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:48:16Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:48:16Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:48:16Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:48:18Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:48:18Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:48:18Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:48:18Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:48:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:48:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:48:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:48:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:48:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:48:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:48:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:48:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:48:21Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:48:21Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:48:21Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:48:21Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:48:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:48:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:48:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:48:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:48:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:48:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:48:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:48:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:48:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:48:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:48:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:48:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:48:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:48:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:48:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/pid_map.log
+[2026-03-04T05:48:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/pid_map.log
+[2026-03-04T05:48:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/pid_map.log
+[2026-03-04T05:48:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/Benchmarker/pid_map.log
+[2026-03-04T05:48:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/System/qStatus.log
+[2026-03-04T05:48:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/System/qStatus.log
+[2026-03-04T05:48:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/System/qStatus.log
+[2026-03-04T05:48:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/System/qStatus.log
+[2026-03-04T05:48:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/exp_runner/exp_runner.log
+[2026-03-04T05:48:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/exp_runner/exp_runner.log
+[2026-03-04T05:48:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/exp_runner/exp_runner.log
+[2026-03-04T05:48:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/logs/exp_runner/exp_runner.log
+[2026-03-04T05:48:31Z] INFO: Uploaded 20 checkpoint files
+[2026-03-04T05:48:31Z] INFO: Uploaded 20 checkpoint files
+[2026-03-04T05:48:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/dxnn-run.log
+[2026-03-04T05:48:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/dxnn-run.log
+[2026-03-04T05:48:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/dxnn-run.log
+[2026-03-04T05:48:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/dxnn-run.log
+[2026-03-04T05:48:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_MANIFEST
+[2026-03-04T05:48:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_MANIFEST
+[2026-03-04T05:48:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_MANIFEST
+[2026-03-04T05:48:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_MANIFEST
+[2026-03-04T05:48:34Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_MANIFEST
+[2026-03-04T05:48:34Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_MANIFEST
+[2026-03-04T05:48:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_SUCCESS
+[2026-03-04T05:48:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_SUCCESS
+[2026-03-04T05:48:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_SUCCESS
+[2026-03-04T05:48:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_SUCCESS
+[2026-03-04T05:48:35Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_SUCCESS
+[2026-03-04T05:48:35Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9/_SUCCESS
+[2026-03-04T05:48:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:48:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:48:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:48:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:48:36Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:43:08Z_f6kd_run9
+[2026-03-04T05:48:36Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:43:08Z_f6kd_run9
+[2026-03-04T05:48:36Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9
+[2026-03-04T05:48:36Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:43:08Z_f6kd_run9
+[2026-03-04T05:48:36Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:48:36Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:48:36Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:48:36Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:48:36Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:48:36Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:55:04Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:55:04Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T05:55:05Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:55:05Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T05:55:05Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772603704
+[2026-03-04T05:55:05Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772603704
+[2026-03-04T05:55:05Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:55:05Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T05:55:05Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772603704 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10
+[2026-03-04T05:55:05Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772603704 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10
+[2026-03-04T05:55:05Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_CHECKPOINT_INFO
+[2026-03-04T05:55:05Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_CHECKPOINT_INFO
+[2026-03-04T05:55:07Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_CHECKPOINT_INFO
+[2026-03-04T05:55:07Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_CHECKPOINT_INFO
+[2026-03-04T05:55:07Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/config.erl
+[2026-03-04T05:55:07Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/config.erl
+[2026-03-04T05:55:08Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/config.erl
+[2026-03-04T05:55:08Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/config.erl
+[2026-03-04T05:55:08Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:55:08Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:55:10Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:55:10Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T05:55:10Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:55:10Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:55:11Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:55:11Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T05:55:11Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:55:11Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:55:12Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:55:12Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T05:55:12Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:55:12Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:55:13Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:55:13Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T05:55:13Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:55:13Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:55:15Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:55:15Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T05:55:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:55:15Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:55:16Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:55:16Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T05:55:16Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:55:16Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:55:17Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:55:17Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T05:55:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:55:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:55:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:55:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T05:55:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:55:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:55:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:55:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T05:55:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:55:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:55:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:55:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T05:55:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:55:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:55:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:55:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T05:55:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:55:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:55:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:55:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T05:55:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:55:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:55:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:55:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T05:55:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:55:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:55:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:55:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T05:55:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:55:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:55:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:55:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T05:55:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:55:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:55:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:55:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T05:55:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:55:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:55:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:55:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T05:55:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:55:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:55:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:55:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T05:55:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:55:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:55:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:55:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T05:55:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:55:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:55:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:55:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/agent_trades.log
+[2026-03-04T05:55:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:55:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:55:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:55:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/benchmarker.log
+[2026-03-04T05:55:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:55:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:55:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:55:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/agent_meta.log
+[2026-03-04T05:55:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/pid_map.log
+[2026-03-04T05:55:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/pid_map.log
+[2026-03-04T05:55:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/pid_map.log
+[2026-03-04T05:55:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/Benchmarker/pid_map.log
+[2026-03-04T05:55:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/System/qStatus.log
+[2026-03-04T05:55:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/System/qStatus.log
+[2026-03-04T05:55:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/System/qStatus.log
+[2026-03-04T05:55:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/System/qStatus.log
+[2026-03-04T05:55:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/exp_runner/exp_runner.log
+[2026-03-04T05:55:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/exp_runner/exp_runner.log
+[2026-03-04T05:55:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/exp_runner/exp_runner.log
+[2026-03-04T05:55:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/logs/exp_runner/exp_runner.log
+[2026-03-04T05:55:49Z] INFO: Uploaded 27 checkpoint files
+[2026-03-04T05:55:49Z] INFO: Uploaded 27 checkpoint files
+[2026-03-04T05:55:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/dxnn-run.log
+[2026-03-04T05:55:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/dxnn-run.log
+[2026-03-04T05:55:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/dxnn-run.log
+[2026-03-04T05:55:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/dxnn-run.log
+[2026-03-04T05:55:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_MANIFEST
+[2026-03-04T05:55:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_MANIFEST
+[2026-03-04T05:55:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_MANIFEST
+[2026-03-04T05:55:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_MANIFEST
+[2026-03-04T05:55:51Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_MANIFEST
+[2026-03-04T05:55:51Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_MANIFEST
+[2026-03-04T05:55:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_SUCCESS
+[2026-03-04T05:55:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_SUCCESS
+[2026-03-04T05:55:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_SUCCESS
+[2026-03-04T05:55:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_SUCCESS
+[2026-03-04T05:55:52Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_SUCCESS
+[2026-03-04T05:55:52Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10/_SUCCESS
+[2026-03-04T05:55:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:55:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:55:53Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:55:53Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T05:55:53Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:48:03Z_f6kd_run10
+[2026-03-04T05:55:53Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:48:03Z_f6kd_run10
+[2026-03-04T05:55:53Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10
+[2026-03-04T05:55:53Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:48:03Z_f6kd_run10
+[2026-03-04T05:55:53Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:55:53Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T05:55:53Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:55:53Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T05:55:53Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T05:55:53Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T06:21:24Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T06:21:24Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T06:21:25Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T06:21:25Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T06:21:25Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772605284
+[2026-03-04T06:21:25Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772605284
+[2026-03-04T06:21:25Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T06:21:25Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T06:21:25Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772605284 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11
+[2026-03-04T06:21:25Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772605284 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11
+[2026-03-04T06:21:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_CHECKPOINT_INFO
+[2026-03-04T06:21:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_CHECKPOINT_INFO
+[2026-03-04T06:21:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_CHECKPOINT_INFO
+[2026-03-04T06:21:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_CHECKPOINT_INFO
+[2026-03-04T06:21:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/config.erl
+[2026-03-04T06:21:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/config.erl
+[2026-03-04T06:21:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/config.erl
+[2026-03-04T06:21:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/config.erl
+[2026-03-04T06:21:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T06:21:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T06:21:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T06:21:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T06:21:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T06:21:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T06:21:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T06:21:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T06:21:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T06:21:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T06:21:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T06:21:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T06:21:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T06:21:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T06:21:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T06:21:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T06:21:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T06:21:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T06:21:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T06:21:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T06:21:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T06:21:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T06:21:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T06:21:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T06:21:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T06:21:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T06:21:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T06:21:36Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T06:21:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T06:21:36Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T06:21:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T06:21:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T06:21:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T06:21:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T06:21:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T06:21:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T06:21:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T06:21:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T06:21:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T06:21:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T06:21:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T06:21:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T06:21:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T06:21:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T06:21:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T06:21:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T06:21:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T06:21:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T06:21:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T06:21:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T06:21:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T06:21:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T06:21:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T06:21:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T06:21:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T06:21:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T06:21:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T06:21:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T06:21:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T06:21:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T06:21:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T06:21:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T06:21:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T06:21:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T06:21:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/agent_trades.log
+[2026-03-04T06:21:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/agent_trades.log
+[2026-03-04T06:21:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/agent_trades.log
+[2026-03-04T06:21:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/agent_trades.log
+[2026-03-04T06:21:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/benchmarker.log
+[2026-03-04T06:21:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/benchmarker.log
+[2026-03-04T06:21:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/benchmarker.log
+[2026-03-04T06:21:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/benchmarker.log
+[2026-03-04T06:21:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/agent_meta.log
+[2026-03-04T06:21:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/agent_meta.log
+[2026-03-04T06:21:53Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/agent_meta.log
+[2026-03-04T06:21:53Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/agent_meta.log
+[2026-03-04T06:21:53Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/pid_map.log
+[2026-03-04T06:21:53Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/pid_map.log
+[2026-03-04T06:21:54Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/pid_map.log
+[2026-03-04T06:21:54Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/Benchmarker/pid_map.log
+[2026-03-04T06:21:54Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/System/qStatus.log
+[2026-03-04T06:21:54Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/System/qStatus.log
+[2026-03-04T06:21:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/System/qStatus.log
+[2026-03-04T06:21:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/System/qStatus.log
+[2026-03-04T06:21:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/exp_runner/exp_runner.log
+[2026-03-04T06:21:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/exp_runner/exp_runner.log
+[2026-03-04T06:21:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/exp_runner/exp_runner.log
+[2026-03-04T06:21:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/logs/exp_runner/exp_runner.log
+[2026-03-04T06:21:56Z] INFO: Uploaded 24 checkpoint files
+[2026-03-04T06:21:56Z] INFO: Uploaded 24 checkpoint files
+[2026-03-04T06:21:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/dxnn-run.log
+[2026-03-04T06:21:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/dxnn-run.log
+[2026-03-04T06:21:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/dxnn-run.log
+[2026-03-04T06:21:56Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/dxnn-run.log
+[2026-03-04T06:21:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_MANIFEST
+[2026-03-04T06:21:56Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_MANIFEST
+[2026-03-04T06:21:57Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_MANIFEST
+[2026-03-04T06:21:57Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_MANIFEST
+[2026-03-04T06:21:57Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_MANIFEST
+[2026-03-04T06:21:57Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_MANIFEST
+[2026-03-04T06:21:57Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_SUCCESS
+[2026-03-04T06:21:57Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_SUCCESS
+[2026-03-04T06:21:58Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_SUCCESS
+[2026-03-04T06:21:58Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_SUCCESS
+[2026-03-04T06:21:58Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_SUCCESS
+[2026-03-04T06:21:58Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11/_SUCCESS
+[2026-03-04T06:21:58Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T06:21:58Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T06:21:59Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T06:21:59Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T06:21:59Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:55:04Z_f6kd_run11
+[2026-03-04T06:21:59Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T05:55:04Z_f6kd_run11
+[2026-03-04T06:21:59Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11
+[2026-03-04T06:21:59Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T05:55:04Z_f6kd_run11
+[2026-03-04T06:21:59Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T06:21:59Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T06:21:59Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T06:21:59Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T06:21:59Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T06:21:59Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T06:48:16Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T06:48:16Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T06:48:17Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T06:48:17Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T06:48:17Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772606896
+[2026-03-04T06:48:17Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772606896
+[2026-03-04T06:48:17Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T06:48:17Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T06:48:17Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772606896 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12
+[2026-03-04T06:48:17Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772606896 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12
+[2026-03-04T06:48:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_CHECKPOINT_INFO
+[2026-03-04T06:48:17Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_CHECKPOINT_INFO
+[2026-03-04T06:48:18Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_CHECKPOINT_INFO
+[2026-03-04T06:48:18Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_CHECKPOINT_INFO
+[2026-03-04T06:48:18Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/config.erl
+[2026-03-04T06:48:18Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/config.erl
+[2026-03-04T06:48:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/config.erl
+[2026-03-04T06:48:19Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/config.erl
+[2026-03-04T06:48:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T06:48:19Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T06:48:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T06:48:20Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T06:48:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T06:48:20Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T06:48:21Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T06:48:21Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T06:48:21Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T06:48:21Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T06:48:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T06:48:22Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T06:48:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T06:48:22Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T06:48:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T06:48:23Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/cortex.DCL
+[2026-03-04T06:48:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T06:48:23Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T06:48:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T06:48:24Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T06:48:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T06:48:24Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T06:48:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T06:48:25Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T06:48:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T06:48:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T06:48:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T06:48:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T06:48:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T06:48:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T06:48:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T06:48:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T06:48:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T06:48:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T06:48:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T06:48:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T06:48:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T06:48:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T06:48:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T06:48:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T06:48:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T06:48:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T06:48:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T06:48:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T06:48:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T06:48:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T06:48:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T06:48:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T06:48:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T06:48:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T06:48:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T06:48:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/experiment.DCL
+[2026-03-04T06:48:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T06:48:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T06:48:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T06:48:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/sensor.DCL
+[2026-03-04T06:48:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T06:48:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T06:48:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T06:48:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/actuator.DCL
+[2026-03-04T06:48:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T06:48:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T06:48:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T06:48:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T06:48:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T06:48:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T06:48:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T06:48:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T06:48:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T06:48:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T06:48:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T06:48:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T06:48:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T06:48:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T06:48:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T06:48:41Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T06:48:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/agent_trades.log
+[2026-03-04T06:48:41Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/agent_trades.log
+[2026-03-04T06:48:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/agent_trades.log
+[2026-03-04T06:48:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/agent_trades.log
+[2026-03-04T06:48:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/benchmarker.log
+[2026-03-04T06:48:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/benchmarker.log
+[2026-03-04T06:48:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/benchmarker.log
+[2026-03-04T06:48:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/benchmarker.log
+[2026-03-04T06:48:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/agent_meta.log
+[2026-03-04T06:48:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/agent_meta.log
+[2026-03-04T06:48:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/agent_meta.log
+[2026-03-04T06:48:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/agent_meta.log
+[2026-03-04T06:48:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/pid_map.log
+[2026-03-04T06:48:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/pid_map.log
+[2026-03-04T06:48:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/pid_map.log
+[2026-03-04T06:48:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/Benchmarker/pid_map.log
+[2026-03-04T06:48:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/System/qStatus.log
+[2026-03-04T06:48:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/System/qStatus.log
+[2026-03-04T06:48:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/System/qStatus.log
+[2026-03-04T06:48:46Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/System/qStatus.log
+[2026-03-04T06:48:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/exp_runner/exp_runner.log
+[2026-03-04T06:48:46Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/exp_runner/exp_runner.log
+[2026-03-04T06:48:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/exp_runner/exp_runner.log
+[2026-03-04T06:48:47Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/logs/exp_runner/exp_runner.log
+[2026-03-04T06:48:47Z] INFO: Uploaded 27 checkpoint files
+[2026-03-04T06:48:47Z] INFO: Uploaded 27 checkpoint files
+[2026-03-04T06:48:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/dxnn-run.log
+[2026-03-04T06:48:47Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/dxnn-run.log
+[2026-03-04T06:48:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/dxnn-run.log
+[2026-03-04T06:48:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/dxnn-run.log
+[2026-03-04T06:48:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_MANIFEST
+[2026-03-04T06:48:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_MANIFEST
+[2026-03-04T06:48:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_MANIFEST
+[2026-03-04T06:48:49Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_MANIFEST
+[2026-03-04T06:48:49Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_MANIFEST
+[2026-03-04T06:48:49Z] INFO: MANIFEST_UPLOADED - Stored at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_MANIFEST
+[2026-03-04T06:48:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_SUCCESS
+[2026-03-04T06:48:49Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_SUCCESS
+[2026-03-04T06:48:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_SUCCESS
+[2026-03-04T06:48:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_SUCCESS
+[2026-03-04T06:48:50Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_SUCCESS
+[2026-03-04T06:48:50Z] INFO: S3 sentinel created successfully at s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12/_SUCCESS
+[2026-03-04T06:48:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T06:48:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T06:48:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T06:48:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/_LATEST_RUN
+[2026-03-04T06:48:51Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T06:21:24Z_f6kd_run12
+[2026-03-04T06:48:51Z] INFO: LATEST_PTR_UPDATED - Updated pointer to 2026-03-04T06:21:24Z_f6kd_run12
+[2026-03-04T06:48:51Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12
+[2026-03-04T06:48:51Z] INFO: FINALIZE_SUCCESS - Checkpoint uploaded to s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:21:24Z_f6kd_run12
+[2026-03-04T06:48:51Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T06:48:51Z] INFO: FINALIZE_COMPLETE - Artifacts processed (status: incremental)
+[2026-03-04T06:48:51Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T06:48:51Z] INFO: AUTO_TERMINATE_DEFAULT=false AUTO_TERMINATE_ENV=false SAFE_MODE= RESOLVED_AUTO_TERMINATE=false
+[2026-03-04T06:48:51Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T06:48:51Z] INFO: AUTO_TERMINATE disabled - instance will remain running
+[2026-03-04T07:21:24Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T07:21:24Z] INFO: FINALIZE_START - Status: incremental, Exit Code: 0
+[2026-03-04T07:21:25Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T07:21:25Z] INFO: Looking for checkpoint in /var/lib/dxnn/checkpoints or using direct upload
+[2026-03-04T07:21:25Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772608884
+[2026-03-04T07:21:25Z] INFO: Using latest checkpoint: /var/lib/dxnn/checkpoints/checkpoint-1772608884
+[2026-03-04T07:21:25Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T07:21:25Z] INFO: Found Mnesia directory: Mnesia.nonode@nohost
+[2026-03-04T07:21:25Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772608884 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13
+[2026-03-04T07:21:25Z] INFO: Uploading checkpoint from /var/lib/dxnn/checkpoints/checkpoint-1772608884 -> s3://dxnn-checkpoints/dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13
+[2026-03-04T07:21:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/_CHECKPOINT_INFO
+[2026-03-04T07:21:25Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/_CHECKPOINT_INFO
+[2026-03-04T07:21:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/_CHECKPOINT_INFO
+[2026-03-04T07:21:26Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/_CHECKPOINT_INFO
+[2026-03-04T07:21:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/config.erl
+[2026-03-04T07:21:26Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/config.erl
+[2026-03-04T07:21:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/config.erl
+[2026-03-04T07:21:27Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/config.erl
+[2026-03-04T07:21:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T07:21:27Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T07:21:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T07:21:28Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/actuator.DCD
+[2026-03-04T07:21:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T07:21:28Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T07:21:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T07:21:29Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/sensor.DCD
+[2026-03-04T07:21:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T07:21:29Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T07:21:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T07:21:30Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/DECISION_TAB.LOG
+[2026-03-04T07:21:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T07:21:30Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T07:21:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T07:21:31Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/population.DCL
+[2026-03-04T07:21:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T07:21:31Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T07:21:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T07:21:32Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/cortex.DCD
+[2026-03-04T07:21:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T07:21:32Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T07:21:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T07:21:33Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/population.DCD
+[2026-03-04T07:21:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T07:21:33Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T07:21:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T07:21:34Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/LATEST.LOG
+[2026-03-04T07:21:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T07:21:34Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T07:21:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T07:21:35Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/agent.DCD
+[2026-03-04T07:21:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T07:21:35Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T07:21:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T07:21:37Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/neuron.DCL
+[2026-03-04T07:21:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T07:21:37Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T07:21:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T07:21:38Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/schema.DAT
+[2026-03-04T07:21:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T07:21:38Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T07:21:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T07:21:39Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/neuron.DCD
+[2026-03-04T07:21:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T07:21:39Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T07:21:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T07:21:40Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/experiment.DCD
+[2026-03-04T07:21:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T07:21:40Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T07:21:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T07:21:42Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/specie.DCD
+[2026-03-04T07:21:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T07:21:42Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T07:21:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T07:21:43Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/specie.DCL
+[2026-03-04T07:21:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T07:21:43Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T07:21:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T07:21:44Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/agent.DCL
+[2026-03-04T07:21:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T07:21:44Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T07:21:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T07:21:45Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/Mnesia.nonode@nohost/substrate.DCD
+[2026-03-04T07:21:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/agent_trades.log
+[2026-03-04T07:21:45Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/agent_trades.log
+[2026-03-04T07:21:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/agent_trades.log
+[2026-03-04T07:21:48Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/agent_trades.log
+[2026-03-04T07:21:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/benchmarker.log
+[2026-03-04T07:21:48Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/benchmarker.log
+[2026-03-04T07:21:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/benchmarker.log
+[2026-03-04T07:21:50Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/benchmarker.log
+[2026-03-04T07:21:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/agent_meta.log
+[2026-03-04T07:21:50Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/agent_meta.log
+[2026-03-04T07:21:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/agent_meta.log
+[2026-03-04T07:21:51Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/agent_meta.log
+[2026-03-04T07:21:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/pid_map.log
+[2026-03-04T07:21:51Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/pid_map.log
+[2026-03-04T07:21:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/pid_map.log
+[2026-03-04T07:21:52Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/Benchmarker/pid_map.log
+[2026-03-04T07:21:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/System/qStatus.log
+[2026-03-04T07:21:52Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/System/qStatus.log
+[2026-03-04T07:21:53Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/System/qStatus.log
+[2026-03-04T07:21:53Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/System/qStatus.log
+[2026-03-04T07:21:53Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/exp_runner/exp_runner.log
+[2026-03-04T07:21:53Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/exp_runner/exp_runner.log
+[2026-03-04T07:21:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/exp_runner/exp_runner.log
+[2026-03-04T07:21:55Z] INFO: S3 upload successful: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/logs/exp_runner/exp_runner.log
+[2026-03-04T07:21:55Z] INFO: Uploaded 24 checkpoint files
+[2026-03-04T07:21:55Z] INFO: Uploaded 24 checkpoint files
+[2026-03-04T07:21:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/dxnn-run.log
+[2026-03-04T07:21:55Z] INFO: S3 upload attempt 1/7: dxnn-prod/f6kd/2026-03-04T06:48:16Z_f6kd_run13/dxnn-run.log

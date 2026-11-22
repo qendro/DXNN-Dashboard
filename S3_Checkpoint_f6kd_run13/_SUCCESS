@@ -1,0 +1,9 @@
+{
+    "population_id": "2026-03-04T06:48:16Z_f6kd_run13",
+    "lineage_id": "f6kd",
+    "finalized_at": "2026-03-04T07:21:58Z",
+    "status": "success",
+    "completion_status": "incremental",
+    "exit_code": 0,
+    "reason": "spot_interruption"
+}

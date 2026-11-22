@@ -11,6 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY dashboard.py .
+COPY mnesia_reader.py .
+COPY erlang_term_parser.py .
 COPY templates/ templates/
 COPY static/ static/
 

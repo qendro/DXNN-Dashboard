@@ -22,25 +22,30 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
 
   @impl true
   def handle_event("load_all_experiments", _, socket) do
-    experiments = AnalyzerBridge.get_experiments_from_settings()
-    
-    results = Enum.map(experiments, fn exp ->
-      case AnalyzerBridge.load_context(exp.path, exp.name) do
-        {:ok, _} -> {:ok, exp.name}
-        {:error, {:already_loaded, _}} -> {:ok, exp.name}
-        {:error, reason} -> {:error, exp.name, reason}
-      end
-    end)
-    
+    loaded_names = MapSet.new(socket.assigns.experiments, &to_string(&1.name))
+
+    experiments =
+      AnalyzerBridge.get_experiments_from_settings()
+      |> Enum.reject(&MapSet.member?(loaded_names, &1.name))
+
+    results =
+      Enum.map(experiments, fn exp ->
+        case AnalyzerBridge.load_context(exp.path, exp.name) do
+          {:ok, _} -> {:ok, exp.name}
+          {:error, {:already_loaded, _}} -> {:ok, exp.name}
+          {:error, reason} -> {:error, exp.name, reason}
+        end
+      end)
+
     success_count = Enum.count(results, fn r -> match?({:ok, _}, r) end)
     total_count = length(experiments)
-    
+
     socket =
       socket
       |> load_experiments()
       |> maybe_put_load_all_error(results)
       |> put_flash(:info, "Loaded #{success_count} of #{total_count} experiments")
-    
+
     {:noreply, socket}
   end
 
@@ -51,18 +56,20 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
 
   @impl true
   def handle_event("unload_experiment", %{"name" => name}, socket) do
-    AnalyzerBridge.unload_context(name)
-
     socket =
-      socket
-      |> put_flash(:info, "Experiment '#{name}' unloaded")
-      |> load_experiments()
+      case AnalyzerBridge.unload_context(name) do
+        :ok ->
+          put_flash(socket, :info, "Experiment '#{name}' unloaded")
 
-    {:noreply, socket}
+        {:error, reason} ->
+          put_flash(socket, :error, "Could not unload experiment: #{inspect(reason)}")
+      end
+
+    {:noreply, load_experiments(socket)}
   end
 
   defp load_experiments(socket) do
-    experiments = 
+    experiments =
       try do
         AnalyzerBridge.list_contexts()
       rescue
@@ -70,142 +77,113 @@ defmodule DxnnAnalyzerWeb.DashboardLive do
       catch
         :exit, _ -> []
       end
-    
-    assign(socket, :experiments, experiments)
+
+    loaded_names = MapSet.new(experiments, &to_string(&1.name))
+
+    loadable_count =
+      AnalyzerBridge.get_experiments_from_settings()
+      |> Enum.count(&(not MapSet.member?(loaded_names, &1.name)))
+
+    socket
+    |> assign(:experiments, experiments)
+    |> assign(:loadable_count, loadable_count)
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gray-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="mb-8 flex justify-between items-center">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-900">DXNN Analyzer Dashboard</h1>
-            <p class="mt-2 text-gray-600">View and manage loaded experiments</p>
+    <div class="page-container">
+      <.page_header title="Dashboard" description="View and manage your loaded experiments.">
+        <:actions>
+          <button phx-click="refresh" phx-disable-with="Refreshing…" class="btn btn-secondary">
+            Refresh
+          </button>
+          <.link navigate={~p"/settings"} class="btn btn-primary">Manage experiments</.link>
+        </:actions>
+      </.page_header>
+
+      <section class="panel" aria-labelledby="loaded-experiments-title">
+        <div class="panel-heading">
+          <div class="flex items-center gap-3">
+            <h2 id="loaded-experiments-title" class="section-title">Loaded experiments</h2>
+            <span class="badge"><%= length(@experiments) %></span>
           </div>
-          <div class="flex gap-2">
-            <.link
-              navigate={~p"/analytics"}
-              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition"
-            >
-              📊 Analytics
-            </.link>
-            <.link
-              navigate={~p"/s3-experiments"}
-              class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-            >
-              📦 S3 Experiments
-            </.link>
-            <.link
-              navigate={~p"/s3-explorer"}
-              class="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition"
-            >
-              🗂️ S3 Explorer
-            </.link>
-            <.link
-              navigate={~p"/aws-deployment"}
-              class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition"
-            >
-              ☁️ AWS Deployment
-            </.link>
-            <.link navigate={~p"/oracle-instances"} class="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-800 transition">
-              Oracle Instances
-            </.link>
-            <.link
-              navigate={~p"/spot-pricing"}
-              class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-            >
-              💰 Spot Pricing
-            </.link>
-            <.link
-              navigate={~p"/settings"}
-              class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition"
-            >
-              ⚙️ Manage Experiments
-            </.link>
-            <button
-              phx-click="load_all_experiments"
-              class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
-            >
-              📂 Load All
-            </button>
-            <button
-              phx-click="refresh"
-              class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-            >
-              🔄 Refresh
-            </button>
-          </div>
+          <button
+            phx-click="load_all_experiments"
+            phx-disable-with="Loading…"
+            class="btn btn-secondary btn-sm"
+            disabled={@loadable_count == 0}
+          >
+            Load saved experiments
+          </button>
         </div>
 
-        <!-- Loaded Experiments -->
-        <div class="bg-white shadow rounded-lg p-6">
-          <h2 class="text-xl font-semibold mb-6">Loaded Experiments</h2>
-          
-          <%= if Enum.empty?(@experiments) do %>
-            <div class="text-center py-12">
-              <p class="text-gray-500 mb-4">No experiments loaded</p>
-              <.link
-                navigate={~p"/settings"}
-                class="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition"
-              >
-                Go to Settings to Load Experiments
-              </.link>
+        <%= if Enum.empty?(@experiments) do %>
+          <div class="empty-state">
+            <div class="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-400">
+              <.icon name="flask" class="h-6 w-6" />
             </div>
-          <% else %>
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              <%= for experiment <- @experiments do %>
-                <div class="border-2 border-gray-200 rounded-lg p-4 hover:shadow-lg transition">
-                  <div class="flex justify-between items-start mb-2">
-                    <h3 class="font-semibold text-lg"><%= experiment.name %></h3>
-                    <button
-                      phx-click="unload_experiment"
-                      phx-value-name={experiment.name}
-                      class="text-red-600 hover:text-red-800 text-sm font-bold"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div class="text-sm text-gray-600 mb-3">
-                    <div>Agents: <span class="font-medium"><%= experiment.agent_count %></span></div>
-                    <div>Species: <span class="font-medium"><%= experiment.specie_count %></span></div>
-                    <div class="mt-2 flex flex-wrap gap-1">
-                      <span class="inline-flex bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">
-                        Mnesia
-                      </span>
-                      <%= if experiment.logs_path do %>
-                        <span class="inline-flex bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">
-                          logs
-                        </span>
-                      <% end %>
-                      <%= if experiment.analytics_path do %>
-                        <span class="inline-flex bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">
-                          analytics
-                        </span>
-                      <% end %>
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <.link
-                      navigate={~p"/agents?context=#{experiment.name}"}
-                      class="block text-center bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700 transition"
-                    >
-                      Agents
-                    </.link>
-                    <.link
-                      navigate={~p"/contexts/#{experiment.name}/artifacts"}
-                      class="block text-center bg-slate-700 text-white px-3 py-2 rounded-md text-sm hover:bg-slate-800 transition"
-                    >
-                      Artifacts
-                    </.link>
-                  </div>
+            <h3 class="text-sm font-semibold text-slate-900">No experiments loaded</h3>
+            <p class="mt-2 max-w-sm text-sm leading-6 text-slate-500">
+              Add or load an experiment to explore its agents, logs, and analytics.
+            </p>
+            <.link
+              navigate={~p"/settings"}
+              class="mt-5 text-sm font-medium text-blue-700 hover:text-blue-800"
+            >
+              Browse experiments <span aria-hidden="true">→</span>
+            </.link>
+          </div>
+        <% else %>
+          <div class="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
+            <article :for={experiment <- @experiments} class="experiment-card">
+              <h3 class="break-words text-sm font-semibold leading-6"><%= experiment.name %></h3>
+              <dl class="my-5 grid grid-cols-2 gap-4">
+                <div>
+                  <dt class="text-xs text-slate-500">Agents</dt>
+                  <dd class="mt-1 text-2xl font-semibold tabular-nums">
+                    <%= experiment.agent_count %>
+                  </dd>
                 </div>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-      </div>
+                <div>
+                  <dt class="text-xs text-slate-500">Species</dt>
+                  <dd class="mt-1 text-2xl font-semibold tabular-nums">
+                    <%= experiment.specie_count %>
+                  </dd>
+                </div>
+              </dl>
+              <div class="mb-5 flex flex-wrap gap-1.5">
+                <span class="badge">Mnesia</span>
+                <span :if={experiment.logs_path} class="badge">Logs</span>
+                <span :if={experiment.analytics_path} class="badge">Analytics</span>
+              </div>
+              <div class="page-actions mt-auto border-t border-slate-100 pt-4">
+                <.link
+                  navigate={~p"/agents?context=#{experiment.name}"}
+                  class="btn btn-secondary btn-sm"
+                >
+                  View agents
+                </.link>
+                <.link
+                  navigate={~p"/contexts/#{experiment.name}/artifacts"}
+                  class="btn btn-secondary btn-sm"
+                >
+                  Artifacts
+                </.link>
+                <button
+                  phx-click="unload_experiment"
+                  phx-value-name={experiment.name}
+                  data-confirm={"Unload #{experiment.name}? Files on disk will be kept."}
+                  aria-label={"Unload #{experiment.name}"}
+                  class="btn btn-danger btn-sm ml-auto"
+                >
+                  Unload
+                </button>
+              </div>
+            </article>
+          </div>
+        <% end %>
+      </section>
     </div>
     """
   end

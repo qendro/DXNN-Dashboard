@@ -1,13 +1,13 @@
 defmodule DxnnAnalyzerWeb.ExperimentCopier do
   @moduledoc """
   Handles copying DXNN-Trader-v2 experiments to the dashboard database.
-  
+
   Copies the following from source:
   - Mnesia.nonode@nohost/ (complete database)
   - logs/ (all experiment logs)
   - config.erl (experiment configuration)
   - exp_runner.erl (experiment runner)
-  
+
   Creates a timestamped folder in the destination directory.
   """
 
@@ -15,7 +15,7 @@ defmodule DxnnAnalyzerWeb.ExperimentCopier do
 
   @doc """
   Copies an experiment from source to destination.
-  
+
   Returns:
   - {:ok, new_path} on success
   - {:error, reason} on failure
@@ -37,7 +37,7 @@ defmodule DxnnAnalyzerWeb.ExperimentCopier do
     e in File.Error ->
       Logger.error("File error during copy: #{inspect(e)}")
       {:error, "File operation failed: #{e.reason}"}
-    
+
     e ->
       Logger.error("Unexpected error during copy: #{inspect(e)}")
       {:error, "Unexpected error occurred"}
@@ -57,7 +57,7 @@ defmodule DxnnAnalyzerWeb.ExperimentCopier do
       {"exp_runner.erl", &File.exists?/1}
     ]
 
-    missing = 
+    missing =
       required
       |> Enum.reject(fn {name, check_fn} ->
         source_path |> Path.join(name) |> check_fn.()
@@ -81,7 +81,7 @@ defmodule DxnnAnalyzerWeb.ExperimentCopier do
 
   defp create_destination_directory(base_path) do
     with :ok <- File.mkdir_p(base_path) do
-      timestamp = 
+      timestamp =
         DateTime.utc_now()
         |> DateTime.to_iso8601()
         |> String.replace(":", "-")
@@ -91,7 +91,7 @@ defmodule DxnnAnalyzerWeb.ExperimentCopier do
       folder_name = "#{timestamp}_experiment_run1"
       destination_path = Path.join(base_path, folder_name)
       final_path = ensure_unique_path(destination_path)
-      
+
       case File.mkdir_p(final_path) do
         :ok -> {:ok, final_path}
         {:error, reason} -> {:error, reason}
@@ -102,12 +102,12 @@ defmodule DxnnAnalyzerWeb.ExperimentCopier do
   defp ensure_unique_path(path) do
     if File.exists?(path) do
       base = String.replace(path, ~r/_run\d+$/, "")
-      
-      run_number = 
+
+      run_number =
         2
         |> Stream.iterate(&(&1 + 1))
         |> Enum.find(&(not File.exists?("#{base}_run#{&1}")))
-      
+
       "#{base}_run#{run_number}"
     else
       path
@@ -130,7 +130,7 @@ defmodule DxnnAnalyzerWeb.ExperimentCopier do
       Logger.info("Copying #{file}...")
       source_file = Path.join(source_path, file)
       dest_file = Path.join(destination_path, file)
-      
+
       case File.cp(source_file, dest_file) do
         :ok -> {:cont, :ok}
         {:error, reason} -> {:halt, {:error, reason}}
@@ -151,7 +151,7 @@ defmodule DxnnAnalyzerWeb.ExperimentCopier do
         source_item = Path.join(source, item)
         dest_item = Path.join(destination, item)
 
-        result = 
+        result =
           if File.dir?(source_item) do
             copy_directory_recursive(source_item, dest_item)
           else
@@ -167,12 +167,16 @@ defmodule DxnnAnalyzerWeb.ExperimentCopier do
   end
 
   defp create_metadata_files(destination_path, source_path) do
-    success_content = Jason.encode!(%{
-      status: "copied",
-      timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
-      source: source_path,
-      copied_by: "DXNN-Dashboard"
-    }, pretty: true)
+    success_content =
+      Jason.encode!(
+        %{
+          status: "copied",
+          timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
+          source: source_path,
+          copied_by: "DXNN-Dashboard"
+        },
+        pretty: true
+      )
 
     manifest_content = """
     Mnesia.nonode@nohost/

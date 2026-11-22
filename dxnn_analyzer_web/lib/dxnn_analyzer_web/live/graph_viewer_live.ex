@@ -1,51 +1,40 @@
 defmodule DxnnAnalyzerWeb.GraphViewerLive do
   use DxnnAnalyzerWeb, :live_view
-  alias DxnnAnalyzerWeb.AnalyzerBridge
+  alias DxnnAnalyzerWeb.{AgentId, AnalyzerBridge}
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    {:ok, assign(socket, agent_id: URI.decode(id), selected_edge: nil, selected_node_id: nil)}
+    {:ok,
+     assign(socket,
+       agent_id: URI.decode(id),
+       context: nil,
+       graph: nil,
+       error: nil,
+       selected_edge: nil,
+       selected_node_id: nil,
+       graph_layout: "hierarchical"
+     )}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
     context = params["context"]
+    socket = assign(socket, context: context, graph: nil, error: nil)
+
+    result =
+      with true <- is_binary(context) and context != "",
+           {:ok, agent_id} <- AgentId.parse(socket.assigns.agent_id) do
+        AnalyzerBridge.get_topology_graph(agent_id, context)
+      else
+        false -> {:error, "Choose an experiment from the dashboard first"}
+        error -> error
+      end
 
     socket =
-      if context do
-        agent_id = parse_agent_id(socket.assigns.agent_id)
-
-        case AnalyzerBridge.get_topology_graph(agent_id, context) do
-          graph when is_map(graph) and not is_map_key(graph, :__struct__) ->
-            socket
-            |> assign(:context, context)
-            |> assign(:graph, graph)
-            |> assign(:error, nil)
-            |> assign(:selected_node_id, nil)
-            |> assign(:selected_edge, nil)
-            |> assign(:graph_layout, "hierarchical")
-
-          {:error, reason} ->
-            socket
-            |> assign(:context, context)
-            |> assign(:graph, nil)
-            |> assign(:selected_edge, nil)
-            |> assign(:selected_node_id, nil)
-            |> assign(:error, "Failed to load graph: #{reason}")
-
-          _ ->
-            socket
-            |> assign(:context, context)
-            |> assign(:graph, nil)
-            |> assign(:selected_edge, nil)
-            |> assign(:selected_node_id, nil)
-            |> assign(:error, "Failed to load graph data")
-        end
-      else
-        socket
-        |> assign(:error, "No context specified")
-        |> assign(:selected_edge, nil)
-        |> assign(:selected_node_id, nil)
+      case result do
+        data when is_map(data) -> assign(socket, :graph, data)
+        {:error, reason} -> assign(socket, :error, "Could not load graph: #{inspect(reason)}")
+        _ -> assign(socket, :error, "Could not load graph")
       end
 
     {:noreply, socket}
@@ -57,7 +46,11 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
   end
 
   @impl true
-  def handle_event("select_edge", %{"source" => source, "target" => target, "weight" => weight, "recurrent" => recurrent}, socket) do
+  def handle_event(
+        "select_edge",
+        %{"source" => source, "target" => target, "weight" => weight, "recurrent" => recurrent},
+        socket
+      ) do
     edge_info = %{
       source: source,
       target: target,
@@ -66,6 +59,7 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
       source_node: get_node_by_id(socket.assigns.graph, source),
       target_node: get_node_by_id(socket.assigns.graph, target)
     }
+
     {:noreply, assign(socket, selected_edge: edge_info, selected_node_id: nil)}
   end
 
@@ -95,38 +89,33 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
     end
   end
 
-  defp parse_agent_id(id_str) do
-    {agent_id, _} = Code.eval_string(id_str)
-    agent_id
-  end
-
   @impl true
   def render(assigns) do
-    assigns = 
+    assigns =
       assigns
       |> assign_new(:selected_node, fn -> get_selected_node(assigns) end)
       |> assign_new(:selected_edge, fn -> nil end)
       |> assign_new(:graph, fn -> nil end)
       |> assign_new(:context, fn -> nil end)
-    
+
     ~H"""
-    <div class="min-h-screen bg-gray-50">
-      <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="min-w-0">
+      <div class="page-container">
         <!-- Header -->
         <div class="mb-6">
           <.link
-            navigate={~p"/agents/#{URI.encode(@agent_id)}?context=#{@context}"}
+            navigate={if @context, do: ~p"/agents/#{@agent_id}?context=#{@context}", else: ~p"/"}
             class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block"
           >
-            ← Back to Agent Inspector
+            ← <%= if @context, do: "Back to agent", else: "Back to dashboard" %>
           </.link>
           <div class="flex justify-between items-start">
             <div>
-              <h1 class="text-3xl font-bold text-gray-900">Neural Network Graph</h1>
+              <h1 class="page-title">Neural Network Graph</h1>
               <p class="text-gray-600 mt-1">Agent: <%= @agent_id %></p>
             </div>
             <%= if @graph do %>
-              <div class="flex gap-2">
+              <div class="page-actions">
                 <select
                   phx-change="change_layout"
                   name="layout"
@@ -151,7 +140,7 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
 
         <%= if @graph do %>
           <!-- Stats Bar -->
-          <div class="bg-white shadow rounded-lg p-4 mb-6">
+          <div class="panel p-4 mb-6">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div class="text-center">
                 <div class="text-2xl font-bold text-blue-600">
@@ -179,9 +168,8 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
               </div>
             </div>
           </div>
-
           <!-- Main Graph Container -->
-          <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="panel overflow-hidden">
             <div class="relative">
               <!-- Graph Canvas -->
               <div
@@ -195,7 +183,6 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
               >
                 <svg id="network-svg" class="w-full h-full"></svg>
               </div>
-
               <!-- Legend -->
               <div class="absolute top-4 left-4 bg-white bg-opacity-90 rounded-lg shadow p-4">
                 <h3 class="text-sm font-semibold mb-2">Legend</h3>
@@ -237,11 +224,10 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
               </div>
             </div>
           </div>
-
           <!-- Layer Information -->
           <%= if length(@graph.layers) > 0 do %>
-            <div class="bg-white shadow rounded-lg p-6 mt-6">
-              <h2 class="text-xl font-semibold mb-4">Layer Structure</h2>
+            <div class="panel p-6 mt-6">
+              <h2 class="section-title mb-4">Layer Structure</h2>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <%= for layer <- @graph.layers do %>
                   <div class="border border-gray-200 rounded-lg p-4">
@@ -256,17 +242,13 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
               </div>
             </div>
           <% end %>
-
           <!-- Node Details Sidebar -->
           <%= if @selected_node do %>
             <div class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
               <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
                   <h2 class="text-xl font-bold text-gray-900">Node Details</h2>
-                  <button
-                    phx-click="close_details"
-                    class="text-gray-400 hover:text-gray-600"
-                  >
+                  <button phx-click="close_details" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         stroke-linecap="round"
@@ -330,7 +312,6 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
                         </div>
                       </div>
                     </div>
-
                     <!-- Expandable Connection Lists -->
                     <div class="border-t border-gray-200 pt-4 space-y-3">
                       <!-- Input Connections -->
@@ -351,7 +332,9 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
                                   d="M9 5l7 7-7 7"
                                 />
                               </svg>
-                              <span class="text-sm font-semibold text-blue-900">Input Connections</span>
+                              <span class="text-sm font-semibold text-blue-900">
+                                Input Connections
+                              </span>
                             </div>
                             <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">
                               <%= length(@selected_node.input_ids || []) %>
@@ -366,7 +349,6 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
                           <% end %>
                         </div>
                       </details>
-
                       <!-- Input Modulation Connections -->
                       <%= if length(@selected_node.input_modulation_ids || []) > 0 do %>
                         <details class="group">
@@ -404,7 +386,6 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
                           </div>
                         </details>
                       <% end %>
-
                       <!-- Output Connections -->
                       <details class="group">
                         <summary class="cursor-pointer list-none">
@@ -440,7 +421,6 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
                           <% end %>
                         </div>
                       </details>
-
                       <!-- Recurrent Output Connections -->
                       <%= if length(@selected_node.ro_ids || []) > 0 do %>
                         <details class="group">
@@ -491,7 +471,6 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
                       <div class="text-sm font-medium text-gray-500">Vector Length</div>
                       <div class="mt-1 text-gray-900"><%= @selected_node.vl %></div>
                     </div>
-
                     <!-- Connection Lists -->
                     <div class="border-t border-gray-200 pt-4 space-y-3">
                       <%= if @selected_node.type == "sensor" && @selected_node.fanout_ids do %>
@@ -512,7 +491,9 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
                                     d="M9 5l7 7-7 7"
                                   />
                                 </svg>
-                                <span class="text-sm font-semibold text-blue-900">Fanout Connections</span>
+                                <span class="text-sm font-semibold text-blue-900">
+                                  Fanout Connections
+                                </span>
                               </div>
                               <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">
                                 <%= length(@selected_node.fanout_ids) %>
@@ -547,7 +528,9 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
                                     d="M9 5l7 7-7 7"
                                   />
                                 </svg>
-                                <span class="text-sm font-semibold text-purple-900">Fanin Connections</span>
+                                <span class="text-sm font-semibold text-purple-900">
+                                  Fanin Connections
+                                </span>
                               </div>
                               <span class="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full">
                                 <%= length(@selected_node.fanin_ids) %>
@@ -569,17 +552,13 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
               </div>
             </div>
           <% end %>
-
           <!-- Edge Details Sidebar -->
           <%= if @selected_edge do %>
             <div class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
               <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
                   <h2 class="text-xl font-bold text-gray-900">Connection Details</h2>
-                  <button
-                    phx-click="close_details"
-                    class="text-gray-400 hover:text-gray-600"
-                  >
+                  <button phx-click="close_details" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         stroke-linecap="round"
@@ -595,7 +574,9 @@ defmodule DxnnAnalyzerWeb.GraphViewerLive do
                   <div>
                     <div class="text-sm font-medium text-gray-500">Weight</div>
                     <div class="mt-1 text-2xl font-bold text-gray-900">
-                      <%= if is_float(@selected_edge.weight), do: Float.round(@selected_edge.weight, 4), else: @selected_edge.weight %>
+                      <%= if is_float(@selected_edge.weight),
+                        do: Float.round(@selected_edge.weight, 4),
+                        else: @selected_edge.weight %>
                     </div>
                   </div>
 

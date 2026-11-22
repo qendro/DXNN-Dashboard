@@ -144,6 +144,10 @@ defmodule DxnnAnalyzerWeb.OCI.OCIBridge do
         "OCI_PROFILE=#{System.get_env("OCI_PROFILE", "DEFAULT")}",
         "-e",
         "OCI_SIGNING_KEY_FILE=#{System.get_env("OCI_SIGNING_KEY_FILE", "")}",
+        "-e",
+        "OCI_AUTH=#{System.get_env("OCI_AUTH", "config")}",
+        "-e",
+        "OCI_REGION=#{System.get_env("OCI_REGION", "")}",
         "--mount",
         "type=bind,source=#{host},target=#{host},readonly",
         "--mount",
@@ -161,6 +165,16 @@ defmodule DxnnAnalyzerWeb.OCI.OCIBridge do
         image
       ]
 
+      args =
+        if System.get_env("OCI_AUTH") == "instance_principal" do
+          # Identity comes from this OCI host. No local API-key mounts exist.
+          args = remove_credential_mounts(args, credentials, config)
+
+          ["run", "--network", "host" | tl(args)]
+        else
+          args
+        end
+
       # Create only the existing ignored state directory, through the dashboard bind.
       case File.mkdir_p(Path.join(root(), "output/oci")) do
         :ok -> {:ok, args, "/opt/dxnn/oci_dashboard.py"}
@@ -171,6 +185,22 @@ defmodule DxnnAnalyzerWeb.OCI.OCIBridge do
       _ -> {:error, "Set OCI_HOST_HOME and OCI_CREDENTIALS_DIR to absolute Docker-host paths."}
     end
   end
+
+  defp remove_credential_mounts(["--mount", value | rest], credentials, config) do
+    if value in [
+         "type=bind,source=#{credentials},target=#{credentials},readonly",
+         "type=bind,source=#{config},target=#{config},readonly"
+       ] do
+      remove_credential_mounts(rest, credentials, config)
+    else
+      ["--mount", value | remove_credential_mounts(rest, credentials, config)]
+    end
+  end
+
+  defp remove_credential_mounts([value | rest], credentials, config),
+    do: [value | remove_credential_mounts(rest, credentials, config)]
+
+  defp remove_credential_mounts([], _, _), do: []
 
   defp planned_mounts(plan) do
     paths = String.split(plan, <<0>>, trim: true)

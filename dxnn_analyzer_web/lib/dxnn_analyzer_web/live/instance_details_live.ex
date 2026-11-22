@@ -46,23 +46,43 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
 
   @impl true
   def handle_info({:state_updated, state}, socket) do
-    instance = Enum.find(state.instances, fn inst -> 
-      inst.id == socket.assigns.instance_id 
-    end)
-    
+    instance =
+      Enum.find(state.instances, fn inst ->
+        inst.id == socket.assigns.instance_id
+      end)
+
     deployment = Map.get(state.deployments || %{}, socket.assigns.instance_id)
-    
+
     socket =
       socket
       |> assign(:instance, instance)
       |> assign(:deployment, deployment)
-    
+
     {:noreply, socket}
   end
 
   def handle_info({:deployment_recorded, instance_id, deployment}, socket) do
     if instance_id == socket.assigns.instance_id do
       {:noreply, assign(socket, :deployment, deployment)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_info(:refresh_tmux, socket) do
+    if socket.assigns.tmux_auto_refresh do
+      key_file = get_key_path(socket.assigns.instance_id)
+      host = socket.assigns.instance.ip
+      lines = Map.get(socket.assigns, :tmux_lines, 100)
+
+      socket =
+        case AWSBridge.capture_tmux_pane(key_file, host, "trader", lines) do
+          {:ok, output} -> assign(socket, :tmux_output, output)
+          {:error, _} -> socket
+        end
+
+      timer = Process.send_after(self(), :refresh_tmux, 3000)
+      {:noreply, assign(socket, :tmux_timer, timer)}
     else
       {:noreply, socket}
     end
@@ -75,12 +95,16 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
 
   def handle_event("load_logs", _, socket) do
     socket = assign(socket, :log_loading, true)
-    
+
     case AWSBridge.get_instance_logs(socket.assigns.instance_id) do
       {:ok, logs} ->
         {:noreply, assign(socket, log_content: logs, log_loading: false)}
+
       {:error, error} ->
-        {:noreply, socket |> assign(:log_loading, false) |> put_flash(:error, "Failed to load logs: #{error}")}
+        {:noreply,
+         socket
+         |> assign(:log_loading, false)
+         |> put_flash(:error, "Failed to load logs: #{error}")}
     end
   end
 
@@ -97,8 +121,12 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     case AWSBridge.get_ssh_output(key_file, host, command) do
       {:ok, output} ->
         {:noreply, assign(socket, ssh_output: output, ssh_loading: false, ssh_command: command)}
+
       {:error, error} ->
-        {:noreply, socket |> assign(:ssh_loading, false) |> put_flash(:error, "SSH command failed: #{error}")}
+        {:noreply,
+         socket
+         |> assign(:ssh_loading, false)
+         |> put_flash(:error, "SSH command failed: #{error}")}
     end
   end
 
@@ -111,8 +139,12 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     case AWSBridge.capture_tmux_pane(key_file, host, "trader", lines) do
       {:ok, output} ->
         {:noreply, assign(socket, tmux_output: output, tmux_loading: false)}
+
       {:error, error} ->
-        {:noreply, socket |> assign(:tmux_loading, false) |> put_flash(:error, "Failed to capture tmux: #{error}")}
+        {:noreply,
+         socket
+         |> assign(:tmux_loading, false)
+         |> put_flash(:error, "Failed to capture tmux: #{error}")}
     end
   end
 
@@ -123,43 +155,27 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
 
   def handle_event("toggle_tmux_auto_refresh", _, socket) do
     new_state = !socket.assigns.tmux_auto_refresh
-    
-    socket = if new_state do
-      timer = Process.send_after(self(), :refresh_tmux, 3000)
-      assign(socket, tmux_auto_refresh: true, tmux_timer: timer)
-    else
-      if socket.assigns.tmux_timer, do: Process.cancel_timer(socket.assigns.tmux_timer)
-      assign(socket, tmux_auto_refresh: false, tmux_timer: nil)
-    end
 
-    {:noreply, socket}
-  end
-
-  def handle_info(:refresh_tmux, socket) do
-    if socket.assigns.tmux_auto_refresh do
-      key_file = get_key_path(socket.assigns.instance_id)
-      host = socket.assigns.instance.ip
-      lines = Map.get(socket.assigns, :tmux_lines, 100)
-
-      socket = case AWSBridge.capture_tmux_pane(key_file, host, "trader", lines) do
-        {:ok, output} -> assign(socket, :tmux_output, output)
-        {:error, _} -> socket
+    socket =
+      if new_state do
+        timer = Process.send_after(self(), :refresh_tmux, 3000)
+        assign(socket, tmux_auto_refresh: true, tmux_timer: timer)
+      else
+        if socket.assigns.tmux_timer, do: Process.cancel_timer(socket.assigns.tmux_timer)
+        assign(socket, tmux_auto_refresh: false, tmux_timer: nil)
       end
 
-      timer = Process.send_after(self(), :refresh_tmux, 3000)
-      {:noreply, assign(socket, :tmux_timer, timer)}
-    else
-      {:noreply, socket}
-    end
+    {:noreply, socket}
   end
 
   def handle_event("force_checkpoint", _, socket) do
     key_file = get_key_path(socket.assigns.instance_id)
     host = socket.assigns.instance.ip
-    
+
     case AWSBridge.force_checkpoint(key_file, host) do
       {_, 0} ->
         {:noreply, put_flash(socket, :info, "Checkpoint created successfully")}
+
       {error, _} ->
         {:noreply, put_flash(socket, :error, "Checkpoint failed: #{error}")}
     end
@@ -173,29 +189,36 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     key_file = get_key_path(socket.assigns.instance_id)
     host = socket.assigns.instance.ip
     auto_terminate = socket.assigns.s3_auto_terminate
-    
+
     socket = assign(socket, :checkpoint_loading, true)
-    
+
     case AWSBridge.trigger_s3_upload(key_file, host, auto_terminate) do
       {_, 0} ->
-        message = if auto_terminate do
-          "S3 upload initiated. Instance will terminate after successful upload."
-        else
-          "S3 upload initiated"
-        end
+        message =
+          if auto_terminate do
+            "S3 upload initiated. Instance will terminate after successful upload."
+          else
+            "S3 upload initiated"
+          end
+
         {:noreply, socket |> assign(:checkpoint_loading, false) |> put_flash(:info, message)}
+
       {error, _} ->
-        {:noreply, socket |> assign(:checkpoint_loading, false) |> put_flash(:error, "S3 upload failed: #{error}")}
+        {:noreply,
+         socket
+         |> assign(:checkpoint_loading, false)
+         |> put_flash(:error, "S3 upload failed: #{error}")}
     end
   end
 
   def handle_event("load_checkpoint_status", _, socket) do
     key_file = get_key_path(socket.assigns.instance_id)
     host = socket.assigns.instance.ip
-    
+
     case AWSBridge.get_checkpoint_status(key_file, host) do
       {:ok, status} ->
         {:noreply, assign(socket, :checkpoint_status, status)}
+
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to load checkpoint status")}
     end
@@ -205,10 +228,11 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     if socket.assigns.instance do
       key_file = get_key_path(socket.assigns.instance_id)
       host = socket.assigns.instance.ip
-      
+
       case AWSBridge.list_log_files(key_file, host) do
         {:ok, logs} ->
           {:noreply, assign(socket, :available_logs, logs)}
+
         {:error, error} ->
           {:noreply, put_flash(socket, :error, "Failed to list logs: #{error}")}
       end
@@ -219,7 +243,6 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
 
   def handle_event("select_log", params, socket) do
     log_path = params["log"] || ""
-    IO.puts("DEBUG: select_log called with: #{inspect(log_path)}, params: #{inspect(params)}")
     {:noreply, assign(socket, :selected_log, log_path)}
   end
 
@@ -231,46 +254,61 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     cond do
       is_nil(socket.assigns.instance) ->
         {:noreply, put_flash(socket, :error, "Instance data not loaded")}
-      
+
       is_nil(socket.assigns.selected_log) || socket.assigns.selected_log == "" ->
         {:noreply, put_flash(socket, :error, "Please select a log file")}
-      
+
       true ->
         socket = assign(socket, :log_viewer_loading, true)
         key_file = get_key_path(socket.assigns.instance_id)
         host = socket.assigns.instance.ip
-        
+
         # read_log_file returns {output, exit_code} tuple from System.cmd
-        case AWSBridge.read_log_file(key_file, host, socket.assigns.selected_log, socket.assigns.log_lines) do
+        case AWSBridge.read_log_file(
+               key_file,
+               host,
+               socket.assigns.selected_log,
+               socket.assigns.log_lines
+             ) do
           {output, 0} ->
             {:noreply, assign(socket, log_viewer_content: output, log_viewer_loading: false)}
+
           {error, exit_code} ->
             error_msg = if is_binary(error), do: error, else: inspect(error)
-            {:noreply, socket |> assign(:log_viewer_loading, false) |> put_flash(:error, "Failed to read log (exit #{exit_code}): #{error_msg}")}
+
+            {:noreply,
+             socket
+             |> assign(:log_viewer_loading, false)
+             |> put_flash(:error, "Failed to read log (exit #{exit_code}): #{error_msg}")}
         end
     end
   end
 
   def handle_event("load_s3_checkpoints", _, socket) do
     socket = assign(socket, :s3_loading, true)
-    
+
     case AWSBridge.list_instance_s3_checkpoints(socket.assigns.instance_id) do
       {:ok, checkpoints} ->
         {:noreply, assign(socket, s3_checkpoints: checkpoints, s3_loading: false)}
+
       {:error, _} ->
-        {:noreply, socket |> assign(:s3_loading, false) |> put_flash(:error, "Failed to load S3 checkpoints")}
+        {:noreply,
+         socket
+         |> assign(:s3_loading, false)
+         |> put_flash(:error, "Failed to load S3 checkpoints")}
     end
   end
 
   defp load_instance_data(socket) do
     state = AWSDeploymentServer.get_state()
-    
-    instance = Enum.find(state.instances, fn inst -> 
-      inst.id == socket.assigns.instance_id 
-    end)
-    
+
+    instance =
+      Enum.find(state.instances, fn inst ->
+        inst.id == socket.assigns.instance_id
+      end)
+
     deployment = Map.get(state.deployments || %{}, socket.assigns.instance_id)
-    
+
     socket
     |> assign(:instance, instance)
     |> assign(:deployment, deployment)
@@ -279,8 +317,8 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gray-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="min-w-0">
+      <div class="page-container">
         <!-- Header -->
         <div class="mb-6">
           <div class="flex items-center space-x-4 mb-4">
@@ -288,29 +326,26 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
               ← Back to Instances
             </.link>
           </div>
-          
+
           <%= if @instance do %>
             <div class="flex justify-between items-start">
               <div>
-                <h1 class="text-3xl font-bold text-gray-900"><%= @instance.id %></h1>
+                <h1 class="page-title"><%= @instance.id %></h1>
                 <p class="text-gray-600 mt-1"><%= @instance.name %></p>
               </div>
-              <button
-                phx-click="refresh_instance"
-                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-              >
-                🔄 Refresh
+              <button phx-click="refresh_instance" class="btn btn-secondary">
+                Refresh
               </button>
             </div>
           <% else %>
-            <h1 class="text-3xl font-bold text-gray-900">Instance Not Found</h1>
+            <h1 class="page-title">Instance Not Found</h1>
           <% end %>
         </div>
 
         <%= if @instance do %>
           <!-- Tabs -->
           <div class="border-b border-gray-200 mb-6">
-            <nav class="-mb-px flex space-x-8">
+            <nav class="-mb-px flex gap-6 overflow-x-auto">
               <button
                 phx-click="switch_tab"
                 phx-value-tab="overview"
@@ -341,21 +376,20 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
               </button>
             </nav>
           </div>
-
           <!-- Tab Content -->
-          <div class="bg-white shadow rounded-lg p-6">
+          <div class="panel p-6">
             <%= case @active_tab do %>
               <% "overview" -> %>
-                <.overview_tab 
-                  instance={@instance} 
-                  deployment={@deployment} 
+                <.overview_tab
+                  instance={@instance}
+                  deployment={@deployment}
                   checkpoint_status={@checkpoint_status}
                   checkpoint_loading={@checkpoint_loading}
                   s3_auto_terminate={@s3_auto_terminate}
                 />
               <% "logs" -> %>
-                <.logs_tab 
-                  log_content={@log_content} 
+                <.logs_tab
+                  log_content={@log_content}
                   log_loading={@log_loading}
                   available_logs={@available_logs}
                   selected_log={@selected_log}
@@ -364,15 +398,15 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                   log_viewer_loading={@log_viewer_loading}
                 />
               <% "ssh" -> %>
-                <.ssh_tab 
-                  instance={@instance} 
+                <.ssh_tab
+                  instance={@instance}
                   deployment={@deployment}
                   ssh_output={@ssh_output}
                   ssh_loading={@ssh_loading}
                   ssh_command={@ssh_command}
                 />
               <% "monitoring" -> %>
-                <.monitoring_tab 
+                <.monitoring_tab
                   instance={@instance}
                   tmux_output={@tmux_output}
                   tmux_loading={@tmux_loading}
@@ -381,7 +415,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
             <% end %>
           </div>
         <% else %>
-          <div class="bg-white shadow rounded-lg p-6">
+          <div class="panel p-6">
             <p class="text-gray-600">Instance not found or has been terminated.</p>
           </div>
         <% end %>
@@ -395,8 +429,8 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   defp overview_tab(assigns) do
     ~H"""
     <div>
-      <h2 class="text-xl font-semibold mb-4">Instance Information</h2>
-      
+      <h2 class="section-title mb-4">Instance Information</h2>
+
       <div class="grid grid-cols-2 gap-6">
         <div>
           <h3 class="font-medium text-gray-700 mb-3">Basic Details</h3>
@@ -447,15 +481,17 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                 </div>
                 <div>
                   <dt class="text-sm text-gray-600">Deployed At</dt>
-                  <dd class="text-sm text-gray-900"><%= format_datetime(@deployment.deployed_at) %></dd>
+                  <dd class="text-sm text-gray-900">
+                    <%= format_datetime(@deployment.deployed_at) %>
+                  </dd>
                 </div>
                 <div>
                   <dt class="text-sm text-gray-600">Training Status</dt>
                   <dd class="text-sm">
                     <%= if @deployment.started do %>
-                      <span class="text-green-600">🟢 Started</span>
+                      <span class="text-green-600">Started</span>
                     <% else %>
-                      <span class="text-gray-600">⚪ Not Started</span>
+                      <span class="text-gray-600">Not Started</span>
                     <% end %>
                   </dd>
                 </div>
@@ -468,18 +504,19 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
           <% end %>
         </div>
       </div>
-
       <!-- Checkpoint Controls -->
       <%= if @deployment && @deployment.started do %>
         <div class="mt-6 pt-6 border-t border-gray-200">
           <h3 class="font-medium text-gray-700 mb-3">Checkpoint Management</h3>
-          
+
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <%= if @checkpoint_status do %>
               <div class="mb-4 space-y-2 text-sm">
                 <div>
                   <span class="text-gray-600">Last Checkpoint:</span>
-                  <span class="ml-2 font-mono text-gray-900"><%= @checkpoint_status.last_checkpoint || "None" %></span>
+                  <span class="ml-2 font-mono text-gray-900">
+                    <%= @checkpoint_status.last_checkpoint || "None" %>
+                  </span>
                 </div>
                 <div>
                   <span class="text-gray-600">Total Size:</span>
@@ -491,7 +528,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                 </div>
               </div>
             <% end %>
-            
+
             <div class="space-y-3">
               <div class="flex items-center space-x-2">
                 <input
@@ -507,26 +544,23 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
               </div>
 
               <div class="flex items-center space-x-3">
-                <button
-                  phx-click="load_checkpoint_status"
-                  class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition text-sm"
-                >
-                  🔍 Check Status
+                <button phx-click="load_checkpoint_status" class="btn btn-secondary">
+                  Check Status
                 </button>
                 <button
                   phx-click="upload_to_s3"
-                  class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                  class="btn btn-secondary"
                   disabled={@checkpoint_loading}
                 >
                   <%= if @checkpoint_loading do %>
                     ⏳ Uploading...
                   <% else %>
-                    ☁️ Upload to S3
+                    Upload to S3
                   <% end %>
                 </button>
               </div>
             </div>
-            
+
             <p class="text-xs text-gray-600 mt-3">
               Upload to S3: Uploads Mnesia database, logs, and config directly from filesystem
             </p>
@@ -541,20 +575,16 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     ~H"""
     <div>
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold">Console Logs</h2>
-        <button
-          phx-click="load_logs"
-          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition text-sm"
-          disabled={@log_loading}
-        >
+        <h2 class="section-title">Console Logs</h2>
+        <button phx-click="load_logs" class="btn btn-secondary" disabled={@log_loading}>
           <%= if @log_loading do %>
             ⏳ Loading...
           <% else %>
-            🔄 Load Console Logs
+            Load Console Logs
           <% end %>
         </button>
       </div>
-      
+
       <%= if @log_content != "" do %>
         <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto max-h-[600px] mb-6">
           <pre><%= @log_content %></pre>
@@ -565,18 +595,14 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
           <p class="text-gray-500 text-sm mt-2">Note: Requires ec2:GetConsoleOutput IAM permission</p>
         </div>
       <% end %>
-
       <!-- Log File Browser -->
       <div class="mt-6 pt-6 border-t border-gray-200">
         <h3 class="text-lg font-semibold mb-4">Log File Browser</h3>
-        
+
         <div class="bg-white border border-gray-200 rounded-lg p-4">
           <div class="flex items-center space-x-3 mb-4">
-            <button
-              phx-click="load_available_logs"
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
-            >
-              📂 List Log Files
+            <button phx-click="load_available_logs" class="btn btn-secondary">
+              List Log Files
             </button>
           </div>
 
@@ -605,29 +631,28 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                     name="lines"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   >
-                  <option value="50">Last 50 lines</option>
-                  <option value="100" selected={@log_lines == 100}>Last 100 lines</option>
-                  <option value="200">Last 200 lines</option>
-                  <option value="500">Last 500 lines</option>
-                  <option value="1000">Last 1000 lines</option>
-                </select>
+                    <option value="50">Last 50 lines</option>
+                    <option value="100" selected={@log_lines == 100}>Last 100 lines</option>
+                    <option value="200">Last 200 lines</option>
+                    <option value="500">Last 500 lines</option>
+                    <option value="1000">Last 1000 lines</option>
+                  </select>
+                </div>
               </div>
-            </div>
             </form>
 
-            <button
-              phx-click="view_log"
-              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition text-sm"
-            >
+            <button phx-click="view_log" class="btn btn-secondary">
               <%= if @log_viewer_loading do %>
                 ⏳ Loading...
               <% else %>
-                👁️ View Log
+                View Log
               <% end %>
             </button>
 
             <%= if !@selected_log do %>
-              <p class="text-xs text-gray-500 mt-2">Please select a log file from the dropdown above</p>
+              <p class="text-xs text-gray-500 mt-2">
+                Please select a log file from the dropdown above
+              </p>
             <% end %>
 
             <%= if @log_viewer_content != "" do %>
@@ -640,7 +665,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                     onclick={"navigator.clipboard.writeText(`#{String.replace(@log_viewer_content, "`", "\\`")}`)"}
                     class="text-xs text-blue-600 hover:text-blue-800"
                   >
-                    📋 Copy
+                    Copy
                   </button>
                 </div>
                 <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto max-h-[500px]">
@@ -662,8 +687,8 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   defp ssh_tab(assigns) do
     ~H"""
     <div>
-      <h2 class="text-xl font-semibold mb-4">SSH Terminal Viewer</h2>
-      
+      <h2 class="section-title mb-4">SSH Terminal Viewer</h2>
+
       <div class="space-y-6">
         <!-- Quick Commands -->
         <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -672,56 +697,55 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
             <button
               phx-click="execute_ssh_command"
               phx-value-command="uptime"
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              class="btn btn-secondary"
               disabled={@ssh_loading}
             >
-              📊 System Uptime
+              System Uptime
             </button>
             <button
               phx-click="execute_ssh_command"
               phx-value-command="free -h"
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              class="btn btn-secondary"
               disabled={@ssh_loading}
             >
-              💾 Memory Usage
+              Memory Usage
             </button>
             <button
               phx-click="execute_ssh_command"
               phx-value-command="df -h"
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              class="btn btn-secondary"
               disabled={@ssh_loading}
             >
-              💿 Disk Usage
+              Disk Usage
             </button>
             <button
               phx-click="execute_ssh_command"
               phx-value-command="ps aux --sort=-%mem | head -10"
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
+              class="btn btn-secondary"
               disabled={@ssh_loading}
             >
-              🔝 Top Processes
+              Top Processes
             </button>
             <%= if @deployment do %>
               <button
                 phx-click="execute_ssh_command"
                 phx-value-command="tail -50 /var/log/dxnn-run.log"
-                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                class="btn btn-secondary"
                 disabled={@ssh_loading}
               >
-                📜 DXNN Logs
+                DXNN Logs
               </button>
               <button
                 phx-click="execute_ssh_command"
                 phx-value-command="tmux list-sessions"
-                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                class="btn btn-secondary"
                 disabled={@ssh_loading}
               >
-                🖥️ TMUX Sessions
+                TMUX Sessions
               </button>
             <% end %>
           </div>
         </div>
-
         <!-- Output Terminal -->
         <%= if @ssh_output != "" do %>
           <div>
@@ -731,7 +755,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
                 onclick={"navigator.clipboard.writeText(`#{String.replace(@ssh_output, "`", "\\`")}`)"}
                 class="text-xs text-blue-600 hover:text-blue-800"
               >
-                📋 Copy Output
+                Copy Output
               </button>
             </div>
             <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto max-h-[500px]">
@@ -744,7 +768,6 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
             <p class="text-gray-500 text-sm mt-2">Output will appear here</p>
           </div>
         <% end %>
-
         <!-- SSH Connection Info -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 class="font-medium text-blue-900 mb-2">Manual SSH Connection</h3>
@@ -760,35 +783,32 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   defp monitoring_tab(assigns) do
     # Ensure tmux_lines has a default value
     assigns = assign_new(assigns, :tmux_lines, fn -> 100 end)
-    
+
     ~H"""
     <div>
-      <h2 class="text-xl font-semibold mb-4">TMUX Session Viewer</h2>
-      
+      <h2 class="section-title mb-4">TMUX Session Viewer</h2>
+
       <div class="space-y-4">
         <!-- Controls -->
         <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4">
           <div class="flex items-center space-x-4">
-            <button
-              phx-click="load_tmux"
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm"
-              disabled={@tmux_loading}
-            >
+            <button phx-click="load_tmux" class="btn btn-secondary" disabled={@tmux_loading}>
               <%= if @tmux_loading do %>
                 ⏳ Loading...
               <% else %>
-                🔄 Refresh TMUX
+                Refresh TMUX
               <% end %>
             </button>
-            
+
             <button
               phx-click="toggle_tmux_auto_refresh"
-              class={"#{if @tmux_auto_refresh, do: "bg-green-600 hover:bg-green-700", else: "bg-gray-600 hover:bg-gray-700"} text-white px-4 py-2 rounded transition text-sm"}
+              class="btn btn-secondary"
+              aria-pressed={@tmux_auto_refresh}
             >
               <%= if @tmux_auto_refresh do %>
-                ⏸️ Stop Auto-Refresh
+                Stop auto-refresh
               <% else %>
-                ▶️ Auto-Refresh (3s)
+                Auto-refresh (3s)
               <% end %>
             </button>
 
@@ -811,7 +831,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
               </select>
             </div>
           </div>
-          
+
           <%= if @tmux_auto_refresh do %>
             <div class="flex items-center space-x-2">
               <div class="animate-pulse w-2 h-2 rounded-full bg-green-500"></div>
@@ -819,7 +839,6 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
             </div>
           <% end %>
         </div>
-
         <!-- TMUX Output -->
         <%= if @tmux_output != "" do %>
           <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-auto max-h-[600px] border-2 border-gray-700">
@@ -828,10 +847,11 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
         <% else %>
           <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
             <p class="text-gray-600">Click "Refresh TMUX" to view the trader session</p>
-            <p class="text-gray-500 text-sm mt-2">Shows last <%= @tmux_lines %> lines of the tmux pane</p>
+            <p class="text-gray-500 text-sm mt-2">
+              Shows last <%= @tmux_lines %> lines of the tmux pane
+            </p>
           </div>
         <% end %>
-
         <!-- Info -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 class="font-medium text-blue-900 mb-2">About TMUX Viewer</h3>
@@ -859,6 +879,7 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
   defp format_datetime(%DateTime{} = dt) do
     Calendar.strftime(dt, "%Y-%m-%d %H:%M:%S UTC")
   end
+
   defp format_datetime(_), do: "Unknown"
 
   defp get_key_path(instance_id) do
@@ -869,30 +890,38 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
     case File.ls("/app/AWS-Deployment/output") do
       {:ok, files} ->
         json_files = Enum.filter(files, &String.ends_with?(&1, ".json"))
-        
-        matching_data = Enum.find_value(json_files, fn file ->
-          path = Path.join("/app/AWS-Deployment/output", file)
-          case File.read(path) do
-            {:ok, content} ->
-              case Jason.decode(content) do
-                {:ok, data} -> 
-                  if data["instance_id"] == instance_id do
-                    data
-                  else
+
+        matching_data =
+          Enum.find_value(json_files, fn file ->
+            path = Path.join("/app/AWS-Deployment/output", file)
+
+            case File.read(path) do
+              {:ok, content} ->
+                case Jason.decode(content) do
+                  {:ok, data} ->
+                    if data["instance_id"] == instance_id do
+                      data
+                    else
+                      nil
+                    end
+
+                  _ ->
                     nil
-                  end
-                _ -> nil
-              end
-            _ -> nil
-          end
-        end)
-        
+                end
+
+              _ ->
+                nil
+            end
+          end)
+
         if matching_data do
           ssh_key_file = matching_data["ssh_key_file"]
+
           if ssh_key_file do
             Path.basename(ssh_key_file)
           else
             key_name = matching_data["key_name"]
+
             if key_name do
               "#{key_name}-key.pem"
             else
@@ -900,18 +929,23 @@ defmodule DxnnAnalyzerWeb.InstanceDetailsLive do
             end
           end
         else
-          deployment_keys = files
-          |> Enum.filter(&(String.starts_with?(&1, "aws-deployment-key-") and String.ends_with?(&1, ".pem")))
-          |> Enum.sort()
-          |> Enum.reverse()
-          
+          deployment_keys =
+            files
+            |> Enum.filter(
+              &(String.starts_with?(&1, "aws-deployment-key-") and String.ends_with?(&1, ".pem"))
+            )
+            |> Enum.sort()
+            |> Enum.reverse()
+
           if length(deployment_keys) > 0 do
             List.first(deployment_keys)
           else
             "aws-deployment-key-*.pem"
           end
         end
-      _ -> "aws-deployment-key-*.pem"
+
+      _ ->
+        "aws-deployment-key-*.pem"
     end
   end
 end

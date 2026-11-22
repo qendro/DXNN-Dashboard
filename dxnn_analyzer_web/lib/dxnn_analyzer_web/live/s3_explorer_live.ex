@@ -8,7 +8,7 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
   @impl true
   def mount(_params, _session, socket) do
     auto_download_path = DxnnAnalyzerWeb.AnalyzerBridge.get_s3_auto_download_path()
-    
+
     socket =
       socket
       |> assign(:bucket, "dxnn-checkpoints")
@@ -150,7 +150,10 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
       {:noreply,
        socket
        |> assign(:downloading_to_local, true)
-       |> assign(:local_download_progress, "Downloading #{selected_count} item(s) to local path...")}
+       |> assign(
+         :local_download_progress,
+         "Downloading #{selected_count} item(s) to local path..."
+       )}
     end
   end
 
@@ -243,7 +246,10 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
     {:noreply, socket}
   end
 
-  def handle_info({:local_download_complete, {:ok, %{count: count, path: path}}, _selected_count}, socket) do
+  def handle_info(
+        {:local_download_complete, {:ok, %{count: count, path: path}}, _selected_count},
+        socket
+      ) do
     {:noreply,
      socket
      |> assign(:downloading_to_local, false)
@@ -303,25 +309,14 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gray-50" phx-hook="FileDownloader" id="s3-explorer">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="min-w-0" phx-hook="FileDownloader" id="s3-explorer">
+      <div class="page-container">
         <!-- Header -->
-        <div class="mb-8 flex justify-between items-center">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-900">S3 Explorer</h1>
-            <p class="mt-2 text-gray-600">Browse, download, and manage S3 objects</p>
-          </div>
-          <.link
-            navigate="/"
-            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-          >
-            ← Back to Dashboard
-          </.link>
-        </div>
+        <.page_header title="S3 Explorer" description="Browse, download, and manage S3 objects." />
         <!-- Bucket Selector & Actions -->
-        <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="panel p-6 mb-6">
           <div class="flex flex-wrap gap-4 items-center justify-between">
-            <div class="flex items-center gap-4">
+            <div class="flex flex-wrap items-center gap-4 min-w-0">
               <label class="text-sm font-medium text-gray-700">Bucket:</label>
               <select
                 phx-change="change_bucket"
@@ -336,64 +331,53 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
                 </option>
               </select>
 
-              <button
-                phx-click="load_bucket"
-                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition text-sm"
-                disabled={@loading}
-              >
+              <button phx-click="load_bucket" class="btn btn-secondary" disabled={@loading}>
                 <%= if @loading do %>
-                  ⏳
+                  Loading…
                 <% else %>
-                  🔄 Refresh
+                  Refresh
                 <% end %>
               </button>
             </div>
 
-            <div class="flex gap-2">
+            <div class="page-actions">
               <%= if MapSet.size(@selected_items) > 0 do %>
                 <span class="text-sm text-gray-600 self-center">
                   <%= MapSet.size(@selected_items) %> selected
                 </span>
-                <button
-                  phx-click="deselect_all"
-                  class="bg-gray-500 text-white px-3 py-2 rounded-md hover:bg-gray-600 transition text-sm"
-                >
+                <button phx-click="deselect_all" class="btn btn-secondary">
                   Clear
                 </button>
                 <button
                   phx-click="download_selected"
-                  class="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition text-sm"
+                  class="btn btn-secondary"
                   disabled={@downloading}
                 >
                   <%= if @downloading do %>
                     ⏳ Downloading...
                   <% else %>
-                    📥 Download
+                    Download
                   <% end %>
                 </button>
                 <button
                   phx-click="download_to_local"
-                  class="bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition text-sm"
+                  class="btn btn-secondary"
                   disabled={@downloading_to_local}
                   title={"Save to: #{@auto_download_path}"}
                 >
                   <%= if @downloading_to_local do %>
                     ⏳ Saving...
                   <% else %>
-                    💾 Save to Local
+                    Save to Local
                   <% end %>
                 </button>
-                <button
-                  phx-click="show_delete_modal"
-                  class="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition text-sm"
-                  disabled={@deleting}
-                >
-                  🗑️ Delete
+                <button phx-click="show_delete_modal" class="btn btn-danger" disabled={@deleting}>
+                  Delete
                 </button>
               <% else %>
                 <button
                   phx-click="select_all"
-                  class="bg-gray-500 text-white px-3 py-2 rounded-md hover:bg-gray-600 transition text-sm"
+                  class="btn btn-secondary"
                   disabled={length(@items) == 0}
                 >
                   Select All
@@ -405,21 +389,21 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
           <%= if @downloading and @download_progress != "" do %>
             <p class="mt-3 text-sm text-blue-700"><%= @download_progress %></p>
           <% end %>
-          
+
           <%= if @downloading_to_local and @local_download_progress != "" do %>
             <p class="mt-3 text-sm text-purple-700"><%= @local_download_progress %></p>
           <% end %>
         </div>
         <!-- Breadcrumbs -->
         <%= if length(@breadcrumbs) > 0 do %>
-          <div class="bg-white shadow rounded-lg p-4 mb-6">
+          <div class="panel p-4 mb-6">
             <div class="flex items-center gap-2 text-sm">
               <button
                 phx-click="navigate"
                 phx-value-path=""
                 class="text-blue-600 hover:text-blue-800 font-medium"
               >
-                🏠 Root
+                Root
               </button>
               <%= for crumb <- @breadcrumbs do %>
                 <span class="text-gray-400">/</span>
@@ -435,7 +419,7 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
           </div>
         <% end %>
         <!-- Items List -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="panel overflow-x-auto">
           <%= if length(@items) > 0 do %>
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
@@ -506,38 +490,30 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
               <%= if @loading do %>
                 <div class="text-lg">⏳ Loading...</div>
               <% else %>
-                <div class="text-lg">📂 Empty folder</div>
+                <div class="text-lg">Empty folder</div>
                 <p class="text-sm mt-2">No objects found in this location</p>
               <% end %>
             </div>
           <% end %>
         </div>
-        <!-- Info Box -->
-        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 class="font-medium text-blue-900 mb-2">S3 Explorer Features</h3>
-          <ul class="text-blue-800 text-sm space-y-1">
-            <li>• Browse S3 buckets and folders</li>
-            <li>• Select multiple files/folders for batch operations</li>
-            <li>• <strong>📥 Download:</strong> Single files to browser, folders as ZIP</li>
-            <li>• <strong>💾 Save to Local:</strong> Direct download to server path (no ZIP)</li>
-            <li>• Delete files and folders (with confirmation)</li>
-            <li>• Navigate using breadcrumbs</li>
-          </ul>
-          <div class="mt-3 p-3 bg-purple-50 border border-purple-200 rounded">
-            <p class="text-purple-800 text-sm">
-              <strong>💾 Save to Local Path:</strong>
-              <%= @auto_download_path %>
+        <details class="mt-5 text-sm text-slate-500">
+          <summary class="cursor-pointer font-medium text-slate-600">Download options</summary>
+          <div class="mt-3 space-y-2 leading-6">
+            <p><strong>Download</strong> saves files to your browser and folders as ZIP archives.</p>
+            <p>
+              <strong>Save to Local</strong>
+              copies files directly to <code class="break-all"><%= @auto_download_path %></code>.
             </p>
-            <p class="text-purple-700 text-xs mt-1">
-              Configure this path in Settings page
-            </p>
+            <.link navigate={~p"/settings"} class="text-blue-700 hover:underline">
+              Change download location
+            </.link>
           </div>
-        </div>
+        </details>
       </div>
       <!-- Delete Confirmation Modal -->
       <%= if @show_delete_modal do %>
         <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div class="relative top-20 mx-auto p-5 border w-[calc(100%-2rem)] max-w-sm shadow-lg rounded-lg bg-white">
             <div class="mt-3 text-center">
               <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
                 <span class="text-2xl">⚠️</span>
@@ -550,16 +526,10 @@ defmodule DxnnAnalyzerWeb.S3ExplorerLive do
                 </p>
               </div>
               <div class="flex gap-3 px-4 py-3">
-                <button
-                  phx-click="cancel_delete"
-                  class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition"
-                >
+                <button phx-click="cancel_delete" class="btn btn-secondary flex-1">
                   Cancel
                 </button>
-                <button
-                  phx-click="confirm_delete"
-                  class="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
-                >
+                <button phx-click="confirm_delete" class="btn btn-danger-solid flex-1">
                   Delete
                 </button>
               </div>

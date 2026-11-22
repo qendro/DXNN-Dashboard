@@ -328,13 +328,7 @@ scope "/", DxnnAnalyzerWeb do
 end
 ```
 
-3. **Add navigation link:**
-```heex
-<!-- lib/dxnn_analyzer_web/components/layouts/app.html.heex -->
-<.link navigate={~p"/my-feature"} class="nav-link">
-  My Feature
-</.link>
-```
+3. **Add a navigation entry** to `Layouts.navigation/0` in `components/layouts.ex`.
 
 ### Adding a New Analyzer Function
 
@@ -372,51 +366,21 @@ def handle_event("do_something", %{"arg" => arg}, socket) do
 end
 ```
 
-### Styling with Tailwind CSS
+### Shared UI styling
 
-Use Tailwind utility classes directly in templates:
+The application has one layout in `components/layouts/app.html.heex`, with navigation
+owned by `Layouts.navigation/0`. Add destinations there and include their LiveView
+modules so the active state follows detail pages.
 
-```heex
-<!-- Card Component -->
-<div class="bg-white shadow-lg rounded-lg p-6 mb-4">
-  <h2 class="text-xl font-semibold text-gray-800 mb-2">Title</h2>
-  <p class="text-gray-600">Content goes here</p>
-</div>
+Use `CoreComponents.page_header` for page headings and actions. Shared classes live
+in `assets/css/app.css`: `page-container`, `panel`, `section-title`, `page-actions`,
+`btn btn-primary`, `btn btn-secondary`, and `btn btn-danger`. Use `btn-danger-solid`
+for the final destructive action. Keep status colors for status; use the shared
+button classes instead of introducing another button palette.
 
-<!-- Button -->
-<button class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition-colors">
-  Click Me
-</button>
-
-<!-- Grid Layout -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-  <div class="bg-white p-4 rounded shadow">Item 1</div>
-  <div class="bg-white p-4 rounded shadow">Item 2</div>
-  <div class="bg-white p-4 rounded shadow">Item 3</div>
-</div>
-
-<!-- Responsive Table -->
-<div class="overflow-x-auto">
-  <table class="min-w-full divide-y divide-gray-200">
-    <thead class="bg-gray-50">
-      <tr>
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Header</th>
-      </tr>
-    </thead>
-    <tbody class="bg-white divide-y divide-gray-200">
-      <tr>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Data</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-```
-
-After CSS changes:
-```bash
-cd dxnn_analyzer_web/assets
-npm run deploy
-```
+Run `mix check` for formatting and tests, and `npm test && npm run deploy` in `assets`
+for JavaScript checks and the production bundle. Tests supervise their own dependencies
+and do not start cloud services. The Docker build includes the compiled Erlang analyzer.
 
 ### Adding D3.js Visualization
 

@@ -28,7 +28,7 @@ Hooks.CopySSH = {
     }
     this.el.querySelector("button").addEventListener("click", this.copy)
   },
-  updated() { this.el.querySelector("button").textContent = "Copy SSH command" },
+  updated() { this.el.querySelector("button").textContent = this.el.dataset.copyLabel || "Copy SSH command" },
   destroyed() { this.el.querySelector("button").removeEventListener("click", this.copy) }
 }
 

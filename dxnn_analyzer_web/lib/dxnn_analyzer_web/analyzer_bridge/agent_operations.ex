@@ -12,7 +12,7 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
     with {:ok, context_atom, _} <- validate_context_from_opts(opts) do
       erlang_opts = convert_opts_to_erlang(opts, context_atom)
       result = :analyzer.list_agents(erlang_opts)
-      {:ok, result}
+      wrap_result(result)
     end
   end
 
@@ -29,7 +29,7 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
     else
       erlang_opts = Enum.reject(opts, fn {key, _value} -> key == :context end)
       result = :analyzer.find_best(count, erlang_opts)
-      {:ok, result}
+      wrap_result(result)
     end
   end
 
@@ -39,7 +39,7 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
   def inspect_agent(agent_id, context) do
     with {:ok, context_atom, _} <- ContextManager.validate_context(context) do
       result = :agent_inspector.inspect_agent(agent_id, context_atom)
-      {:ok, result}
+      wrap_result(result)
     end
   end
 
@@ -49,7 +49,7 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
   def get_topology(agent_id, context) do
     with {:ok, context_atom, _} <- ContextManager.validate_context(context) do
       result = :agent_inspector.get_full_topology(agent_id, context_atom)
-      {:ok, result}
+      wrap_result(result)
     end
   end
 
@@ -59,7 +59,7 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
   def compare_agents(agent_ids, context) do
     with {:ok, context_atom, _} <- ContextManager.validate_context(context) do
       result = :analyzer.compare(agent_ids, context_atom)
-      {:ok, result}
+      wrap_result(result)
     end
   end
 
@@ -86,6 +86,9 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.AgentOperations do
   end
 
   # Private helpers
+
+  defp wrap_result({:error, _} = error), do: error
+  defp wrap_result(result), do: {:ok, result}
 
   defp validate_context_from_opts(opts) do
     case Keyword.get(opts, :context) do

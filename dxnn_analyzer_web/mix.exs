@@ -6,9 +6,13 @@ defmodule DxnnAnalyzerWeb.MixProject do
       app: :dxnn_analyzer_web,
       version: "0.1.0",
       elixir: "~> 1.14",
+      # The analyzer is built with Rebar, outside Mix's dependency tree.
+      prune_code_paths: false,
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      aliases: [check: ["format --check-formatted", "test"]],
+      preferred_cli_env: [check: :test],
       releases: releases()
     ]
   end
@@ -16,7 +20,7 @@ defmodule DxnnAnalyzerWeb.MixProject do
   def application do
     [
       mod: {DxnnAnalyzerWeb.Application, []},
-      extra_applications: [:logger, :runtime_tools, :mnesia]
+      extra_applications: [:logger, :runtime_tools, :mnesia, :inets, :ssl]
     ]
   end
 
@@ -36,14 +40,7 @@ defmodule DxnnAnalyzerWeb.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
-      {:yaml_elixir, "~> 2.9"},
-      {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.1.1",
-       sparse: "optimized",
-       app: false,
-       compile: false,
-       depth: 1}
+      {:yaml_elixir, "~> 2.9.0"}
     ]
   end
 

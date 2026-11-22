@@ -251,7 +251,7 @@ export const NetworkGraph = {
         event.stopPropagation();
         const sourceId = d.source.id || d.source;
         const targetId = d.target.id || d.target;
-        console.log("Edge clicked:", sourceId, "->", targetId, "weight:", d.weight, "recurrent:", d.recurrent);
+
         
         // Highlight this edge and connected nodes
         this.highlightEdge(sourceId, targetId);

@@ -1,4 +1,10 @@
 defmodule DxnnAnalyzerWeb.OCI.OCIServer do
+  @moduledoc """
+  Serializes VM lifecycle operations for one provider and broadcasts public state.
+
+  Defaults serve Oracle (OCI). The GCP page runs a second instance with its own
+  bridge, topic and event (see `DxnnAnalyzerWeb.GCP.GCPBridge.server_opts/0`).
+  """
   use GenServer
   alias DxnnAnalyzerWeb.OCI.OCIBridge
 
@@ -15,6 +21,11 @@ defmodule DxnnAnalyzerWeb.OCI.OCIServer do
     {:ok,
      %{
        bridge: Keyword.get(opts, :bridge, OCIBridge),
+       topic: Keyword.get(opts, :topic, "oci_instances"),
+       event: Keyword.get(opts, :event, :oci_state),
+       label: Keyword.get(opts, :label, "OCI"),
+       task_supervisor: Keyword.get(opts, :task_supervisor, DxnnAnalyzerWeb.OCI.TaskSupervisor),
+       public_instance: Keyword.get(opts, :public_instance, &OCIBridge.public_instance/1),
        active: nil,
        public: %{
          instances: [],
@@ -35,7 +46,9 @@ defmodule DxnnAnalyzerWeb.OCI.OCIServer do
   def handle_call(:state, _from, state), do: {:reply, state.public, state}
 
   def handle_call({:submit, _, _}, _from, %{active: active} = state) when not is_nil(active),
-    do: {:reply, {:error, "Another OCI operation is running. Wait for it to finish."}, state}
+    do:
+      {:reply, {:error, "Another #{state.label} operation is running. Wait for it to finish."},
+       state}
 
   def handle_call({:submit, type, params}, _from, state) do
     case validate(type, params, state) do
@@ -43,7 +56,7 @@ defmodule DxnnAnalyzerWeb.OCI.OCIServer do
         bridge = state.bridge
 
         task =
-          Task.Supervisor.async_nolink(DxnnAnalyzerWeb.OCI.TaskSupervisor, fn ->
+          Task.Supervisor.async_nolink(state.task_supervisor, fn ->
             result = bridge.run(type, params)
 
             refreshed =
@@ -152,7 +165,7 @@ defmodule DxnnAnalyzerWeb.OCI.OCIServer do
     end
   end
 
-  defp validate(_, _, _), do: {:error, "Unsupported OCI request."}
+  defp validate(_, _, state), do: {:error, "Unsupported #{state.label} request."}
 
   @impl true
   def handle_info({ref, {result, refreshed}}, %{active: %{ref: ref} = active} = state) do
@@ -199,10 +212,10 @@ defmodule DxnnAnalyzerWeb.OCI.OCIServer do
             }
 
           _ ->
-            %{public | summary_error: error_message(result)}
+            %{public | summary_error: error_message(result, state.label)}
         end
       else
-        apply_instances(public, refreshed || result)
+        apply_instances(public, refreshed || result, state)
       end
 
     public =
@@ -219,13 +232,13 @@ defmodule DxnnAnalyzerWeb.OCI.OCIServer do
                       message:
                         cond do
                           not match?({:ok, _}, result) ->
-                            error_message(result)
+                            error_message(result, state.label)
 
                           public.refresh_error ->
                             "Action completed; refresh failed and current state is uncertain."
 
                           true ->
-                            "Completed; actual OCI state refreshed."
+                            "Completed; actual #{state.label} state refreshed."
                         end
                   }
                 else
@@ -238,41 +251,51 @@ defmodule DxnnAnalyzerWeb.OCI.OCIServer do
     %{state | public: public, active: nil}
   end
 
-  defp apply_instances(public, {:ok, %{"instances" => instances}}) do
+  defp apply_instances(public, {:ok, %{"instances" => instances}}, state) do
     %{
       public
-      | instances: Enum.map(instances, &OCIBridge.public_instance/1),
+      | instances: Enum.map(instances, state.public_instance),
         refresh_error: nil,
         last_refresh: DateTime.utc_now()
     }
   end
 
-  defp apply_instances(public, result) do
+  defp apply_instances(public, result, state) do
     public =
       case result do
         {:error, %{"instances" => instances}} when instances != [] ->
-          %{public | instances: Enum.map(instances, &OCIBridge.public_instance/1)}
+          %{public | instances: Enum.map(instances, state.public_instance)}
 
         _ ->
           public
       end
 
-    %{public | refresh_error: error_message(result)}
+    %{public | refresh_error: error_message(result, state.label)}
   end
 
   defp merge_records(public, records) do
     instances =
       Enum.reduce(records, public.instances, fn record, instances ->
+        same_launch? = fn item -> item["name"] == record["name"] and item["region"] == record["region"] end
+
         index =
           Enum.find_index(instances, fn item ->
             if record["instance_id"],
-              do: item["instance_id"] == record["instance_id"],
-              else: item["name"] == record["name"] and item["region"] == record["region"]
+              # A row seen while the launch was still pending has no ID yet.
+              do:
+                item["instance_id"] == record["instance_id"] or
+                  (is_nil(item["instance_id"]) and same_launch?.(item)),
+              else: same_launch?.(item)
           end)
 
         if index do
-          List.update_at(instances, index, fn item ->
-            Map.merge(record, item) |> Map.put("progress", record["progress"])
+          List.update_at(instances, index, fn
+            %{"instance_id" => id} = item when is_binary(id) ->
+              Map.merge(record, item) |> Map.put("progress", record["progress"])
+
+            item ->
+              # The record now knows more (ID, zone) than the pending row.
+              Map.merge(item, record)
           end)
         else
           instances ++ [Map.put(record, "state", "UNKNOWN")]
@@ -282,11 +305,11 @@ defmodule DxnnAnalyzerWeb.OCI.OCIServer do
     %{public | instances: instances}
   end
 
-  defp error_message({:error, %{"error" => error}}) when is_binary(error), do: error
-  defp error_message({:error, error}) when is_binary(error), do: error
+  defp error_message({:error, %{"error" => error}}, _label) when is_binary(error), do: error
+  defp error_message({:error, error}, _label) when is_binary(error), do: error
 
-  defp error_message(_),
-    do: "OCI result was incomplete; outcome is uncertain. Refresh before retrying."
+  defp error_message(_, label),
+    do: "#{label} result was incomplete; outcome is uncertain. Refresh before retrying."
 
   defp target(%{instance: instance}), do: "#{instance["name"]} (#{instance["instance_id"]})"
   defp target(%{config: config}), do: config
@@ -296,7 +319,7 @@ defmodule DxnnAnalyzerWeb.OCI.OCIServer do
     do:
       Phoenix.PubSub.broadcast(
         DxnnAnalyzerWeb.PubSub,
-        "oci_instances",
-        {:oci_state, state.public}
+        state.topic,
+        {state.event, state.public}
       )
 end

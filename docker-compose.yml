@@ -18,6 +18,14 @@ services:
       - OCI_SIGNING_KEY_FILE=${OCI_SIGNING_KEY_FILE:-}
       - OCI_DEPLOYMENT_IMAGE=${OCI_DEPLOYMENT_IMAGE:-aws-deployment:latest}
       - HOST_OCI_ADAPTER_PATH=${HOST_OCI_ADAPTER_PATH:-${PWD}/scripts/oci_dashboard.py}
+      # GCP: login written by AWS-Deployment/gcp-login.sh (Docker-only, no local
+      # gcloud), or override with a host gcloud login / service-account key file.
+      - GCP_HOST_HOME=${GCP_HOST_HOME:-${HOME}}
+      - GCP_CREDENTIALS_FILE=${GCP_CREDENTIALS_FILE:-${HOST_AWS_DEPLOYMENT_PATH:-${PWD}/../AWS-Deployment}/output/gcp-auth/application_default_credentials.json}
+      - GCP_AUTH=${GCP_AUTH:-adc}
+      - GOOGLE_CLOUD_QUOTA_PROJECT=${GOOGLE_CLOUD_QUOTA_PROJECT:-}
+      - GCP_DEPLOYMENT_IMAGE=${GCP_DEPLOYMENT_IMAGE:-aws-deployment:latest}
+      - HOST_GCP_ADAPTER_PATH=${HOST_GCP_ADAPTER_PATH:-${PWD}/scripts/gcp_dashboard.py}
     volumes:
       # Mount your Documents folder so you can browse any experiment
       - ${HOME}/Documents:/app/Documents
@@ -32,6 +40,12 @@ services:
       # Docker socket for docker-deploy.sh
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:4000/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
 
 volumes:
   dxnn_data:

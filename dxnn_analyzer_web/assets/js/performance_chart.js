@@ -27,13 +27,12 @@ export const PerformanceChart = {
     const rawData = chartConfig.data.raw || chartConfig.data
     const smaData = chartConfig.data.sma || []
 
-    console.log('=== CHART INIT DEBUG ===')
-    console.log('chartConfig.data:', chartConfig.data)
-    console.log('rawData length:', rawData.length)
-    console.log('smaData length:', smaData.length)
-    console.log('First 3 raw points:', rawData.slice(0, 3))
-    console.log('First 3 SMA points:', smaData.slice(0, 3))
-    console.log('Last 3 SMA points:', smaData.slice(-3))
+
+
+
+
+
+
 
     this.chart = new Chart(ctx, {
       type: 'line',
@@ -115,7 +114,6 @@ export const PerformanceChart = {
     const rawData = chartConfig.data.raw || chartConfig.data
     const smaData = chartConfig.data.sma || []
 
-    console.log('Updating chart data:', { rawData: rawData.length, smaData: smaData.length })
     
     // Dataset 0 is SMA, Dataset 1 is raw data
     this.chart.data.datasets[0].data = smaData

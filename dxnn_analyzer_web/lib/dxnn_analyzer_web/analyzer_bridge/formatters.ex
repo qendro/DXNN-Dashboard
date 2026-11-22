@@ -42,6 +42,7 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.Formatters do
     analytics_path = Map.get(bundle, :analytics_path) || Map.get(bundle, "analytics_path")
     manifest_path = Map.get(bundle, :manifest_path) || Map.get(bundle, "manifest_path")
     success_path = Map.get(bundle, :success_path) || Map.get(bundle, "success_path")
+
     checkpoint_info_path =
       Map.get(bundle, :checkpoint_info_path) || Map.get(bundle, "checkpoint_info_path")
 
@@ -145,6 +146,18 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.Formatters do
   Formats comparison data.
   """
   def format_comparison(data) when is_map(data), do: data
+  def format_comparison({:ok, comparison}), do: format_comparison(comparison)
+
+  def format_comparison({:agent_comparison, agents, mutations, topology, ranking, similarity}) do
+    %{
+      agents: agents,
+      common_mutations: mutations,
+      topology_diffs: topology,
+      fitness_ranking: ranking,
+      structural_similarity: similarity
+    }
+  end
+
   def format_comparison(_), do: %{}
 
   @doc """

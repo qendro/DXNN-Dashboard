@@ -1,55 +1,49 @@
 defmodule DxnnAnalyzerWeb.TopologyViewerLive do
   use DxnnAnalyzerWeb, :live_view
-  alias DxnnAnalyzerWeb.AnalyzerBridge
+  alias DxnnAnalyzerWeb.{AgentId, AnalyzerBridge}
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    {:ok, assign(socket, :agent_id, URI.decode(id))}
+    {:ok, assign(socket, agent_id: URI.decode(id), context: nil, topology: nil, error: nil)}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
     context = params["context"]
+    socket = assign(socket, context: context, topology: nil, error: nil)
+
+    result =
+      with true <- is_binary(context) and context != "",
+           {:ok, agent_id} <- AgentId.parse(socket.assigns.agent_id) do
+        AnalyzerBridge.get_topology(agent_id, context)
+      else
+        false -> {:error, "Choose an experiment from the dashboard first"}
+        error -> error
+      end
 
     socket =
-      if context do
-        agent_id = parse_agent_id(socket.assigns.agent_id)
-
-        case AnalyzerBridge.get_topology(agent_id, context) do
-          topology when is_map(topology) ->
-            socket
-            |> assign(:context, context)
-            |> assign(:topology, topology)
-            |> assign(:error, nil)
-
-          _ ->
-            socket
-            |> assign(:context, context)
-            |> assign(:topology, nil)
-            |> assign(:error, "Failed to load topology")
-        end
-      else
-        assign(socket, :error, "No context specified")
+      case result do
+        data when is_map(data) -> assign(socket, :topology, data)
+        {:error, reason} -> assign(socket, :error, "Could not load topology: #{inspect(reason)}")
+        _ -> assign(socket, :error, "Could not load topology")
       end
 
     {:noreply, socket}
   end
 
-  defp parse_agent_id(id_str) do
-    {agent_id, _} = Code.eval_string(id_str)
-    agent_id
-  end
-
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gray-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="min-w-0">
+      <div class="page-container">
         <div class="mb-6">
-          <.link navigate={~p"/agents/#{URI.encode(@agent_id)}?context=#{@context}"} class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">
-            ← Back to Agent Inspector
+          <.link
+            navigate={if @context, do: ~p"/agents/#{@agent_id}?context=#{@context}", else: ~p"/"}
+            class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block"
+          >
+            ← <%= if @context, do: "Back to agent", else: "Back to dashboard" %>
           </.link>
-          <h1 class="text-3xl font-bold text-gray-900">Neural Network Topology</h1>
+          <h1 class="page-title">Neural Network Topology</h1>
           <p class="text-gray-600 mt-1">Agent: <%= @agent_id %></p>
         </div>
 
@@ -62,8 +56,8 @@ defmodule DxnnAnalyzerWeb.TopologyViewerLive do
         <%= if @topology do %>
           <div class="space-y-6">
             <!-- Topology Stats -->
-            <div class="bg-white shadow rounded-lg p-6">
-              <h2 class="text-xl font-semibold mb-4">Network Statistics</h2>
+            <div class="panel p-6">
+              <h2 class="section-title mb-4">Network Statistics</h2>
               <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="text-center p-4 bg-blue-50 rounded">
                   <div class="text-3xl font-bold text-blue-600">
@@ -91,11 +85,10 @@ defmodule DxnnAnalyzerWeb.TopologyViewerLive do
                 </div>
               </div>
             </div>
-
             <!-- Sensors -->
             <%= if Map.has_key?(@topology, :sensors) && length(@topology.sensors) > 0 do %>
-              <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-xl font-semibold mb-4">Sensors</h2>
+              <div class="panel p-6">
+                <h2 class="section-title mb-4">Sensors</h2>
                 <div class="space-y-2">
                   <%= for sensor <- @topology.sensors do %>
                     <div class="border border-gray-200 rounded p-3 text-sm">
@@ -105,11 +98,10 @@ defmodule DxnnAnalyzerWeb.TopologyViewerLive do
                 </div>
               </div>
             <% end %>
-
             <!-- Neurons by Layer -->
             <%= if Map.has_key?(@topology, :neurons) && length(@topology.neurons) > 0 do %>
-              <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-xl font-semibold mb-4">Neurons</h2>
+              <div class="panel p-6">
+                <h2 class="section-title mb-4">Neurons</h2>
                 <div class="text-sm text-gray-600 mb-4">
                   Total: <%= length(@topology.neurons) %> neurons
                 </div>
@@ -127,11 +119,10 @@ defmodule DxnnAnalyzerWeb.TopologyViewerLive do
                 </div>
               </div>
             <% end %>
-
             <!-- Actuators -->
             <%= if Map.has_key?(@topology, :actuators) && length(@topology.actuators) > 0 do %>
-              <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-xl font-semibold mb-4">Actuators</h2>
+              <div class="panel p-6">
+                <h2 class="section-title mb-4">Actuators</h2>
                 <div class="space-y-2">
                   <%= for actuator <- @topology.actuators do %>
                     <div class="border border-gray-200 rounded p-3 text-sm">
@@ -141,10 +132,9 @@ defmodule DxnnAnalyzerWeb.TopologyViewerLive do
                 </div>
               </div>
             <% end %>
-
             <!-- Visualization Placeholder -->
-            <div class="bg-white shadow rounded-lg p-6">
-              <h2 class="text-xl font-semibold mb-4">Network Visualization</h2>
+            <div class="panel p-6">
+              <h2 class="section-title mb-4">Network Visualization</h2>
               <div class="bg-gray-100 rounded-lg p-8 text-center">
                 <p class="text-gray-600">
                   Interactive network visualization will be rendered here using D3.js or Cytoscape.js

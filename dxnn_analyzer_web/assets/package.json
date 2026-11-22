@@ -2,7 +2,8 @@
   "name": "dxnn_analyzer_web",
   "version": "0.1.0",
   "scripts": {
-    "deploy": "tailwindcss --postcss --minify --input=css/app.css --output=../priv/static/assets/app.css && esbuild js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*"
+    "test": "node --test js/*.test.mjs",
+    "deploy": "tailwindcss --postcss --minify --input=css/app.css --output=../priv/static/assets/app.css && esbuild js/app.js --bundle --minify --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

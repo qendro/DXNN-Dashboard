@@ -69,7 +69,9 @@ defmodule DxnnAnalyzerWeb.RunBundleResolver do
   Determines whether a directory looks like a run root.
   """
   def run_root?(path) when is_binary(path) do
-    File.dir?(path) and mnesia_dir?(Path.join(path, @mnesia_dir_name))
+    File.dir?(path) and
+      (mnesia_dir?(Path.join(path, @mnesia_dir_name)) or
+         File.regular?(Path.join(path, "mnesia.backup")))
   end
 
   def run_root?(_), do: false
@@ -79,6 +81,9 @@ defmodule DxnnAnalyzerWeb.RunBundleResolver do
       {:error, :path_not_accessible}
     else
       cond do
+        File.regular?(Path.join(candidate, "mnesia.backup")) ->
+          build_bundle(candidate, candidate)
+
         mnesia_dir?(candidate) ->
           bundle_from_mnesia_path(candidate)
 

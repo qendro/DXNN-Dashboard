@@ -1,32 +1,42 @@
-<header class="bg-white shadow-sm border-b border-gray-200">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center py-4">
-      <div class="flex items-center">
-        <.link navigate={~p"/"} class="text-xl font-bold text-gray-900">
-          DXNN Analyzer
+<a href="#main-content" class="skip-link">Skip to content</a>
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="flex items-center justify-between">
+      <.link navigate={~p"/"} class="app-brand" aria-label="DXNN Analyzer dashboard">
+        <span class="app-brand-mark" aria-hidden="true">DX</span>
+        <span>DXNN <span class="font-normal text-slate-500">Analyzer</span></span>
+      </.link>
+      <button
+        id="navigation-toggle"
+        type="button"
+        class="btn btn-secondary mr-4 lg:hidden"
+        aria-expanded="false"
+        aria-controls="app-navigation"
+        phx-click={
+          JS.toggle_attribute({"data-open", "true", "false"}, to: "#app-navigation")
+          |> JS.toggle_attribute({"aria-expanded", "true", "false"}, to: "#navigation-toggle")
+        }
+      >
+        Menu
+      </button>
+    </div>
+    <nav id="app-navigation" class="app-nav" data-open="false" aria-label="Main navigation">
+      <div :for={group <- navigation()} class="app-nav-group">
+        <p class="app-nav-label"><%= group.label %></p>
+        <.link
+          :for={item <- group.items}
+          navigate={item.path}
+          class="app-nav-link"
+          aria-current={if @socket.view in item.views, do: "page"}
+        >
+          <.icon name={item.icon} />
+          <%= item.label %>
         </.link>
       </div>
-      <nav class="flex space-x-4">
-        <.link navigate={~p"/oracle-instances"} class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-          Oracle Instances
-        </.link>
-        <.link
-          navigate={~p"/"}
-          class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-        >
-          Dashboard
-        </.link>
-        <.link
-          navigate={~p"/settings"}
-          class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-        >
-          Settings
-        </.link>
-      </nav>
-    </div>
-  </div>
-</header>
-<main>
-  <.flash_group flash={@flash} />
-  <%= @inner_content %>
-</main>
+    </nav>
+  </aside>
+  <main id="main-content" class="app-main" tabindex="-1">
+    <.flash_group flash={@flash} />
+    <%= @inner_content %>
+  </main>
+</div>

@@ -14,8 +14,21 @@ defmodule DxnnAnalyzerWeb.Application do
       {DxnnAnalyzerWeb.AnalyzerBridge, []},
       DxnnAnalyzerWeb.AWS.AWSDeploymentServer,
       {Task.Supervisor, name: DxnnAnalyzerWeb.OCI.TaskSupervisor},
-      {DxnnAnalyzerWeb.OCI.OCIServer, []}
+      {DxnnAnalyzerWeb.OCI.OCIServer, []},
+      {Task.Supervisor, name: DxnnAnalyzerWeb.GCP.TaskSupervisor},
+      Supervisor.child_spec(
+        {DxnnAnalyzerWeb.OCI.OCIServer, DxnnAnalyzerWeb.GCP.GCPBridge.server_opts()},
+        id: DxnnAnalyzerWeb.GCP.Server
+      )
     ]
+
+    children =
+      if System.get_env("DXNN_ENABLE_AWS", "true") == "false",
+        do: Enum.reject(children, &(&1 == DxnnAnalyzerWeb.AWS.AWSDeploymentServer)),
+        else: children
+
+    children =
+      if Application.get_env(:dxnn_analyzer_web, :start_services, true), do: children, else: []
 
     opts = [strategy: :one_for_one, name: DxnnAnalyzerWeb.Supervisor]
     Supervisor.start_link(children, opts)

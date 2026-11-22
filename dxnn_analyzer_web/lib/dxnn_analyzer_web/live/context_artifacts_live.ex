@@ -52,17 +52,17 @@ defmodule DxnnAnalyzerWeb.ContextArtifactsLive do
   @impl true
   def handle_event("generate_analytics", %{"format" => format}, socket) do
     format_atom = String.to_atom(format)
-    
+
     socket = assign(socket, :generating, true)
     send(self(), {:do_generate_analytics, format_atom})
-    
+
     {:noreply, socket}
   end
 
   @impl true
   def handle_info({:do_generate_analytics, format}, socket) do
     context_name = socket.assigns.context_name
-    
+
     case AnalyzerBridge.generate_analytics(context_name, format) do
       {:ok, filepath} ->
         # Reload artifacts to show the new file
@@ -71,15 +71,15 @@ defmodule DxnnAnalyzerWeb.ContextArtifactsLive do
           |> assign(:generating, false)
           |> assign(:generation_success, "Analytics generated: #{Path.basename(filepath)}")
           |> load_artifacts(context_name)
-        
+
         {:noreply, socket}
-      
+
       {:error, reason} ->
         socket =
           socket
           |> assign(:generating, false)
           |> assign(:error, "Failed to generate analytics: #{inspect(reason)}")
-        
+
         {:noreply, socket}
     end
   end
@@ -87,47 +87,75 @@ defmodule DxnnAnalyzerWeb.ContextArtifactsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gray-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="min-w-0">
+      <div class="page-container">
         <div class="mb-6 flex items-center justify-between">
           <div>
-            <.link navigate={~p"/"} class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">
+            <.link
+              navigate={~p"/"}
+              class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block"
+            >
               ← Back to Dashboard
             </.link>
-            <h1 class="text-2xl font-bold text-gray-900">Artifacts: <%= @context_name %></h1>
-            <p class="text-gray-600 text-sm mt-1">Logs and analytics files discovered for this loaded context</p>
+            <h1 class="page-title">Artifacts: <%= @context_name %></h1>
+            <p class="text-gray-600 text-sm mt-1">
+              Logs and analytics files discovered for this loaded context
+            </p>
           </div>
-          <div class="flex gap-2">
-            <.link
-              navigate={~p"/agents?context=#{@context_name}"}
-              class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-            >
+          <div class="page-actions">
+            <.link navigate={~p"/agents?context=#{@context_name}"} class="btn btn-secondary">
               View Agents
             </.link>
-            
             <!-- Analytics Generation Dropdown -->
             <div class="relative inline-block text-left">
               <button
                 type="button"
-                class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                class="btn btn-secondary gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={@generating}
                 onclick="document.getElementById('analytics-menu').classList.toggle('hidden')"
               >
                 <%= if @generating do %>
-                  <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    class="animate-spin h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    >
+                    </circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    >
+                    </path>
                   </svg>
                   Generating...
                 <% else %>
-                  📊 Generate Analytics
+                  Generate Analytics
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    >
+                    </path>
                   </svg>
                 <% end %>
               </button>
-              
-              <div id="analytics-menu" class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+
+              <div
+                id="analytics-menu"
+                class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+              >
                 <div class="py-1" role="menu">
                   <button
                     phx-click="generate_analytics"
@@ -135,7 +163,7 @@ defmodule DxnnAnalyzerWeb.ContextArtifactsLive do
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     role="menuitem"
                   >
-                    📄 CSV Format
+                    CSV Format
                   </button>
                   <button
                     phx-click="generate_analytics"
@@ -143,7 +171,7 @@ defmodule DxnnAnalyzerWeb.ContextArtifactsLive do
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     role="menuitem"
                   >
-                    📝 Markdown Format
+                    Markdown Format
                   </button>
                   <button
                     phx-click="generate_analytics"
@@ -151,7 +179,7 @@ defmodule DxnnAnalyzerWeb.ContextArtifactsLive do
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     role="menuitem"
                   >
-                    📋 Log Format
+                    Log Format
                   </button>
                 </div>
               </div>
@@ -173,24 +201,32 @@ defmodule DxnnAnalyzerWeb.ContextArtifactsLive do
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div class="bg-white border border-gray-200 rounded-md p-4">
               <div class="text-sm text-gray-500">Bundle Root</div>
-              <div class="font-mono text-xs text-gray-800 break-all mt-1"><%= @bundle.bundle_root || "-" %></div>
+              <div class="font-mono text-xs text-gray-800 break-all mt-1">
+                <%= @bundle.bundle_root || "-" %>
+              </div>
             </div>
             <div class="bg-white border border-gray-200 rounded-md p-4">
               <div class="text-sm text-gray-500">Mnesia Path</div>
-              <div class="font-mono text-xs text-gray-800 break-all mt-1"><%= @bundle.mnesia_path || "-" %></div>
+              <div class="font-mono text-xs text-gray-800 break-all mt-1">
+                <%= @bundle.mnesia_path || "-" %>
+              </div>
             </div>
             <div class="bg-white border border-gray-200 rounded-md p-4">
               <div class="text-sm text-gray-500">Logs Path</div>
-              <div class="font-mono text-xs text-gray-800 break-all mt-1"><%= @bundle.logs_path || "-" %></div>
+              <div class="font-mono text-xs text-gray-800 break-all mt-1">
+                <%= @bundle.logs_path || "-" %>
+              </div>
             </div>
             <div class="bg-white border border-gray-200 rounded-md p-4">
               <div class="text-sm text-gray-500">Analytics Path</div>
-              <div class="font-mono text-xs text-gray-800 break-all mt-1"><%= @bundle.analytics_path || "-" %></div>
+              <div class="font-mono text-xs text-gray-800 break-all mt-1">
+                <%= @bundle.analytics_path || "-" %>
+              </div>
             </div>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-white shadow rounded-lg p-4">
+            <div class="panel p-4">
               <h2 class="font-semibold text-gray-900 mb-3">Logs (<%= length(@logs_files) %>)</h2>
               <%= if Enum.empty?(@logs_files) do %>
                 <p class="text-sm text-gray-500">No logs folder found.</p>
@@ -211,8 +247,10 @@ defmodule DxnnAnalyzerWeb.ContextArtifactsLive do
               <% end %>
             </div>
 
-            <div class="bg-white shadow rounded-lg p-4">
-              <h2 class="font-semibold text-gray-900 mb-3">Analytics (<%= length(@analytics_files) %>)</h2>
+            <div class="panel p-4">
+              <h2 class="font-semibold text-gray-900 mb-3">
+                Analytics (<%= length(@analytics_files) %>)
+              </h2>
               <%= if Enum.empty?(@analytics_files) do %>
                 <p class="text-sm text-gray-500">No analytics folder found.</p>
               <% else %>
@@ -232,11 +270,12 @@ defmodule DxnnAnalyzerWeb.ContextArtifactsLive do
               <% end %>
             </div>
 
-            <div class="bg-white shadow rounded-lg p-4">
+            <div class="panel p-4">
               <h2 class="font-semibold text-gray-900 mb-3">Preview</h2>
               <%= if @selected_file_name do %>
                 <div class="text-xs text-gray-600 mb-2">
-                  <span class="font-medium">File:</span> <span class="font-mono break-all"><%= @selected_file_name %></span>
+                  <span class="font-medium">File:</span>
+                  <span class="font-mono break-all"><%= @selected_file_name %></span>
                 </div>
                 <pre class="text-xs bg-gray-900 text-gray-100 p-3 rounded overflow-x-auto max-h-[32rem]"><%= @preview %></pre>
               <% else %>

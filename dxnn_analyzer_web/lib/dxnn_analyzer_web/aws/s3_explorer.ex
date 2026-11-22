@@ -275,14 +275,15 @@ defmodule DxnnAnalyzerWeb.AWS.S3Explorer do
     with :ok <- validate_target_path(target_path),
          :ok <- File.mkdir_p(target_path) do
       base_prefix = normalize_prefix(current_path)
-      
-      results = Enum.map(keys, fn key ->
-        relative_key = relative_key(key, base_prefix)
-        download_key_to_local(bucket, key, relative_key, target_path)
-      end)
-      
+
+      results =
+        Enum.map(keys, fn key ->
+          relative_key = relative_key(key, base_prefix)
+          download_key_to_local(bucket, key, relative_key, target_path)
+        end)
+
       errors = Enum.filter(results, &match?({:error, _}, &1))
-      
+
       if length(errors) > 0 do
         {:error, "Some downloads failed: #{inspect(errors)}"}
       else
@@ -503,18 +504,20 @@ defmodule DxnnAnalyzerWeb.AWS.S3Explorer do
       !File.dir?(path) && !File.exists?(path) ->
         # Path doesn't exist, will try to create it
         :ok
-      
+
       File.dir?(path) ->
         # Path exists and is a directory
         case File.stat(path) do
           {:ok, %{access: access}} when access in [:read_write, :write] ->
             :ok
+
           {:ok, _} ->
             {:error, "Path is not writable: #{path}"}
+
           {:error, reason} ->
             {:error, "Cannot access path: #{inspect(reason)}"}
         end
-      
+
       true ->
         {:error, "Path exists but is not a directory: #{path}"}
     end
@@ -526,7 +529,7 @@ defmodule DxnnAnalyzerWeb.AWS.S3Explorer do
     if String.ends_with?(key, "/") do
       # Download folder
       folder_relative = String.trim_trailing(relative_key, "/")
-      
+
       with {:ok, folder_path} <- safe_join(target_path, folder_relative),
            :ok <- File.mkdir_p(folder_path) do
         case System.cmd("aws", ["s3", "sync", s3_uri, folder_path, "--no-progress"],

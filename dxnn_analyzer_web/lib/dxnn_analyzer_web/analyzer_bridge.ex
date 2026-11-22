@@ -2,11 +2,12 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
   @moduledoc """
   Bridge module to interface with the Erlang DXNN Analyzer.
   Provides Elixir-friendly wrappers around Erlang analyzer functions.
-  
+
   This module acts as a GenServer coordinator that delegates to specialized
   operation modules for better organization and maintainability.
   """
   use GenServer
+  require Logger
 
   alias DxnnAnalyzerWeb.AnalyzerBridge.{
     AgentOperations,
@@ -246,12 +247,9 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
 
   @impl true
   def init(state) do
-    IO.puts("=== AnalyzerBridge init starting ===")
-
     setup_erlang_code_paths()
     start_analyzer_if_available()
 
-    IO.puts("=== AnalyzerBridge init complete ===")
     {:ok, state}
   end
 
@@ -550,7 +548,11 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
   end
 
   @impl true
-  def handle_call({:copy_agents_to_experiment, agent_ids, source_context, target_context}, _from, state) do
+  def handle_call(
+        {:copy_agents_to_experiment, agent_ids, source_context, target_context},
+        _from,
+        state
+      ) do
     case ExperimentOperations.copy_agents_to_experiment(agent_ids, source_context, target_context) do
       {:ok, result} -> {:reply, Formatters.format_result(result), state}
       {:error, reason} -> {:reply, {:error, reason}, state}
@@ -580,6 +582,7 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
     catch
       :error, :undef ->
         {:error, :module_not_loaded}
+
       _type, error ->
         {:error, error}
     end
@@ -625,10 +628,10 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
       "/app/dxnn_analyzer/_build/default/lib/jsx/ebin"
     ]
 
-    Enum.each(analyzer_paths ++ jsx_paths, fn path ->
+    Enum.each(Enum.uniq(analyzer_paths ++ jsx_paths), fn path ->
       if File.exists?(path) do
         :code.add_pathz(String.to_charlist(path))
-        IO.puts("Added Erlang code path: #{path}")
+        Logger.debug("Added Erlang code path: #{path}")
       end
     end)
   end
@@ -636,24 +639,16 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge do
   defp start_analyzer_if_available do
     case :code.which(:analyzer) do
       :non_existing ->
-        IO.puts("WARNING: analyzer module not found in code path")
+        Logger.warning("Analyzer module not found in code path")
 
-      path ->
-        IO.puts("Found analyzer module at: #{path}")
-        IO.puts("Attempting to start analyzer...")
-
+      _path ->
         try do
-          result = :analyzer.start()
-          IO.puts("Analyzer start result: #{inspect(result)}")
-          IO.puts("Analyzer started successfully")
+          case :analyzer.start() do
+            :ok -> Logger.info("DXNN analyzer ready")
+            result -> Logger.warning("Analyzer startup returned: #{inspect(result)}")
+          end
         catch
-          kind, reason ->
-            IO.puts("ERROR starting analyzer: #{inspect(kind)} - #{inspect(reason)}")
-
-            case :ets.info(:analyzer_contexts) do
-              :undefined -> IO.puts("ERROR: Failed to create ETS table")
-              _ -> IO.puts("Analyzer ETS table already exists")
-            end
+          kind, reason -> Logger.error("Could not start analyzer: #{inspect({kind, reason})}")
         end
     end
   end

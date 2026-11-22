@@ -2,108 +2,63 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-/* LiveView specific styles */
+@layer base {
+  body { @apply bg-slate-50 text-slate-800 antialiased; }
+  h1, h2, h3 { @apply text-slate-900; }
+  button, a, input, select, textarea, summary { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { @apply outline outline-2 outline-offset-2 outline-blue-600; }
+  button:disabled { @apply cursor-not-allowed opacity-50; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea {
+    @apply min-w-0 max-w-full rounded-md border-slate-300 bg-white text-sm shadow-sm;
+  }
+  input[type="checkbox"], input[type="radio"] { @apply accent-blue-600; }
+  th { @apply font-medium; }
+  td { font-variant-numeric: tabular-nums; }
+}
+
+@layer components {
+  .app-shell { @apply min-h-screen lg:grid lg:grid-cols-[208px_minmax(0,1fr)]; }
+  .app-sidebar { @apply border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-b-0 lg:border-r; }
+  .app-brand { @apply flex items-center gap-3 px-5 py-6 text-sm font-semibold tracking-tight text-slate-900; }
+  .app-brand-mark { @apply flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-xs font-bold tracking-wider text-white; }
+  .app-nav { @apply grid grid-cols-2 gap-5 px-3 pb-5 sm:grid-cols-3 lg:block lg:space-y-7 lg:pt-4; }
+  .app-nav[data-open="false"] { @apply max-lg:hidden; }
+  .app-nav-group { @apply min-w-0 space-y-1; }
+  .app-nav-label { @apply px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500; }
+  .app-nav-link { @apply flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900; }
+  .app-nav-link[aria-current="page"] { @apply bg-blue-50 text-blue-700; }
+  .app-main { @apply min-w-0; }
+  .page-container { @apply mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-9; }
+  .page-header { @apply mb-7 flex flex-wrap items-start justify-between gap-4; }
+  .page-title { @apply text-2xl font-semibold tracking-tight text-slate-900; overflow-wrap: anywhere; }
+  .page-description { @apply mt-1.5 text-sm leading-6 text-slate-500; }
+  .page-actions { @apply flex flex-wrap items-center gap-2; }
+  .panel { @apply rounded-lg border border-slate-200 bg-white; }
+  .panel-heading { @apply flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4; }
+  .section-title { @apply text-base font-semibold text-slate-900; }
+  .btn {
+    @apply inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium leading-5 transition-colors;
+  }
+  .btn-primary { @apply border-blue-700 bg-blue-700 text-white hover:border-blue-800 hover:bg-blue-800; }
+  .btn-secondary { @apply border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50; }
+  .btn-danger { @apply border-red-200 bg-white text-red-700 hover:border-red-300 hover:bg-red-50; }
+  .btn-danger-solid { @apply border-red-700 bg-red-700 text-white hover:bg-red-800; }
+  .btn-sm { @apply min-h-8 px-2.5 py-1 text-xs; }
+  .badge { @apply inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600; }
+  .empty-state { @apply flex flex-col items-center px-6 py-16 text-center; }
+  .experiment-card { @apply flex min-w-0 flex-col rounded-lg border border-slate-200 p-5; }
+  .experiment-card:hover { @apply border-slate-300; }
+  .skip-link { @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2; }
+  .flash-stack { @apply fixed right-4 top-4 z-50 w-[calc(100%-2rem)] max-w-sm space-y-2; }
+  .flash-notice { @apply relative rounded-lg border bg-white py-3 pl-4 pr-10 text-sm shadow-lg; }
+}
+
+/* LiveView adds these while events are pending. Keep controls stable in size. */
 .phx-no-feedback.invalid-feedback,
-.phx-no-feedback .invalid-feedback {
-  display: none;
-}
+.phx-no-feedback .invalid-feedback { display: none; }
+.phx-click-loading { opacity: 0.6; pointer-events: none; }
+.phx-loading { cursor: wait; }
 
-.phx-click-loading {
-  opacity: 0.5;
-  transition: opacity 1s ease-out;
-}
-
-.phx-loading {
-  cursor: wait;
-}
-
-.phx-modal {
-  opacity: 1 !important;
-  position: fixed;
-  z-index: 1;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgb(0, 0, 0);
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-.phx-modal-content {
-  background-color: #fefefe;
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
-}
-
-.phx-modal-close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.phx-modal-close:hover,
-.phx-modal-close:focus {
-  color: black;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.fade-in-scale {
-  animation: 0.2s ease-in 0s normal forwards 1 fade-in-scale-keys;
-}
-
-.fade-out-scale {
-  animation: 0.2s ease-out 0s normal forwards 1 fade-out-scale-keys;
-}
-
-.fade-in {
-  animation: 0.2s ease-out 0s normal forwards 1 fade-in-keys;
-}
-
-.fade-out {
-  animation: 0.2s ease-out 0s normal forwards 1 fade-out-keys;
-}
-
-@keyframes fade-in-scale-keys {
-  0% {
-    scale: 0.95;
-    opacity: 0;
-  }
-  100% {
-    scale: 1;
-    opacity: 1;
-  }
-}
-
-@keyframes fade-out-scale-keys {
-  0% {
-    scale: 1;
-    opacity: 1;
-  }
-  100% {
-    scale: 0.95;
-    opacity: 0;
-  }
-}
-
-@keyframes fade-in-keys {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes fade-out-keys {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

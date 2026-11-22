@@ -75,21 +75,21 @@ compare_fitness(Agents) ->
     
     lists:foreach(fun(Topo) ->
         Agent = maps:get(agent, Topo),
-        io:format("  ~p: ~.6f (Gen ~w)~n", 
+        io:format("  ~p: ~.6f (Gen ~w)~n",
                  [Agent#agent.id, Agent#agent.fitness, Agent#agent.generation])
     end, Sorted),
     io:format("~n").
 
 compare_topology_stats(Agents) ->
     io:format("Topology Statistics:~n"),
-    io:format("~-40s ~10s ~10s ~10s ~10s~n", 
+    io:format("~-40s ~10s ~10s ~10s ~10s~n",
              ["Agent", "Sensors", "Neurons", "Actuators", "Connections"]),
     io:format("~s~n", [lists:duplicate(80, $-)]),
     
     lists:foreach(fun(Topo) ->
         Agent = maps:get(agent, Topo),
-        io:format("~-40p ~10w ~10w ~10w ~10w~n",
-                 [Agent#agent.id,
+        io:format("~-40s ~10w ~10w ~10w ~10w~n",
+                 [lists:flatten(io_lib:format("~p", [Agent#agent.id])),
                   length(maps:get(sensors, Topo)),
                   length(maps:get(neurons, Topo)),
                   length(maps:get(actuators, Topo)),
@@ -103,7 +103,7 @@ compare_mutations(Agents) ->
     lists:foreach(fun(Topo) ->
         Agent = maps:get(agent, Topo),
         MutationTypes = count_mutation_types(Agent#agent.evo_hist),
-        io:format("  ~p: ~w total mutations~n", 
+        io:format("  ~p: ~w total mutations~n",
                  [Agent#agent.id, length(Agent#agent.evo_hist)]),
         maps:foreach(fun(Type, Count) ->
             io:format("    ~p: ~w~n", [Type, Count])
@@ -174,8 +174,8 @@ connection_similarity(Topo1, Topo2) ->
     end.
 
 structure_similarity(Topo1, Topo2) ->
-    Layers1 = get_layer_structure(Topo1),
-    Layers2 = get_layer_structure(Topo2),
+    Layers1 = lists:usort(get_layer_structure(Topo1)),
+    Layers2 = lists:usort(get_layer_structure(Topo2)),
     
     CommonLayers = length([L || L <- Layers1, lists:member(L, Layers2)]),
     TotalLayers = length(lists:usort(Layers1 ++ Layers2)),

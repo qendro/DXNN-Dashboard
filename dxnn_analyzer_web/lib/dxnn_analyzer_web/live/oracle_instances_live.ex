@@ -156,21 +156,14 @@ defmodule DxnnAnalyzerWeb.OracleInstancesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900">Oracle Instances</h1>
-        <button
-          id="oci-refresh"
-          phx-click="refresh"
-          disabled={@oci.busy}
-          class="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-        >
-          Refresh
-        </button>
-      </div>
-      <p class="text-sm text-gray-600">
-        OCI instances recorded by AWS-Deployment. Operations continue while you reload or leave this page.
-      </p>
+    <div class="page-container space-y-6">
+      <.page_header title="Oracle Instances" description="Manage your recorded OCI instances.">
+        <:actions>
+          <button id="oci-refresh" phx-click="refresh" disabled={@oci.busy} class="btn btn-secondary">
+            Refresh
+          </button>
+        </:actions>
+      </.page_header>
       <p :if={@oci.busy} role="status" class="bg-blue-50 p-3 rounded">OCI operation in progress…</p>
       <p :if={@oci.refresh_error} role="alert" class="bg-red-50 text-red-800 p-3 rounded">
         <%= @oci.refresh_error %>
@@ -179,19 +172,21 @@ defmodule DxnnAnalyzerWeb.OracleInstancesLive do
         Last successful refresh: <%= Calendar.strftime(@oci.last_refresh, "%Y-%m-%d %H:%M:%S UTC") %>
       </p>
 
-      <section class="bg-white border rounded-lg p-4 space-y-3">
+      <section class="panel p-4 space-y-3">
         <h2 class="text-lg font-semibold">Launch from existing YAML</h2>
-        <form id="oci-config-form" phx-change="select-config" phx-submit="summary" class="flex gap-3">
+        <form
+          id="oci-config-form"
+          phx-change="select-config"
+          phx-submit="summary"
+          class="flex flex-wrap gap-3"
+        >
           <select name="config" required disabled={@oci.busy} class="border rounded px-3 py-2">
             <option value="">Select OCI configuration</option>
             <option :for={config <- @oci.configs} value={config} selected={config == @selected_config}>
               <%= config %>
             </option>
           </select>
-          <button
-            disabled={@oci.busy}
-            class="bg-gray-800 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
+          <button disabled={@oci.busy} class="btn btn-secondary disabled:opacity-50">
             Review summary
           </button>
         </form>
@@ -244,14 +239,14 @@ defmodule DxnnAnalyzerWeb.OracleInstancesLive do
             id="oci-launch"
             phx-click="launch"
             disabled={@oci.busy}
-            class="bg-purple-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            class="btn btn-primary disabled:opacity-50"
           >
             Launch / resume <%= @oci.summary["name"] %>
           </button>
         </div>
       </section>
 
-      <section class="bg-white border rounded-lg overflow-x-auto">
+      <section class="panel overflow-x-auto">
         <table id="oci-instances" class="min-w-full text-sm">
           <thead class="bg-gray-50 text-left">
             <tr>
@@ -316,7 +311,7 @@ defmodule DxnnAnalyzerWeb.OracleInstancesLive do
                       phx-value-id={instance["instance_id"]}
                       phx-value-region={instance["region"]}
                       disabled={unavailable(@oci, instance, states)}
-                      class="border border-gray-200 rounded px-2 py-1 text-blue-700 hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                      class="btn btn-secondary btn-sm"
                     >
                       <%= String.capitalize(action) %>
                     </button>
@@ -325,7 +320,7 @@ defmodule DxnnAnalyzerWeb.OracleInstancesLive do
                       phx-value-id={instance["instance_id"]}
                       phx-value-region={instance["region"]}
                       disabled={unavailable(@oci, instance, :terminate)}
-                      class="border border-red-200 rounded px-2 py-1 text-red-700 hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                      class="btn btn-danger btn-sm"
                     >
                       Terminate
                     </button>
@@ -398,6 +393,30 @@ defmodule DxnnAnalyzerWeb.OracleInstancesLive do
                         Copy SSH command
                       </button>
                     </div>
+                    <div class="space-y-2">
+                      <p class="text-sm font-semibold">Connect to Hermes</p>
+                      <p class="text-xs text-gray-500">Run this command in your local terminal.</p>
+                      <div
+                        id={"oci-hermes-#{index}"}
+                        phx-hook="CopySSH"
+                        data-copy-label="Copy Hermes command"
+                        class="flex flex-wrap sm:flex-nowrap items-center gap-2"
+                      >
+                        <input
+                          aria-label="Hermes connection command"
+                          value="cd /Users/qendrim/Documents/Code/02_Sandbox/Hermes-Deployment && ./hermes.sh chat"
+                          readonly
+                          spellcheck="false"
+                          class="border border-gray-200 rounded px-3 py-2 text-xs font-mono w-full min-w-0 bg-white"
+                        />
+                        <button
+                          type="button"
+                          class="text-blue-700 text-xs whitespace-nowrap px-2 py-2"
+                        >
+                          Copy Hermes command
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -426,13 +445,12 @@ defmodule DxnnAnalyzerWeb.OracleInstancesLive do
             Delete boot volume — permanently delete its data.
           </label>
           <p class="text-sm">The instance will be terminated. Network resources are preserved.</p>
-          <button
-            disabled={@oci.busy}
-            class="bg-red-700 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
+          <button disabled={@oci.busy} class="btn btn-danger disabled:opacity-50">
             Terminate this instance
           </button>
-          <button type="button" phx-click="cancel-termination" class="px-4 py-2">Cancel</button>
+          <button type="button" phx-click="cancel-termination" class="btn btn-secondary">
+            Cancel
+          </button>
         </form>
       </section>
 
@@ -440,7 +458,7 @@ defmodule DxnnAnalyzerWeb.OracleInstancesLive do
         :if={@oci.operations != []}
         id="oci-operation-history"
         open={Enum.any?(@oci.operations, &needs_attention?(&1, @oci.instances))}
-        class="bg-white border rounded-lg p-4"
+        class="panel p-4"
       >
         <summary class="cursor-pointer font-semibold">
           Operation history (<%= length(@oci.operations) %>)

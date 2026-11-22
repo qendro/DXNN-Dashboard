@@ -156,7 +156,9 @@ defmodule DxnnAnalyzerWeb.ContextRegistry do
 
   defp resolve_context(context, state) when is_binary(context) do
     case Map.fetch(state.name_to_atom, context) do
-      {:ok, atom} -> {:ok, atom, context}
+      {:ok, atom} ->
+        {:ok, atom, context}
+
       :error ->
         find_slot_name_match(context, state)
     end

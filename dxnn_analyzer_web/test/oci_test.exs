@@ -21,6 +21,7 @@ defmodule DxnnAnalyzerWeb.OCITest do
   setup do
     Process.register(self(), :oci_test_owner)
     start_supervised!({Phoenix.PubSub, name: DxnnAnalyzerWeb.PubSub})
+    start_supervised!(DxnnAnalyzerWeb.Endpoint)
     start_supervised!({Task.Supervisor, name: DxnnAnalyzerWeb.OCI.TaskSupervisor})
     start_supervised!({OCIServer, name: :oci_test_server, bridge: MockBridge})
     Phoenix.PubSub.subscribe(DxnnAnalyzerWeb.PubSub, "oci_instances")
@@ -234,8 +235,22 @@ defmodule DxnnAnalyzerWeb.OCITest do
     assert aws_bridge =~ ~s|run_script_async("docker-deploy.sh", args)|
     assert aws_bridge =~ ~s|args = ["-c", config_file]|
 
-    assert File.read!("lib/dxnn_analyzer_web/live/dashboard_live.ex") =~
-             ~s|navigate={~p"/aws-deployment"}|
+    # Infrastructure destinations remain available on every page, including instance details.
+    for {view, active_path} <- [
+          {DxnnAnalyzerWeb.OracleInstancesLive, "/oracle-instances"},
+          {DxnnAnalyzerWeb.InstanceDetailsLive, "/aws-deployment"}
+        ] do
+      layout =
+        render_component(&DxnnAnalyzerWeb.Layouts.app/1,
+          socket: %Phoenix.LiveView.Socket{view: view},
+          flash: %{},
+          inner_content: ""
+        )
+
+      assert Floki.attribute(find(layout, "nav a[aria-current=page]"), "href") == [active_path]
+      assert find(layout, "nav a[href='/aws-deployment']") != []
+      assert find(layout, "nav a[href='/oracle-instances']") != []
+    end
   end
 
   test "stats stay expanded across updates and a historical verification error shows recovery only for the same verified VM" do

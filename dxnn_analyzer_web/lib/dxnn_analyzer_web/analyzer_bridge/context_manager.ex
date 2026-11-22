@@ -71,7 +71,16 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.ContextManager do
             {:error, {:already_loaded, context_atom}}
           else
             path_charlist = String.to_charlist(bundle.mnesia_path)
-            result = :analyzer.load(path_charlist, context_atom)
+
+            result =
+              if File.regular?(Path.join(bundle.bundle_root, "mnesia.backup")) do
+                :dxnn_backup_loader.load(
+                  String.to_charlist(Path.join(bundle.bundle_root, "mnesia.backup")),
+                  context_atom
+                )
+              else
+                :analyzer.load(path_charlist, context_atom)
+              end
 
             case result do
               {:ok, _context} ->
@@ -193,7 +202,8 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.ContextManager do
       end
 
     inferred_bundle = %{
-      context_name: ContextRegistry.display_name_for_atom(context_atom) || Atom.to_string(context_atom),
+      context_name:
+        ContextRegistry.display_name_for_atom(context_atom) || Atom.to_string(context_atom),
       source_path: bundle_root,
       bundle_root: bundle_root,
       mnesia_path: mnesia_path,
@@ -209,7 +219,8 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.ContextManager do
   end
 
   defp maybe_restore_source_path(bundle, existing_bundle) do
-    source_path = Map.get(existing_bundle, :source_path) || Map.get(existing_bundle, "source_path")
+    source_path =
+      Map.get(existing_bundle, :source_path) || Map.get(existing_bundle, "source_path")
 
     case source_path do
       nil -> bundle
@@ -217,8 +228,11 @@ defmodule DxnnAnalyzerWeb.AnalyzerBridge.ContextManager do
     end
   end
 
-  defp normalize_context_name(context_name) when is_binary(context_name), do: String.trim(context_name)
-  defp normalize_context_name(context_name) when is_atom(context_name), do: Atom.to_string(context_name)
+  defp normalize_context_name(context_name) when is_binary(context_name),
+    do: String.trim(context_name)
+
+  defp normalize_context_name(context_name) when is_atom(context_name),
+    do: Atom.to_string(context_name)
 
   defp loaded?(context_atom) do
     case :ets.info(:analyzer_contexts) do

@@ -35,3 +35,10 @@ Thumbs.db
 /Databases/
 /Documents/
 /data/
+
+# Generated output and machine-specific configuration
+dxnn_analyzer_web/priv/static/
+dxnn_analyzer_web/data/
+dxnn_analyzer/data/
+*.backup
+__pycache__/

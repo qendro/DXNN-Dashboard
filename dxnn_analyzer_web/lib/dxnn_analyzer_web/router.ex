@@ -18,6 +18,8 @@ defmodule DxnnAnalyzerWeb.Router do
     pipe_through :browser
 
     get "/s3-explorer/download/:token/:filename", S3ExplorerDownloadController, :show
+    get "/oracle-artifacts/download/:token/:filename", OracleArtifactDownloadController, :show
+    get "/gcp-storage/download/:token/:filename", GCPArtifactDownloadController, :show
 
     live "/", DashboardLive, :index
     live "/settings", SettingsLive, :index
@@ -32,7 +34,13 @@ defmodule DxnnAnalyzerWeb.Router do
     live "/aws-deployment", AWSDeploymentLive, :index
     live "/aws-deployment/instance/:instance_id", InstanceDetailsLive, :show
     live "/oracle-instances", OracleInstancesLive, :index
+    live "/oracle-dxnn", OracleDxnnLive, :index
+    live "/oracle-artifacts", OracleArtifactsLive, :index
+    live "/gcp-instances", GCPInstancesLive, :index
+    live "/gcp-dxnn", GCPDxnnLive, :index
+    live "/gcp-storage", GCPStorageLive, :index
     live "/spot-pricing", SpotPricingLive, :index
+    live "/oracle-spot-pricing", OracleSpotPricingLive, :index
     live "/s3-experiments", S3ExperimentsLive, :index
     live "/s3-explorer", S3ExplorerLive, :index
     live "/contexts/:context/artifacts", ContextArtifactsLive, :show

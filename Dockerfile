@@ -20,12 +20,13 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-# Copy everything
+# Copy source; generated output and local data are excluded by .dockerignore.
 COPY . .
 
 # Compile Erlang analyzer
 WORKDIR /app/dxnn_analyzer
 RUN rebar3 compile
+ENV ERL_LIBS=/app/dxnn_analyzer/_build/default/lib
 
 # Install Elixir dependencies and compile
 WORKDIR /app/dxnn_analyzer_web
@@ -44,7 +45,8 @@ WORKDIR /app/dxnn_analyzer_web
 RUN MIX_ENV=prod mix do compile, phx.digest
 
 # Create data directory
-RUN mkdir -p /app/data/MasterDatabase /app/data/s3_cache
+RUN mkdir -p /app/data/MasterDatabase /app/data/s3_cache && \
+    ln -s /app/data /app/dxnn_analyzer_web/data
 
 ENV MIX_ENV=prod
 ENV PORT=4000
